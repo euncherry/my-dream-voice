@@ -1,0 +1,33 @@
+/*
+ * fonts.css — 로컬 한글 폰트
+ *
+ * ⚠️ 웹폰트 CDN 금지 (CLAUDE.md · SPIKE_PLAN ④) — 폰트 파일을 리포지토리에 포함한다.
+ *    Vite가 이 url()을 번들에 넣으므로 실행 시 네트워크를 타지 않는다.
+ *
+ * Pretendard v1.3.9 · SIL Open Font License 1.1 (임베딩·상업적 이용 허용)
+ *   https://github.com/orioncactus/pretendard
+ *   라이선스 전문: ./fonts/LICENSE-Pretendard.txt
+ *
+ * 키오스크 UI(app.css)와 보호자 리포트(report.css)가 같은 폰트를 쓴다.
+ */
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('./fonts/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('./fonts/Pretendard-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+/*
+ * ⚠️ 이모지(🌟)는 Pretendard에 없어 OS 폰트(Segoe UI Emoji)로 대체 렌더된다.
+ *    PDF 출력에서 어떻게 나오는지 5단계에서 확인할 것 (REPORT_TEMPLATE.md §5)
+ */

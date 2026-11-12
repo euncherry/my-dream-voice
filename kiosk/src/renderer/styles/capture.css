@@ -1,0 +1,136 @@
+/*
+ * capture.css — P-06[촬영]
+ *
+ * 색·크기는 tokens.css와 같은 임시값이다 (프레임·포즈 아트 미제작).
+ * 프리뷰 비율 5:7은 네컷 한 칸(525×735)과 같아야 한다 — composeFourCut.ts
+ */
+
+.capture {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xl);
+}
+
+.capture__stage {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 5 / 7;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: #000;
+  border: 12px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+/* composeFourCut의 중앙 크롭과 같은 결과가 나와야 한다.
+   거울처럼 보여주기만 한다 — 저장·인쇄되는 사진은 뒤집지 않는다 */
+.capture__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.capture__result {
+  height: 100%;
+  aspect-ratio: 2 / 3;
+  flex: 0 0 auto;
+  border-radius: 8px;
+}
+
+.capture__job {
+  position: absolute;
+  top: var(--gap-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--gap-xs) var(--gap-md);
+  border-radius: 999px;
+  background: rgba(6, 8, 12, 0.72);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.capture__count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 200px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  animation: capture-pop 1s ease-out;
+}
+
+.capture__notice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--gap-md);
+  background: rgba(6, 8, 12, 0.6);
+  font-weight: 700;
+}
+
+.capture__flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: capture-flash 400ms ease-out forwards;
+}
+
+.capture__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-md);
+  width: 400px;
+  flex: 0 1 auto;
+}
+
+.capture__thumbs {
+  display: grid;
+  grid-template-columns: repeat(2, 120px);
+  gap: var(--gap-sm);
+}
+
+.capture__thumb {
+  aspect-ratio: 5 / 7;
+  overflow: hidden;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+}
+
+.capture__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes capture-pop {
+  from {
+    transform: scale(1.4);
+    opacity: 0.4;
+  }
+  30% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes capture-flash {
+  from {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 0;
+  }
+}

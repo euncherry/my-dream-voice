@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CameraHost — Canon EOS R100 제어 사이드카.
+    R100은 UVC가 아니라 getUserMedia로 받을 수 없어 EDSDK(C DLL)를 쓰는 별도 프로세스로 둔다.
+    키오스크 PC에 .NET 설치가 필요 없도록 self-contained 단일 exe로 배포한다.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RootNamespace>Mdv.CameraHost</RootNamespace>
+    <AssemblyName>CameraHost</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DebugType>none</DebugType>
+    <!-- smoke-test.mjs · publish 폴더는 컴파일 대상이 아니다 -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="*.cs" />
+  </ItemGroup>
+
+  <!--
+    Canon EDSDK 64비트 DLL (EDSDK.dll·EdsImage.dll). 저장소에는 없고 camera-host/edsdk에 직접 넣는다.
+    exe에 묶지 않고 옆에 낱개 파일로 둔다 — EDSDK.dll이 EdsImage.dll을 같은 폴더에서 찾는다.
+    없으면 빌드는 되고 edsdk 백엔드만 기동 시 backend-unavailable로 실패한다.
+  -->
+  <ItemGroup>
+    <None Include="edsdk\*.dll"
+          Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- FakeCamera의 JPEG 생성 전용. 실제 카메라는 JPEG를 그대로 받으므로 쓰지 않는다 -->
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

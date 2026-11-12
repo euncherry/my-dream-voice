@@ -1,0 +1,16 @@
+node_modules/
+out/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+
+# 카메라 사이드카 빌드 산출물
+camera-host/bin/
+camera-host/obj/
+camera-host/publish/
+# Canon EDSDK DLL — 저장소에 올리지 않음 (앱 패키지에만 포함, 단독 배포 금지)
+camera-host/edsdk/
+
+# 스파이크 산출물 (세션 폴더 — 실환경 녹음 샘플은 별도 보관)
+sessions/

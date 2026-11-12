@@ -1,0 +1,82 @@
+{
+  "name": "mdv-kiosk",
+  "version": "0.1.1",
+  "private": true,
+  "description": "마이 드림 보이스 — 키오스크 앱 (스파이크)",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "camera:build": "node scripts/build-camera-host.mjs",
+    "camera:test": "node camera-host/smoke-test.mjs",
+    "camera:test:edsdk": "node camera-host/edsdk-test.mjs",
+    "dist": "npm run camera:build && npm run build && electron-builder --win"
+  },
+  "build": {
+    "appId": "kr.mdv.kiosk",
+    "productName": "MyDreamVoice",
+    "electronDist": "node_modules/electron/dist",
+    "electronVersion": "33.4.11",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/pdf-to-printer/dist/*.exe"
+    ],
+    "extraResources": [
+      {
+        "from": "camera-host/publish",
+        "to": "camera-host",
+        "filter": [
+          "CameraHost.exe",
+          "EDSDK.dll",
+          "EdsImage.dll"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "마이 드림 보이스",
+      "artifactName": "MyDreamVoice-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "MyDreamVoice-Portable-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "pdf-to-printer": "^5.6.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "zustand": "^5.0.2"
+  }
+}

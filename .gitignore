@@ -1,0 +1,11 @@
+# OS·에디터
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# 사업 원본 문서·흐름도 PDF — 저장소에 올리지 않음 (공유가 필요하면 따로 전달)
+#   흐름도는 docs/user-flow/index.html + shots/ 로 다시 만들 수 있다
+docs/*.pdf
+docs/user-flow/*.pdf

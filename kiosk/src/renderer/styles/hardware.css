@@ -1,0 +1,253 @@
+/*
+ * hardware.css — D-01[하드웨어 체크] 전용
+ *
+ * 개발 전용 화면이라 아동용 UI 원칙(터치 88px, 스크롤 금지)을 따르지 않는다.
+ * 운영 빌드에서는 이 화면과 함께 제외된다.
+ */
+
+/* D-01만 스크롤을 허용한다 (PAGE_SPEC §2-8은 아동 화면 기준) */
+.screen__body:has(> .hw) {
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding: var(--gap-md);
+}
+
+.hw {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  text-align: left;
+}
+
+.hw .panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  font-size: var(--fs-body);
+}
+
+.panel__head .btn {
+  margin-left: auto;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-line);
+  color: var(--c-text-dim);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--fs-caption);
+  color: var(--c-text-dim);
+  line-height: 1.7;
+}
+
+.err {
+  margin: 0;
+  font-size: var(--fs-caption);
+  color: var(--c-danger);
+}
+
+.mono {
+  font-family: ui-monospace, 'Consolas', monospace;
+}
+
+/* ── 표 ── */
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-caption);
+}
+
+.tbl th,
+.tbl td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--c-line);
+  vertical-align: middle;
+}
+
+.tbl th {
+  color: var(--c-text-dim);
+  font-weight: 600;
+}
+
+.tbl tr[data-off='true'] {
+  opacity: 0.4;
+}
+
+/* 장치 목록 — 이름이 길어도 종류·포트·상태 열은 한 줄로 유지 */
+.tbl--devices td:nth-child(1),
+.tbl--devices td:nth-child(3),
+.tbl--devices td:nth-child(4) {
+  white-space: nowrap;
+}
+
+/* ── 로그 ── */
+
+.log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: var(--c-text-dim);
+  line-height: 1.8;
+}
+
+/* ── 셀렉트 / 체크박스 ── */
+
+.sel {
+  min-height: 40px;
+  min-width: 260px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+}
+
+.chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  font-size: var(--fs-caption);
+  background: var(--c-surface-2);
+  cursor: pointer;
+}
+
+/* DSP가 켜진 상태는 "비정상"임을 색으로 알린다 (금지사항 5) */
+.chk--on {
+  border-color: var(--c-accent-2);
+  color: var(--c-accent-2);
+}
+
+/* ── 카메라 ── */
+
+.cam {
+  display: flex;
+  gap: var(--gap-md);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.cam__video {
+  width: 480px;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.cam .kv {
+  flex: 1;
+  min-width: 280px;
+}
+
+/* ── IPC 요청/응답 JSON ── */
+
+.ipc-json {
+  flex: 1;
+  min-width: 320px;
+  margin: 0;
+  padding: 12px 14px;
+  background: #0c0e12;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  font-family: ui-monospace, 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #cfd5e0;
+  white-space: pre;
+  overflow: auto;
+  max-height: 420px;
+}
+
+/* ── 레벨 미터 ── */
+
+.meter {
+  height: 24px;
+  border-radius: 12px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  overflow: hidden;
+}
+
+.meter__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ac2a0, #e8b84a 70%, #e05a5a);
+  transition: width 60ms linear;
+}
+
+/* ── 실카메라 자가진단 (D-01) ── */
+
+.selftest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm);
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-surface-2);
+}
+
+.selftest__summary {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.selftest__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-caption);
+}
+
+.selftest__items li {
+  display: grid;
+  grid-template-columns: 24px 180px 1fr;
+  align-items: center;
+  gap: var(--gap-xs);
+}
+
+.selftest__mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.selftest__dir {
+  margin: 0;
+  font-size: 12px;
+  color: var(--c-text-dim);
+  word-break: break-all;
+}

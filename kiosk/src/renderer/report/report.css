@@ -1,0 +1,187 @@
+/*
+ * report.css — 보호자 리포트 (A4 · PDF/웹 공용)
+ *
+ * 폰트는 ../styles/fonts.css 가 정의한다 (Pretendard, 로컬 파일 · CDN 없음)
+ */
+
+@import '../styles/fonts.css';
+
+@page {
+  size: A4;
+  margin: 18mm 16mm;
+}
+
+:root {
+  --rp-font: 'Pretendard', 'Malgun Gothic', sans-serif;
+  --rp-ink: #22272f;
+  --rp-dim: #6b7480;
+  --rp-line: #dde2e9;
+  --rp-accent: #3a5fa8;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+}
+
+body {
+  font-family: var(--rp-font);
+  color: var(--rp-ink);
+  font-size: 11.5pt;
+  line-height: 1.75;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.rp {
+  max-width: 178mm;
+  margin: 0 auto;
+  padding: 8mm 0;
+}
+
+/* ── 헤더 ── */
+
+.rp-header {
+  border-bottom: 2px solid var(--rp-accent);
+  padding-bottom: 6mm;
+  margin-bottom: 8mm;
+}
+
+.rp-header__title {
+  margin: 0 0 2mm;
+  font-size: 15pt;
+  font-weight: 700;
+  color: var(--rp-accent);
+}
+
+.rp-header__meta {
+  margin: 0;
+  font-size: 11pt;
+  color: var(--rp-dim);
+}
+
+/* ── 섹션 ── */
+
+.rp-section {
+  margin-bottom: 7mm;
+  page-break-inside: avoid;
+}
+
+.rp-section__title {
+  margin: 0 0 2mm;
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: var(--rp-accent);
+}
+
+.rp-section__body p {
+  margin: 0 0 1.5mm;
+}
+
+.rp-jobs,
+.rp-sounds {
+  font-size: 13pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.rp-agegroup {
+  font-size: 10pt;
+  color: var(--rp-dim);
+}
+
+.rp-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-lines li {
+  display: flex;
+  gap: 4mm;
+  padding: 1.5mm 0;
+  border-bottom: 1px dashed var(--rp-line);
+}
+
+.rp-lines__job {
+  flex: 0 0 32mm;
+  color: var(--rp-dim);
+}
+
+.rp-lines__text {
+  flex: 1;
+}
+
+/* ── 관찰 결과 (2단계뿐 — 점수·백분율 없음) ── */
+
+.rp-observation {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-observation li {
+  display: flex;
+  gap: 4mm;
+  align-items: baseline;
+  padding: 2mm 3mm;
+  border-radius: 3mm;
+  margin-bottom: 1.5mm;
+  background: #f4f7fb;
+}
+
+.rp-observation li[data-result='different'] {
+  background: #fdf6ec;
+}
+
+.rp-observation__sound {
+  flex: 0 0 24mm;
+  font-weight: 700;
+}
+
+.rp-summary {
+  margin-top: 3mm;
+  color: var(--rp-dim);
+}
+
+/* ── 마무리 ── */
+
+.rp-closing {
+  margin: 8mm 0 6mm;
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
+}
+
+.rp-disclaimer {
+  border-top: 1px solid var(--rp-line);
+  padding-top: 4mm;
+  font-size: 9.5pt;
+  color: var(--rp-dim);
+  line-height: 1.6;
+}
+
+/* ── 미확정 문구 표시 (화면에서만 눈에 띄게) ── */
+
+.rp-placeholder {
+  background: #fff3cd;
+  border: 1px dashed #b9902a;
+  padding: 2mm 3mm;
+  border-radius: 2mm;
+  color: #7a5c12;
+}
+
+/* 웹으로 볼 때만 종이 느낌 */
+@media screen {
+  body {
+    background: #eef1f5;
+  }
+  .rp {
+    background: #fff;
+    padding: 18mm 16mm;
+    margin: 8mm auto;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+  }
+}
