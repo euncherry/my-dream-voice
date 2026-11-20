@@ -10,9 +10,18 @@
 | `audio/speaker-test.mp3` | **D-01 스피커 테스트음** ← 지금 필요 | mp3, 3~5초, 44.1kHz, 스테레오 |
 | `audio/bgm/*.mp3` | 대기 화면(P-00)·플로우 배경음 | 미정 |
 | `audio/sfx/*.mp3` | 셔터·카운트다운 등 효과음 | 미정 |
-| `audio/voice/*.mp3` | 안내 음성 | 미정 |
+| `audio/voice/cue-speak-now.mp3` | P-05 녹음 멘트 **"이제 말해 보자!"** | 기획 제공 (SPEC T-3) |
+| `audio/voice/cue-one-more.mp3` | P-05 다시 말하기 멘트 **"한 번 더 말해 볼까요?"** | 기획 제공 (SPEC T-3) |
+| `audio/voice/*.mp3` | P-05 **문장 음성**(들려주기 — 만 4세는 어절마다) · 시나리오 내레이션 | 기획 제공 (SPEC T-3) |
 
 `speaker-test.mp3` 는 **좌/우 채널이 모두 들리는 소리**면 좋다 — 스피커 한쪽만 물린 상태를 잡아낼 수 있다.
+
+## P-05 음성 파일 (아직 없다)
+
+- 멘트 2개는 위 경로 · 이름으로 넣으면 바로 재생된다 (`src/shared/jobs.ts`의 `CUES`).
+- 문장 음성 · 내레이션은 파일을 넣은 뒤 `src/shared/jobs.ts` 시나리오 데이터의 `audio` · `narrationAudio`에 경로를 적는다
+  (예: `./audio/voice/police-5-1.mp3`). 만 4세는 어절마다 파일이 하나씩이다.
+- **파일이 없으면 자막만 잠깐(2초) 보여 주고 넘어간다** — 화면에 "음성 파일 미제공" PLACEHOLDER가 뜬다.
 
 ## 파일이 없을 때
 

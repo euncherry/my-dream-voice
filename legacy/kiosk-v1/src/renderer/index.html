@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 오프라인 앱 — 외부 리소스 로드 금지 (웹폰트 CDN 포함).
+         127.0.0.1은 카메라 사이드카의 라이브뷰 스트림 (src/main/camera.ts) -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob: file: http://127.0.0.1:*; media-src 'self' blob: mediastream: file:; font-src 'self' data: file:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <title>마이 드림 보이스 — 키오스크 (스파이크)</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

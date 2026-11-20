@@ -1,0 +1,467 @@
+/*
+ * p07.css — P-07[분석 및 프린트] · 리포트 미리보기(report/ReportPreview) · M-03[완료 안내]
+ *
+ * ⚠️ 색 · 글꼴 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다. 지금은 구조만.
+ *    값은 tokens.css의 변수만 쓴다.
+ *
+ * 스크롤 금지 (PAGE_SPEC §2-8) — 1280×800 창과 1920×1080 모두에서 한 화면에 들어가야 한다.
+ *   → 고정 높이를 쓰지 않는다. grid / flex + min-height: 0 으로 남는 자리를 나눠 쓰고,
+ *     넘치는 글자는 줄임 처리한다.
+ *
+ * 배치 (구성 스케치 p07-result-*.svg)
+ *   ┌──────────── ① 진행도 ────────────┐
+ *   │ ② 촬영 장면 영상   │ ③ 캐릭터 + 문구 / 미리보기 │
+ *   │ ⑤ 사진 나오는 곳   │ ④ 메일 안내 (B)           │
+ *   └ 개발용 띠 ────────────────────────┘
+ */
+
+/* 세로 자리가 빠듯해 바깥 여백을 한 단계 줄인다 (D-01과 같은 방식) */
+.screen__body:has(> .p07) {
+  padding: var(--gap-md);
+}
+
+.p07 {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--gap-sm);
+}
+
+/* ────────────────────────────────────────────────
+   ① 진행도
+   ──────────────────────────────────────────────── */
+
+.p07-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xs) var(--gap-sm);
+}
+
+.p07-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.p07-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: var(--gap-xs) var(--gap-md);
+  border: 2px solid var(--c-line);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-text-dim);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 지금 단계 강조 */
+.p07-step[data-state='active'] {
+  border-color: var(--c-accent);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+/* 끝난 단계 */
+.p07-step[data-state='done'] {
+  color: var(--c-text);
+}
+
+.p07-step__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+/* 기다리는 동안에는 항상 움직이는 표시를 둔다 (PAGE_SPEC §2-5) */
+.p07-step[data-state='active'] .p07-step__mark::before {
+  content: '';
+  width: 0.8em;
+  height: 0.8em;
+  border: 3px solid var(--c-accent);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: p07-spin 1s linear infinite;
+}
+
+.p07-step[data-state='done'] .p07-step__mark::before {
+  content: '✓';
+  color: var(--c-accent-2);
+}
+
+.p07-progress__arrow {
+  color: var(--c-text-dim);
+  font-weight: 700;
+}
+
+@keyframes p07-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ────────────────────────────────────────────────
+   가운데 — 왼쪽(영상 · 사진 나오는 곳) / 오른쪽(캐릭터 · 미리보기 · 메일 안내)
+   ──────────────────────────────────────────────── */
+
+.p07-main {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: var(--gap-md);
+}
+
+.p07-col {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+/* ② 촬영 장면 영상 */
+.p07-video {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.p07-video__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* 거울처럼 좌우 반전 — 녹화는 원본 방향이다 (P-06 라이브뷰와 같은 방향으로 보여 준다) */
+  transform: scaleX(-1);
+}
+
+/* ⑤ 사진 나오는 곳 안내 */
+.p07-out {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xs) var(--gap-sm);
+}
+
+.p07-out__arrow {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 44px;
+  fill: currentColor;
+}
+
+.p07-out__text {
+  margin: 0;
+  font-size: var(--fs-heading);
+  font-weight: 800;
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+/* ③ SD 캐릭터 자리 + 말풍선 */
+.p07-buddy {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--gap-sm);
+}
+
+/* 말풍선이 없을 때 (B모드 · 미리보기를 못 띄운 경우) — 캐릭터 자리만 */
+.p07-buddy--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Placeholder(.ph)가 칸을 가득 채운다 */
+.p07-buddy__char {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.p07-bubble {
+  align-self: start;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: var(--gap-sm);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.p07-bubble__main {
+  margin: 0;
+  font-size: var(--fs-heading);
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+.p07-bubble__sub {
+  margin: 0;
+  color: var(--c-text-dim);
+  word-break: keep-all;
+}
+
+/* ④ 메일 안내 (B만) */
+.p07-mail {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xs) var(--gap-sm);
+  padding: var(--gap-xs) var(--gap-sm);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.p07-mail__text {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+/* 개발용 띠 — 왼쪽에 붙인다 (오른쪽 아래에는 DevBar가 있다) */
+.p07-dev {
+  display: flex;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.p07-dev .devstrip {
+  justify-content: flex-start;
+  gap: 2px var(--gap-sm);
+  padding: 4px var(--gap-sm);
+}
+
+/* ────────────────────────────────────────────────
+   리포트 미리보기 (B모드 — report/ReportPreview.tsx)
+   글자는 작게, 넘치면 줄임 처리. 관찰 결과 자리는 회색 막대뿐이다 (글자가 없다).
+   ──────────────────────────────────────────────── */
+
+.p07-preview {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  padding: var(--gap-sm);
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  font-size: var(--fs-caption);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.p07-preview__top {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--gap-xs);
+}
+
+.p07-preview__badge {
+  padding: 2px 12px;
+  border: 1px solid var(--c-accent);
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.p07-preview__title {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 800;
+  word-break: keep-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.p07-preview__header {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--c-text-dim);
+}
+
+/* 한 줄로 두고 넘치면 … */
+.p07-preview__line {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 직업 · 말한 문장 · 살펴본 소리 — 제목 | 내용 */
+.p07-preview__rows {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px var(--gap-sm);
+  margin: 0;
+}
+
+.p07-preview__rows dt {
+  color: var(--c-text-dim);
+  white-space: nowrap;
+}
+
+.p07-preview__rows dd {
+  min-width: 0;
+  margin: 0;
+  font-weight: 700;
+}
+
+/* 왜 이 소리들을 살펴봤나요? */
+.p07-preview__why {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.p07-preview__why-title {
+  margin: 0;
+  color: var(--c-text-dim);
+  font-size: inherit;
+  font-weight: 400;
+}
+
+.p07-preview__why-text {
+  margin: 0;
+  word-break: keep-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+/* 관찰 결과 자리 — 가린다. 회색 막대(빈 요소)와 안내 한 줄뿐이고 리포트 글자는 들어 있지 않다 */
+.p07-preview__veil {
+  position: relative;
+  flex: 1 1 4.5em;
+  min-height: 4.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.7em;
+  padding: var(--gap-xs) var(--gap-sm);
+  overflow: hidden;
+  background: var(--c-surface-2);
+  border-radius: 12px;
+}
+
+.p07-preview__bar {
+  flex: 0 0 auto;
+  height: 0.6em;
+  border-radius: 999px;
+  background: var(--c-placeholder);
+}
+
+/* 막대 길이는 고정이다 — 관찰 결과에 따라 달라지지 않는다 */
+.p07-preview__bar:nth-child(1) {
+  width: 66%;
+}
+
+.p07-preview__bar:nth-child(2) {
+  width: 78%;
+}
+
+.p07-preview__bar:nth-child(3) {
+  width: 57%;
+}
+
+.p07-preview__bar:nth-child(4) {
+  width: 70%;
+}
+
+.p07-preview__veil-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 큰 화면(키오스크 1920×1080)에서는 글자를 한 단계 키운다 */
+@media (min-width: 1800px) and (min-height: 1000px) {
+  .p07-preview {
+    font-size: var(--fs-body);
+  }
+
+  .p07-preview__why-text {
+    -webkit-line-clamp: 5;
+  }
+}
+
+/* ────────────────────────────────────────────────
+   M-03 [완료 안내] — 화면 위에 뜨는 창 (.modal__scrim / .modal 은 app.css)
+   ──────────────────────────────────────────────── */
+
+.m03-modal {
+  align-items: center;
+}
+
+.m03-title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+.m03-sub {
+  margin: 0;
+  font-size: var(--fs-heading);
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.m03-count {
+  font-size: calc(var(--fs-title) * 2.5);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-accent-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.m03-note {
+  margin: 0;
+  color: var(--c-text-dim);
+}

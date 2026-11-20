@@ -1,7 +1,15 @@
+/*
+ * app.css — 공통 틀 (화면 셸 · 버튼 · placeholder · 창)
+ *
+ * ⚠️ 색 · 글꼴 · 크기 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다.
+ *    지금은 구조와 동작만 확인한다. 값은 tokens.css의 변수로만 쓴다.
+ *
+ * 화면별 스타일은 각 화면 파일이 자기 CSS를 불러온다 (styles/p02a.css · p05.css · …).
+ */
+
 @import './fonts.css';
 @import './tokens.css';
 @import './hardware.css';
-@import './capture.css';
 
 * {
   box-sizing: border-box;
@@ -53,26 +61,16 @@ body {
   letter-spacing: 0.04em;
 }
 
-.screen__spike {
+.screen__stage {
   margin-left: auto;
   padding: 2px 10px;
   border-radius: 999px;
   border: 1px solid var(--c-line);
-}
-
-.screen__spike[data-level='full'] {
-  color: #7ee0a5;
-  border-color: #2f5f45;
-}
-.screen__spike[data-level='min'] {
   color: var(--c-accent-2);
-  border-color: #5f532f;
-}
-.screen__spike[data-level='none'] {
-  color: var(--c-text-dim);
 }
 
 .screen__body {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -85,6 +83,14 @@ body {
   max-width: var(--stage-max-width);
   margin: 0 auto;
   text-align: center;
+}
+
+/* [← 뒤로] — 왼쪽 위 (PAGE_SPEC §2-4) */
+.screen__back {
+  position: absolute;
+  top: var(--gap-md);
+  left: var(--gap-md);
+  z-index: 2;
 }
 
 .screen__title {
@@ -139,7 +145,7 @@ body {
   font-size: var(--fs-heading);
 }
 
-/* D-01(개발 전용)은 정보 밀도가 높아 터치 규격을 따르지 않는다 */
+/* 개발 전용(D-01 · 개발용 띠)은 정보 밀도가 높아 터치 규격을 따르지 않는다 */
 .btn--sm {
   min-height: 40px;
   min-width: 0;
@@ -162,7 +168,7 @@ body {
 }
 
 /* ────────────────────────────────────────────────
-   PLACEHOLDER (PAGE_SPEC §5-5: 눈에 보이게)
+   PLACEHOLDER (PAGE_SPEC §7-5: 눈에 보이게)
    ──────────────────────────────────────────────── */
 
 .ph {
@@ -193,64 +199,25 @@ body {
 }
 
 /* ────────────────────────────────────────────────
-   직업 그리드 (P-02)
+   개발용 띠 — 운영 화면에는 없는 조작 (mock 서버 · mock 받아쓰기 등)
    ──────────────────────────────────────────────── */
 
-.jobgrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--gap-md);
-  width: 100%;
-}
-
-:root[data-orientation='portrait'] .jobgrid {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.jobcard {
-  position: relative;
-  min-height: 160px;
+.devstrip {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: var(--gap-xs);
-  border: 3px solid transparent;
-  border-radius: var(--radius);
-  background: var(--c-surface-2);
-  color: var(--c-text);
-  font-family: inherit;
-  font-size: var(--fs-body);
+  padding: var(--gap-xs) var(--gap-sm);
+  border: 1px dashed var(--c-accent-2);
+  border-radius: 10px;
+  font-size: var(--fs-caption);
+  color: var(--c-accent-2);
+}
+
+.devstrip__label {
   font-weight: 700;
-  cursor: pointer;
-}
-
-.jobcard[data-picked='true'] {
-  border-color: var(--c-accent);
-}
-
-.jobcard__art {
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-size: 11px;
-  color: #0d0f13;
-  font-weight: 800;
-}
-
-.jobcard__badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--c-accent);
-  display: grid;
-  place-items: center;
-  font-size: 18px;
+  letter-spacing: 0.04em;
 }
 
 /* ────────────────────────────────────────────────
@@ -283,6 +250,7 @@ body {
   word-break: break-all;
 }
 
+/* M-02 · M-03 — 화면 위에 뜨는 창 */
 .modal__scrim {
   position: fixed;
   inset: 0;
@@ -309,11 +277,14 @@ body {
   right: var(--gap-sm);
   bottom: var(--gap-sm);
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--gap-xs);
-  z-index: 40;
+  z-index: 60;
 }
 
-.devbar button {
+.devbar button,
+.devbar select {
   font-size: 12px;
   padding: 6px 10px;
   min-height: 0;

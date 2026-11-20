@@ -1,0 +1,431 @@
+/*
+ * select.css — P-00[대기] · P-01[모드 선택] · P-02[동의] · P-03[연령 선택] · P-04[직업 선택]
+ *
+ * ⚠️ 색 · 글꼴 · 크기 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다. 지금은 구조만.
+ *    값은 tokens.css의 변수만 쓴다.
+ *
+ * 스크롤 금지 (PAGE_SPEC §2-8) — 1280×800 창과 1920×1080 모두에서 한 화면에 들어가야 한다.
+ *   → 머리(제목)와 아래(주 액션)는 내용 높이만큼, 가운데가 남는 높이를 나눠 쓴다 (flex + min-height: 0).
+ *     그림 자리는 남는 높이에 맞춰 줄어든다.
+ *
+ * 이 파일은 화면 TSX가 불러오므로 app.css보다 먼저 실린다 (main.tsx의 import 순서).
+ *   → 공통 클래스(.btn · .ph)를 덮어쓸 때는 클래스 두 개로 적어, 실리는 순서와 무관하게 이기게 한다
+ *     (예: .btn.p01-card).
+ *
+ * 클래스 이름: 화면별은 .p00- ~ .p04-, 다섯 화면이 같이 쓰는 틀은 .pick
+ *   (.sel 은 hardware.css 가 D-01에서 이미 쓰고 있어 피했다).
+ */
+
+/* ────────────────────────────────────────────────
+   공통 틀 (P-01 ~ P-04) — 머리(제목) · 가운데(늘어남) · 아래(주 액션)
+   ──────────────────────────────────────────────── */
+
+.pick {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-sm);
+  /* 오른쪽 아래 DevBar(개발용)가 주 액션 버튼을 덮지 않게 조금 띄운다 */
+  padding-bottom: var(--gap-xs);
+}
+
+.pick__head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-xs);
+}
+
+.pick__main {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+}
+
+.pick__foot {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+}
+
+/* [다음] — 구성 스케치(p03-age · p04-job)대로 오른쪽 아래 */
+.pick__foot--end {
+  justify-content: flex-end;
+}
+
+/* 주 액션 [시작] · [다음] */
+.btn.pick-go {
+  min-width: 240px;
+}
+
+/* 고르는 카드 — 고른 것 강조 (P-03 · P-04) */
+.btn.pick-choice {
+  border-width: 3px;
+}
+
+.btn.pick-choice[data-picked='true'] {
+  border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 22%, var(--c-surface-2));
+  box-shadow: 0 0 0 4px var(--c-accent);
+}
+
+/* ────────────────────────────────────────────────
+   P-00 [대기]
+   ──────────────────────────────────────────────── */
+
+/* 터치 영역 — 상자를 만들지 않는다. 안쪽(바닥 + 본문) 어디를 눌러도 클릭이 여기로 올라온다 */
+.p00-root {
+  display: contents;
+}
+
+/* 본문 밖(양옆 여백 · 위쪽 띠)까지 덮는 투명한 바닥 — "화면 아무 곳이나 터치" */
+.p00-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  cursor: pointer;
+}
+
+.p00-body {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+  padding-bottom: var(--gap-xs);
+  cursor: pointer;
+}
+
+.p00-concept {
+  flex: 0 0 auto;
+  width: min(100%, 760px);
+  display: flex;
+}
+
+/* 어트랙트 루프 자리 — 남는 높이를 다 쓴다 */
+.p00-loop {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(100%, 1100px);
+  display: flex;
+}
+
+.btn.p00-start {
+  flex: 0 0 auto;
+  min-width: 360px;
+}
+
+/* ────────────────────────────────────────────────
+   P-01 [모드 선택] — 카드 2개 + A 안내 한 줄
+   ──────────────────────────────────────────────── */
+
+.btn.p01-card {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 620px;
+  height: 100%;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: var(--gap-md);
+  border-width: 3px;
+}
+
+/* 카드 그림 자리 — 남는 높이에 맞춰 줄어든다 */
+.p01-card__art {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+}
+
+.p01-card__name {
+  flex: 0 0 auto;
+  font-size: var(--fs-heading);
+  font-weight: 800;
+}
+
+/* 제공물 안내 */
+.p01-card__gives {
+  flex: 0 0 auto;
+  font-size: var(--fs-body);
+}
+
+.p01-card__how {
+  flex: 0 0 auto;
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  color: var(--c-text-dim);
+}
+
+/* A 안내 한 줄 — 위치(A 카드 안 / 화면 아래)는 디자인에서 정한다 */
+.p01-notice {
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.p01-notice__text {
+  margin: 0;
+}
+
+/* ────────────────────────────────────────────────
+   P-02 [동의] — 체크 3줄 · 안내 · [전문 보기] · [시작]
+   ──────────────────────────────────────────────── */
+
+.p02-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(100%, 1200px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gap-sm);
+}
+
+/* 한 줄 = [체크 영역(줄 전체)] + [자세히 ›]. 자리가 모자라면 터치 최소 높이까지 줄어든다 */
+.p02-item {
+  flex: 0 1 120px;
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 3px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.p02-item[data-checked='true'] {
+  border-color: var(--c-accent);
+}
+
+/* 덜 체크하고 [시작]을 눌렀을 때 — 빠진 항목 강조 */
+.p02-item[data-missing='true'] {
+  border-color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) 16%, var(--c-surface));
+}
+
+.p02-item__check {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  padding: 0 var(--gap-md);
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.p02-item__box {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  background: var(--c-bg);
+  border: 3px solid var(--c-text-dim);
+  border-radius: 10px;
+  font-size: var(--fs-heading);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.p02-item[data-checked='true'] .p02-item__box {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+
+.p02-item[data-missing='true'] .p02-item__box {
+  border-color: var(--c-danger);
+}
+
+.p02-item__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.p02-item__label {
+  font-size: calc(var(--fs-body) * 1.25);
+  font-weight: 700;
+}
+
+.p02-item__desc {
+  font-size: var(--fs-caption);
+  color: var(--c-text-dim);
+}
+
+/* [자세히 ›] — 줄 안에 붙여 둔다 */
+.btn.p02-item__more {
+  flex: 0 0 auto;
+  border: 0;
+  border-left: 1px solid var(--c-line);
+  border-radius: 0;
+  font-size: calc(var(--fs-caption) * 1.25);
+  font-weight: 400;
+  color: var(--c-text-dim);
+}
+
+/* 안내 자리 — 높이를 미리 잡아 두어, 안내가 떠도 줄들이 밀리지 않는다 */
+.p02-warn {
+  flex: 0 0 auto;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.p02-warn__msg {
+  padding: var(--gap-xs) var(--gap-md);
+  border-radius: 999px;
+  background: var(--c-danger);
+  font-weight: 700;
+}
+
+/* [자세히] · [전문 보기] 창 */
+.p02-doc__title {
+  font-size: var(--fs-heading);
+}
+
+.p02-doc__body {
+  height: min(36vh, 320px);
+  display: flex;
+}
+
+/* ────────────────────────────────────────────────
+   P-03 [연령 선택] — 버튼 3개 (그림 + 큰 글자)
+   ──────────────────────────────────────────────── */
+
+.btn.p03-age {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 380px;
+  height: 100%;
+  max-height: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--gap-md);
+}
+
+/* 그림 자리 — 남는 높이에 맞춰 줄어든다 */
+.p03-age__art {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+}
+
+.p03-age__label {
+  flex: 0 0 auto;
+  font-size: var(--fs-heading);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ────────────────────────────────────────────────
+   P-04 [직업 선택] — 카드 6장 · 3×2 격자
+   카드 그림 = 그 직업의 네컷 프레임 (가로 — 비율은 --p04-ratio, P04JobSelect가 FOURCUT 값으로 넣는다)
+   ──────────────────────────────────────────────── */
+
+.p04-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-sm);
+}
+
+/* 칸 — 카드 크기의 기준(cqw · cqh). 카드는 칸 가운데에 놓인다 */
+.p04-cell {
+  container-type: size;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.btn.p04-card {
+  --p04-pad: var(--gap-xs);
+  --p04-line: 3px;
+  /* 직업 이름 줄 높이 — 칸이 크면 같이 커진다 */
+  --p04-name: clamp(40px, 15cqh, 60px);
+  /* 프레임 그림 너비 = 칸 너비와 칸 높이(이름 줄 · 여백 제외)에 모두 들어가는 가장 큰 값.
+     FramePreview는 부모 너비에 맞춰 그려지므로, 높이가 모자라면 너비를 줄여야 한 화면에 들어간다 */
+  --p04-art-w: min(
+    100cqw - 2 * var(--p04-pad) - 2 * var(--p04-line),
+    (100cqh - var(--p04-name) - 3 * var(--p04-pad) - 2 * var(--p04-line)) * var(--p04-ratio, 1.487)
+  );
+
+  position: relative;
+  width: calc(var(--p04-art-w) + 2 * var(--p04-pad) + 2 * var(--p04-line));
+  display: flex;
+  flex-direction: column;
+  gap: var(--p04-pad);
+  padding: var(--p04-pad);
+  border-width: var(--p04-line);
+}
+
+.p04-card__art {
+  flex: 0 0 auto;
+  display: block;
+  width: var(--p04-art-w);
+  aspect-ratio: var(--p04-ratio, 1.487);
+  overflow: hidden;
+  border-radius: 8px;
+  /* 그림이 터치를 가로채지 않게 — 누르는 것은 카드(버튼)다 */
+  pointer-events: none;
+}
+
+.p04-card__name {
+  flex: 0 0 auto;
+  height: var(--p04-name);
+  line-height: var(--p04-name);
+  font-size: calc(var(--p04-name) * 0.62);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* 선택 표시 — 카드 오른쪽 위 */
+.p04-card__check {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-accent);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  line-height: 1;
+}

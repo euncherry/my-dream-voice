@@ -177,7 +177,7 @@ export async function printSilent(req: PrintRequest): Promise<PrintResult> {
     //           SPIKE_PLAN ⑤ "인쇄 실패(용지 없음 등) 시 에러를 감지한다" 는 이것까지 되어야 충족.
     return { ok: true, printerName: req.printerName }
   } catch (e) {
-    // 앱을 죽이지 않는다 — 렌더러가 M-02[오류·폴백 안내]로 처리하고 P-10으로 계속 진행
+    // 앱을 죽이지 않는다 — 렌더러(P-07)가 M-02[오류·폴백 안내]를 띄우고 M-03[완료 안내]로 넘어간다
     return { ok: false, printerName: req.printerName, error: (e as Error).message }
   }
 }

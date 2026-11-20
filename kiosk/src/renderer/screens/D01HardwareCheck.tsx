@@ -1,7 +1,7 @@
 /**
- * D-01 [하드웨어 체크] 🟢 개발 전용 — 스파이크 ①
+ * D-01 [하드웨어 체크] — 개발 전용 (PAGE_SPEC §3 D-01 · V2_PLAN §3 D-01 행)
  *
- * 완료 기준 (SPIKE_PLAN ①)
+ * 키오스크에서 검증된 화면이다. v2에서는 타입만 맞췄고 동작은 그대로 둔다.
  *   1. 연결된 카메라/마이크/스피커 장치 목록이 표시된다
  *   2. 카메라 프리뷰가 뜨고, 요청 해상도가 실제로 적용된 값으로 표시된다
  *   3. 마이크 레벨 미터가 실시간으로 움직인다
@@ -9,22 +9,27 @@
  *   5. 스피커 테스트음이 재생된다
  *   6. USB 재연결 후에도 장치를 다시 찾을 수 있다 (deviceId 유지 여부 기록)
  *
- * 여기서 채집한 WAV가 이후 분석 스파이크의 입력이 된다 (SPIKE_PLAN 산출물 3).
- * 세션 폴더는 'dev-' 접두사로 만들어 P-11 폐기 대상과 구분한다.
+ * v2에서 덧붙인 것 (PAGE_SPEC D-01 「v2 할 일」)
+ *   - 받아쓰기 · 인식률 점검 — components/SttCheckPanel.tsx (⚠️ 받아쓰기는 아직 MOCK)
+ *   - 분석 소요 시간 · IPC 확인 — window.api.analysis.run (⚠️ 관찰 결과 · 지연은 아직 MOCK · SPEC T-15)
+ *
+ * 여기서 채집한 WAV가 받아쓰기 · 분석 프로그램(파이썬)을 붙일 때 점검 입력이 된다.
+ * 세션 폴더는 'dev-' 접두사로 만들어 M-03[완료 안내]에서 지우는 체험 세션과 구분한다.
  */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CameraHostPanel } from '../components/CameraHostPanel'
 import { PrintTestPanel } from '../components/PrintTestPanel'
 import { Screen } from '../components/Screen'
+import { SttCheckPanel } from '../components/SttCheckPanel'
 import { useSession } from '../store/session'
 import { useDevices } from '../audio/useDevices'
 import { DSP_OFF, useAudioCapture } from '../audio/useAudioCapture'
 import { playSavedWav, playSpeakerTest, stopAll } from '../audio/playback'
-import { cutCells } from '../photo/composeFourCut'
-import { RESOLUTION_PRESETS, type ResolutionPreset } from '@shared/constants'
-import { linesFor } from '@shared/jobs'
+import { FOURCUT, RESOLUTION_PRESETS, type ResolutionPreset } from '@shared/constants'
+import { scenarioFor } from '@shared/jobs'
 import type {
+  AgeGroup,
   AnalysisInput,
   AnalysisOutput,
   DspFlags,
@@ -34,10 +39,14 @@ import type {
   PrinterInfo,
   SessionPaths,
   SpeechFeature,
+  SpeechLine,
 } from '@shared/types'
 
-/** 네컷 인쇄에 필요한 컷 1개 크기 — 카메라 해상도 판정 기준 */
-const CUT = cutCells()[0]!
+/**
+ * 네컷 인쇄에 필요한 사진 칸 1개 크기 — 카메라 프리뷰 해상도를 견주는 기준.
+ * ⚠️ 칸 좌표는 임시값이다 (가로 칸 726×546 — 디자이너 값이 오면 constants.ts만 바뀐다 · SPEC §4-1)
+ */
+const CUT = FOURCUT.cells[0]!
 
 interface Recorded {
   path: string
@@ -56,8 +65,12 @@ const PRINTER_CONNECTION_LABEL: Record<PrinterConnection, string> = {
   other: '기타',
 }
 
-/** IPC 연동 확인용 — 녹음 순서대로 붙일 직업 */
-const IPC_CHECK_JOBS: JobId[] = ['police', 'chef', 'singer', 'astronaut']
+/**
+ * 「분석 소요 시간 · IPC 확인」용 — 녹음한 WAV를 이 직업 · 연령 시나리오의 문장 1 · 2에 순서대로 붙인다.
+ * D-01은 직업 · 연령과 무관하다 — 요청 모양을 채우기 위한 값일 뿐이다.
+ */
+const CHECK_JOB: JobId = 'police'
+const CHECK_AGE: AgeGroup = '6+'
 
 export function D01HardwareCheck(): ReactNode {
   const goto = useSession((s) => s.goto)
@@ -82,7 +95,7 @@ export function D01HardwareCheck(): ReactNode {
   const [recorded, setRecorded] = useState<Recorded[]>([])
   const [busy, setBusy] = useState<string | null>(null)
 
-  // IPC 연동 확인 (검수 ④) — 요청/응답을 그대로 보여준다
+  // 분석 소요 시간 · IPC 확인 — 요청/응답을 그대로 보여준다 (⚠️ 관찰 결과 · 지연은 MOCK)
   const mockScenario = useSession((s) => s.mockScenario)
   const [ipcReq, setIpcReq] = useState<AnalysisInput | null>(null)
   const [ipcRes, setIpcRes] = useState<AnalysisOutput | null>(null)
@@ -168,7 +181,7 @@ export function D01HardwareCheck(): ReactNode {
         const p = await ensureSession()
         const saved = await window.api.recording.saveWav({
           sessionId: p.sessionId,
-          index: recorded.length,
+          lineIndex: recorded.length,
           jobId: 'police', // D-01은 직업과 무관 — 파일명 자리만 채운다
           pcm: result.pcm.buffer as ArrayBuffer,
           sampleRate: result.sampleRate,
@@ -207,16 +220,24 @@ export function D01HardwareCheck(): ReactNode {
     )
   }
 
-  /** 검수 ④ — 녹음한 WAV로 analysis.run IPC를 실제 호출하고 응답을 그대로 표시 */
+  /**
+   * 녹음한 WAV로 analysis.run IPC를 실제 호출하고 응답(소요 시간 포함)을 그대로 표시한다.
+   * MOCK: main/mock/analysis.ts — 진폭 · 무음 · 음도는 실측, 관찰 결과와 지연은 가짜다.
+   *       파이썬 분석 프로그램이 붙으면 같은 요청으로 실제 소요 시간을 잰다 (SPEC T-15).
+   */
   async function onIpcCheck(): Promise<void> {
     if (!paths || recorded.length === 0) return
-    const jobs = IPC_CHECK_JOBS.slice(0, recorded.length)
+    // 녹음한 WAV를 순서대로 문장 1 · 2에 붙인다 (WAV가 하나면 문장 1만 · 셋째부터는 쓰지 않는다)
+    const turns = scenarioFor(CHECK_JOB, CHECK_AGE).turns
+    const speech: SpeechLine[] = recorded.slice(0, turns.length).map((r, i) => {
+      const text = turns[i]!.line.text
+      return { line: text, parts: [{ text, wav: r.path, retried: false }] }
+    })
     const req: AnalysisInput = {
       sessionId: paths.sessionId,
-      ageGroup: '6-7',
-      jobs,
-      lines: linesFor(jobs, '6-7').map((l) => l.text),
-      recordings: recorded.map((r) => r.path),
+      ageGroup: CHECK_AGE,
+      job: CHECK_JOB,
+      speech,
       scenario: mockScenario,
     }
     setIpcReq(req)
@@ -248,8 +269,13 @@ export function D01HardwareCheck(): ReactNode {
   const applied = camSettings
   const meets300dpi = applied?.height ? applied.height >= CUT.height : false
 
+  /** 받아쓰기 점검 패널에 넘기는 녹음 경로 — 녹음이 늘 때만 새 배열이 된다 */
+  const recordedPaths = useMemo(() => recorded.map((r) => r.path), [recorded])
+  /** analysis.run에 붙는 녹음 수 — 타깃 문장이 2개라 앞의 2건까지 */
+  const ipcCheckCount = Math.min(recorded.length, 2)
+
   return (
-    <Screen id="D-01" note="스파이크 ①">
+    <Screen id="D-01" note="개발 전용">
       <div className="hw">
         {/* ── 1. 장치 ─────────────────────────────── */}
         <section className="panel">
@@ -412,8 +438,8 @@ export function D01HardwareCheck(): ReactNode {
               <dd>
                 {applied
                   ? meets300dpi
-                    ? `충족 (컷 1개 세로 ${CUT.height}px 필요)`
-                    : `⚠️ 부족 — 컷 1개에 세로 ${CUT.height}px 필요한데 ${applied.height}px`
+                    ? `충족 (사진 칸 1개 세로 ${CUT.height}px 필요 · 칸 좌표는 임시값)`
+                    : `⚠️ 부족 — 사진 칸 1개에 세로 ${CUT.height}px 필요한데 ${applied.height}px (칸 좌표는 임시값)`
                   : '—'}
               </dd>
             </dl>
@@ -529,7 +555,7 @@ export function D01HardwareCheck(): ReactNode {
                 <th>피크</th>
                 <th>무음</th>
                 <th>음도</th>
-                <th>판정</th>
+                <th>녹음 상태</th>
                 <th>DSP</th>
                 <th />
               </tr>
@@ -545,7 +571,7 @@ export function D01HardwareCheck(): ReactNode {
                     {r.quality ? `${Math.round(r.quality.silenceRatio * 100)}%` : '—'}
                   </td>
                   <td>{r.quality?.pitchSummary ?? '—'}</td>
-                  <td>{r.quality ? (r.quality.usable ? 'usable' : '⚠ 재시도') : '—'}</td>
+                  <td>{r.quality ? (r.quality.usable ? '쓸 수 있음' : '⚠ 다시 녹음') : '—'}</td>
                   <td>
                     {r.dsp.noiseSuppression || r.dsp.echoCancellation || r.dsp.autoGainControl
                       ? 'ON'
@@ -575,11 +601,14 @@ export function D01HardwareCheck(): ReactNode {
           </p>
         </section>
 
-        {/* ── IPC 연동 확인 (검수 ④) ─────────────── */}
+        {/* ── 받아쓰기 · 인식률 점검 (⚠️ 받아쓰기는 MOCK) ── */}
+        <SttCheckPanel recordings={recordedPaths} disabled={!!busy || capture.recording} />
+
+        {/* ── 분석 소요 시간 · IPC 확인 (⚠️ MOCK) ─── */}
         <section className="panel">
           <div className="panel__head">
-            <strong>IPC 연동 확인 — analysis.run</strong>
-            <span className="tag">진폭·무음·음도 실측 · 전사·음소는 MOCK</span>
+            <strong>분석 소요 시간 · IPC 확인 (MOCK) — analysis.run</strong>
+            <span className="tag">진폭 · 무음 · 음도 실측 · 관찰 결과 · 지연은 MOCK</span>
           </div>
 
           <div className="row" style={{ justifyContent: 'flex-start' }}>
@@ -588,14 +617,23 @@ export function D01HardwareCheck(): ReactNode {
               onClick={() => void onIpcCheck()}
               disabled={!!busy || capture.recording || recorded.length === 0}
             >
-              녹음 {recorded.length}건으로 호출
+              녹음 {ipcCheckCount}건으로 호출
             </button>
             {ipcRes && (
               <span className="hint">
-                응답 {ipcRes.elapsedMs.toLocaleString()}ms · speechFeatures {ipcRes.speechFeatures.length}건
+                분석 소요 시간 <b>{ipcRes.elapsedMs.toLocaleString()}ms</b> (MOCK 지연 포함) ·
+                speechFeatures {ipcRes.speechFeatures.length}건
               </span>
             )}
           </div>
+
+          <p className="hint">
+            녹음한 WAV를 순서대로 경찰 · 만 6세 이상 시나리오의 문장 1 · 2에 붙여 보낸다 (문장이 2개라
+            앞의 2건까지). 관찰 결과는 DevBar의 MOCK 분석 시나리오를 따른다.
+            <br />
+            ⚠️ 실제 분석 시간(SPEC T-15)은 <b>파이썬 분석 프로그램이 붙은 뒤에</b> 이 버튼으로 잴 수
+            있다 — 지금 보이는 시간은 가짜 지연이다. 영상 재생과 같이 돌 때 끊기는지도 그때 확인한다.
+          </p>
 
           {ipcErr && <p className="err">{ipcErr}</p>}
 

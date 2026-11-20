@@ -1,7 +1,9 @@
 /**
- * components/PrintTestPanel.tsx — D-01 인쇄 점검 (개발 전용)
+ * components/PrintTestPanel.tsx — D-01 [하드웨어 체크] 인쇄 점검 (개발 전용)
  *
- * 용지 설정 확인은 종이를 쓰지 않는다. 테스트 인쇄는 네컷과 같은 경로로 점검표 1장을 뽑는다.
+ * 용지 설정 확인은 종이를 쓰지 않는다. 테스트 인쇄는 네컷과 같은 경로로 점검표 1장을 뽑는다 —
+ * 가로 1844 × 1240 점검표(photo/printTestChart.ts) → (6x4) 인쇄 페이지 PDF에 1:1 → 사일런트 인쇄.
+ * 돌리지도 늘리지도 않는다 (SPEC §4-1 · V2_PLAN §4).
  */
 
 import { useEffect, useState, type ReactNode } from 'react'
@@ -144,6 +146,9 @@ export function PrintTestPanel({
 
       <p className="hint">
         뽑은 종이를 자와 함께 사진으로 남기세요. 눈금 막대와 사방 테두리로 배율과 잘림을 판독합니다.
+        <br />
+        가로 1:1 인쇄 — 눈금 막대는 가로 10.0cm · 세로 5.0cm로 재져야 합니다. 종이는 가운데 6×4in만
+        남으므로 검정 테두리는 잘리고 빨강부터 보이는 것이 예상값입니다 (실물 확인 전).
       </p>
     </section>
   )

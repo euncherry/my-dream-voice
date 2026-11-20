@@ -1,34 +1,46 @@
 /*
- * capture.css — P-06[촬영]
+ * capture.css — P-06 [촬영]
  *
- * 색·크기는 tokens.css와 같은 임시값이다 (프레임·포즈 아트 미제작).
- * 프리뷰 비율 5:7은 네컷 한 칸(525×735)과 같아야 한다 — composeFourCut.ts
+ * ⚠️ 색 · 글꼴 · 크기 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다. 지금은 구조만.
+ *    값은 tokens.css 변수로 쓴다.
+ *
+ * 구성 (스케치 p06-shoot.svg): 왼쪽 큰 라이브뷰 · 오른쪽 직업 이름 / 컷 진행 / 프레임 미리보기.
+ * 라이브뷰의 비율은 네컷 사진 칸과 같아야 한다 — P06Capture.tsx가 CELL_ASPECT를 --p06-aspect로 넘긴다.
+ * 1280×800 창과 1920×1080 모두 스크롤 없이 들어가도록 높이 · 너비 가운데 먼저 닿는 쪽에 맞춘다.
  */
 
-.capture {
+.p06 {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gap-xl);
+  align-items: stretch;
+  gap: var(--gap-lg);
 }
 
-.capture__stage {
+/* 라이브뷰가 쓸 수 있는 자리 — 이 안에서 비율을 지키며 가장 크게 넣는다 */
+.p06-stagebox {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+
+.p06-stage {
   position: relative;
-  height: 100%;
-  aspect-ratio: 5 / 7;
-  flex: 0 0 auto;
+  width: min(100cqw, calc(100cqh * var(--p06-aspect)));
+  aspect-ratio: var(--p06-aspect);
   overflow: hidden;
   background: #000;
-  border: 12px solid var(--c-line);
+  border: 1px solid var(--c-line);
   border-radius: var(--radius);
 }
 
-/* composeFourCut의 중앙 크롭과 같은 결과가 나와야 한다.
-   거울처럼 보여주기만 한다 — 저장·인쇄되는 사진은 뒤집지 않는다 */
-.capture__image {
+/* 네컷 합성(composeFourCut)의 가운데 잘라내기와 같은 결과가 나와야 한다.
+   거울처럼 보여 주기만 한다 — 저장 · 인쇄 · 녹화되는 것은 뒤집지 않는다 */
+.p06-live {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -37,100 +49,141 @@
   transform: scaleX(-1);
 }
 
-.capture__result {
-  height: 100%;
-  aspect-ratio: 2 / 3;
-  flex: 0 0 auto;
-  border-radius: 8px;
-}
-
-.capture__job {
-  position: absolute;
-  top: var(--gap-sm);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: var(--gap-xs) var(--gap-md);
-  border-radius: 999px;
-  background: rgba(6, 8, 12, 0.72);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.capture__count {
+/* 카운트다운 — 큰 숫자 + "N초 뒤에 찍어요" */
+.p06-count {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 200px;
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
-  animation: capture-pop 1s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+  pointer-events: none;
 }
 
-.capture__notice {
+.p06-count__num {
+  display: grid;
+  place-items: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  background: rgba(6, 8, 12, 0.6);
+  font-size: 18cqh;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.p06-count__text {
+  padding: var(--gap-xs) var(--gap-md);
+  border-radius: 999px;
+  background: rgba(6, 8, 12, 0.6);
+  font-size: var(--fs-heading);
+  font-weight: 700;
+}
+
+/* 포즈 가이드 자리 (아트 미제작) */
+.p06-pose {
+  position: absolute;
+  left: 50%;
+  bottom: var(--gap-md);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* "카메라를 켜고 있어요…" · "사진을 만들고 있어요…" */
+.p06-notice {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   padding: var(--gap-md);
   background: rgba(6, 8, 12, 0.6);
+  font-size: var(--fs-heading);
   font-weight: 700;
 }
 
-.capture__flash {
+/* 촬영 플래시 연출 */
+.p06-flash {
   position: absolute;
   inset: 0;
   background: #fff;
-  animation: capture-flash 400ms ease-out forwards;
+  pointer-events: none;
+  animation: p06-flash 400ms ease-out forwards;
 }
 
-.capture__side {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--gap-md);
-  width: 400px;
-  flex: 0 1 auto;
-}
-
-.capture__thumbs {
-  display: grid;
-  grid-template-columns: repeat(2, 120px);
-  gap: var(--gap-sm);
-}
-
-.capture__thumb {
-  aspect-ratio: 5 / 7;
-  overflow: hidden;
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-line);
-  border-radius: 8px;
-}
-
-.capture__thumb img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-@keyframes capture-pop {
-  from {
-    transform: scale(1.4);
-    opacity: 0.4;
-  }
-  30% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes capture-flash {
+@keyframes p06-flash {
   from {
     opacity: 0.95;
   }
   to {
     opacity: 0;
   }
+}
+
+/* 카메라 실패 — 라이브뷰 자리에 [다시 시도] */
+.p06-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+  padding: var(--gap-md);
+}
+
+.p06-error__text {
+  margin: 0;
+  font-size: var(--fs-heading);
+  font-weight: 700;
+}
+
+/* 개발자용 상세 — 길어도 라이브뷰 자리를 넘지 않게 */
+.p06-error .devstrip {
+  max-width: 100%;
+}
+
+.p06-error__detail {
+  max-width: 100%;
+  word-break: break-all;
+}
+
+/* 오른쪽 — 직업 이름 · 컷 진행 · 프레임 미리보기 */
+.p06-side {
+  flex: 0 0 clamp(280px, 28%, 460px);
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+}
+
+.p06-job {
+  font-size: var(--fs-heading);
+  font-weight: 800;
+}
+
+.p06-progress {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* FramePreview는 부모 너비에 맞춰 그려진다 */
+.p06-frame {
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.p06-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-xs);
 }

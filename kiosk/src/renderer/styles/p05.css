@@ -1,0 +1,308 @@
+/*
+ * p05.css — P-05 [발화]
+ *
+ * ⚠️ 색 · 글꼴 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다.
+ *    지금은 구조와 동작만 확인한다. 값은 tokens.css의 변수로만 쓴다.
+ *
+ * 구성 (구성 스케치 p05-speak · p05-record · p05-think · p05-retry 기준)
+ *   위   — 직업 이름 · 문장 진행 표시
+ *   가운데 — 시나리오 장면 (위) + "내 차례!" 패널 (아래)
+ *   아래 — 개발용 띠 (왼쪽 정렬 — 오른쪽 아래 DevBar와 겹치지 않게)
+ *
+ * 1280×800 · 1920×1080 모두 스크롤 없이 들어가도록 높이는 전부 flex 비율로 나눈다.
+ */
+
+.p05 {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+/* ── 위: 직업 이름 · 문장 1 / 2 · (만 4세) 어절 점 ── */
+
+.p05-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+}
+
+.p05-job {
+  font-size: var(--fs-heading);
+  font-weight: 800;
+}
+
+.p05-progress {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--c-text-dim);
+}
+
+.p05-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-xs);
+}
+
+.p05-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--c-line);
+}
+
+.p05-dot--done {
+  background: var(--c-text-dim);
+  border-color: var(--c-text-dim);
+}
+
+.p05-dot--now {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+
+/* ── 가운데: 장면 + 아이 차례 ── */
+
+.p05-main {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.p05-scene {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.p05-scene__art {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+}
+
+.p05-scene__art > .ph {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.p05-narration {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.p05-tags {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap-xs);
+}
+
+/* "내 차례!" 패널 — .panel 위에 얹는다 */
+.p05-turn {
+  flex: 1.3 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  padding: var(--gap-sm) var(--gap-md);
+  text-align: center;
+  overflow: hidden;
+}
+
+.p05-turn__head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+
+.p05-turn__label {
+  font-size: var(--fs-heading);
+  font-weight: 800;
+  color: var(--c-accent);
+}
+
+.p05-turn__row {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: var(--gap-md);
+}
+
+.p05-turn__body {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xs);
+}
+
+.p05-turn__side {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 자리는 지키고 보이지만 않게 — 단계가 바뀌어도 배치가 흔들리지 않는다 */
+.p05-off {
+  visibility: hidden;
+}
+
+.p05-status {
+  margin: 0;
+  color: var(--c-text-dim);
+}
+
+/* 자막 = 타깃 문장(구간) — 대형 */
+.p05-line {
+  margin: 0;
+  font-size: min(var(--fs-line), 3.4vw);
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+/* 만 4세 — 어절로 끊어 말하는 동안 문장 전체를 작게 */
+.p05-whole {
+  margin: 0;
+  font-size: var(--fs-caption);
+  color: var(--c-text-dim);
+}
+
+/* 녹음 멘트 자막 */
+.p05-cue {
+  margin: 0;
+  font-weight: 700;
+  color: var(--c-accent-2);
+}
+
+/* 캐릭터 멘트 ("잘 듣고 있어요…" · "한 번 더 말해 볼까요?") */
+.p05-say {
+  margin: 0;
+  font-size: var(--fs-heading);
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+/* SD 캐릭터 자리 */
+.p05-char {
+  flex: 0 0 28%;
+  min-height: 0;
+  display: flex;
+}
+
+.p05-char > .ph {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* 녹음 중 표시 — 마이크 아이콘 + 레벨 미터 */
+.p05-rec {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+  width: 100%;
+}
+
+.p05-rec__label {
+  font-weight: 700;
+  color: var(--c-danger);
+}
+
+.p05-meter {
+  flex: 0 1 320px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--c-line);
+  background: var(--c-surface-2);
+  overflow: hidden;
+}
+
+.p05-meter__fill {
+  height: 100%;
+  background: var(--c-accent);
+  transition: width 60ms linear;
+}
+
+/* 버튼 — 그림 자리 + 큰 글자 (PAGE_SPEC §2-1) */
+.p05-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--gap-xs) var(--gap-md);
+}
+
+.p05-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap-md);
+}
+
+/* 기다리는 동안 진행 표시 (PAGE_SPEC §2-5) */
+.p05-wait {
+  display: inline-flex;
+  gap: var(--gap-xs);
+}
+
+.p05-wait i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c-text-dim);
+  animation: p05-wait 1.2s ease-in-out infinite;
+}
+
+.p05-wait i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.p05-wait i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes p05-wait {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* ── 아래: 개발용 띠 ── */
+
+.p05-dev {
+  flex: 0 0 auto;
+  min-height: 58px;
+  max-width: 72%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gap-xs);
+}

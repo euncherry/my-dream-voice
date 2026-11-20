@@ -1,27 +1,22 @@
 /**
- * src/main/pdf.ts — printToPDF
+ * src/main/pdf.ts — printToPDF (네컷 인쇄용 PDF만)
  *
- * SPIKE_PLAN ④ 완료 기준
- *   - 리포트 HTML 템플릿에 데이터만 주입하면 내용이 바뀐다 (템플릿 1개, 하드코딩 없음)
- *   - printToPDF로 A4 PDF가 생성·저장된다
- *   - 한글 폰트가 깨지지 않는다 (⚠️ 웹폰트 CDN 금지 — 폰트 파일 로컬 포함)
+ * 합성한 네컷 PNG(가로 1844×1240)를 드라이버 인쇄 페이지(6.15×4.13in 가로)에 **1:1로** 얹는다.
+ * 돌리지도 늘리지도 않는다 (SPEC §4-1 — 2026-11-18 가로 네컷).
+ * 인쇄는 pdf-to-printer로 이 PDF를 보내므로(main/print.ts), 규격은 여기서 확정한다.
  *
- * 두 종류를 만든다.
- *   1) 보호자 리포트 PDF (A4)          → report.html?#data=... 를 렌더
- *   2) 인쇄용 네컷 PDF (4×6 풀블리드)   → 합성 PNG를 드라이버 인쇄 페이지에 돌려 얹음
- *      (⑤ 인쇄는 pdf-to-printer로 PDF를 보내므로, 규격은 여기서 확정한다)
+ * 보호자 리포트 PDF는 v2부터 백엔드 서버가 만든다 — 여기에는 없다.
  */
 
 import { BrowserWindow } from 'electron'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { rendererEntry } from './index'
-import { pathsFor } from './storage'
-import { PRINT_PAGE_INCHES } from '../shared/constants'
-import type { RenderPhotoPdfRequest, RenderReportPdfRequest, SavedFile } from '../shared/types'
+import { assertSessionId, insideDataRoot, pathsFor } from './storage'
+import { FOURCUT, PRINT_PAGE_INCHES } from '../shared/constants'
+import type { RenderPhotoPdfRequest, SavedFile } from '../shared/types'
 
-/** 리포트/사진 페이지가 렌더를 마쳤는지 폴링 */
+/** 페이지가 렌더를 마쳤는지 폴링 */
 async function waitForRenderReady(win: BrowserWindow, timeoutMs = 10_000): Promise<void> {
   const deadline = Date.now() + timeoutMs
   for (;;) {
@@ -53,48 +48,12 @@ async function withOffscreenWindow<T>(
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// 1) 보호자 리포트 PDF (A4)
-// ────────────────────────────────────────────────────────────
-
-export async function renderReportPdf(req: RenderReportPdfRequest): Promise<SavedFile> {
-  const paths = pathsFor(req.sessionId)
-  await mkdir(paths.outputDir, { recursive: true })
-  const outPath = join(paths.outputDir, 'report.pdf')
-
-  // 데이터 주입은 URL 해시로 — 템플릿은 데이터의 순수 함수로 유지한다.
-  const hash = `#data=${encodeURIComponent(JSON.stringify(req.result))}`
-  const entry = rendererEntry('report.html')
-
-  const pdf = await withOffscreenWindow({ width: 794, height: 1123 }, async (win) => {
-    if (entry.url) await win.loadURL(entry.url + hash)
-    else await win.loadFile(entry.file!, { hash: hash.slice(1) })
-
-    await waitForRenderReady(win)
-
-    return win.webContents.printToPDF({
-      pageSize: 'A4',
-      printBackground: true,
-      // 여백은 리포트 CSS(@page)에서 관리한다
-      preferCSSPageSize: true,
-    })
-  })
-
-  await writeFile(outPath, pdf)
-  return { path: outPath, bytes: pdf.length }
-}
-
-// ────────────────────────────────────────────────────────────
-// 2) 인쇄용 네컷 PDF (4×6 풀블리드)
-// ────────────────────────────────────────────────────────────
-
 /**
  * 합성 PNG 하나만 얹은 최소 HTML.
  * 웹폰트·외부 리소스 없음 (오프라인) — 이미지도 file:// 로컬 참조.
  *
  * 사일런트 인쇄는 PDF를 확대 없이 용지 왼쪽 위부터 얹는다 (DP-DS620 실기 확인).
- * 세로 페이지를 그대로 보내면 가로 용지에서 아래가 잘리므로, 페이지를 용지와 같게 만들고
- * 세로 네컷을 90° 돌려 얹는다. 이 페이지가 다시 돌지 않도록 print.ts가 인쇄 방향을 고정한다.
+ * 페이지를 용지와 같게 만들고 가로 네컷을 그대로 채운다. 인쇄 방향은 print.ts가 landscape로 고정한다.
  */
 function photoPageHtml(imageUrl: string): string {
   const { width: w, height: h } = PRINT_PAGE_INCHES
@@ -107,13 +66,12 @@ function photoPageHtml(imageUrl: string): string {
   .page { position: relative; width: ${w}in; height: calc(${h}in - 1px); overflow: hidden; }
   img {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: ${h}in;
-    height: ${w}in;
-    /* 비율이 어긋나도 여백이 생기지 않도록 채운다 (풀블리드) */
+    top: 0;
+    left: 0;
+    width: ${w}in;
+    height: ${h}in;
+    /* 캔버스(1844×1240)와 페이지 비율이 같아 사실상 1:1이다. 어긋나도 여백 없이 채운다 (풀블리드) */
     object-fit: cover;
-    transform: translate(-50%, -50%) rotate(90deg);
   }
 </style>
 <div class="page"><img id="shot" src="${imageUrl}"></div>
@@ -126,25 +84,35 @@ function photoPageHtml(imageUrl: string): string {
 }
 
 export async function renderPhotoPdf(req: RenderPhotoPdfRequest): Promise<SavedFile> {
+  // 렌더러가 넘긴 값 — 세션 폴더 안의 이미지만 받는다
+  assertSessionId(req.sessionId, 'renderPhotoPdf')
+  const imagePath = insideDataRoot(req.imagePath, 'renderPhotoPdf')
+  if (!/\.(png|jpe?g)$/i.test(imagePath)) {
+    throw new Error(`renderPhotoPdf: 이미지 파일이 아닙니다 (${req.imagePath})`)
+  }
+
   const paths = pathsFor(req.sessionId)
   await mkdir(paths.outputDir, { recursive: true })
 
   const htmlPath = join(paths.outputDir, '_print_photo.html')
-  await writeFile(htmlPath, photoPageHtml(pathToFileURL(req.imagePath).href), 'utf8')
+  await writeFile(htmlPath, photoPageHtml(pathToFileURL(imagePath).href), 'utf8')
 
   const outPath = join(paths.outputDir, 'photo_4x6.pdf')
 
-  const pdf = await withOffscreenWindow({ width: 1200, height: 1800 }, async (win) => {
-    await win.loadFile(htmlPath)
-    await waitForRenderReady(win)
+  const pdf = await withOffscreenWindow(
+    { width: FOURCUT.width, height: FOURCUT.height },
+    async (win) => {
+      await win.loadFile(htmlPath)
+      await waitForRenderReady(win)
 
-    return win.webContents.printToPDF({
-      pageSize: { ...PRINT_PAGE_INCHES },
-      margins: { top: 0, bottom: 0, left: 0, right: 0 },
-      printBackground: true,
-      preferCSSPageSize: true,
-    })
-  })
+      return win.webContents.printToPDF({
+        pageSize: { ...PRINT_PAGE_INCHES },
+        margins: { top: 0, bottom: 0, left: 0, right: 0 },
+        printBackground: true,
+        preferCSSPageSize: true,
+      })
+    },
+  )
 
   await writeFile(outPath, pdf)
   return { path: outPath, bytes: pdf.length }

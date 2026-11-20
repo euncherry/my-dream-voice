@@ -18,30 +18,50 @@ import {
 import { openCameraFolder, runCameraSelfTest } from './cameraSelfTest'
 import { getMainWindow } from './index'
 import { runAnalysis } from './mock/analysis'
-import { renderPhotoPdf, renderReportPdf } from './pdf'
+import { mockKakaoLogin, mockServerGet, mockServerSet } from './mock/server'
+import { transcribe } from './mock/stt'
+import { renderPhotoPdf } from './pdf'
 import { listPrinters, printSilent, readPrinterPaper } from './print'
+import { closeSession, linkStatus, openSession, sendReport, submitEmail } from './server'
 import {
   beginSession,
+  deleteWav,
   getDataRoot,
+  insideDataRoot,
   purgeSession,
   readPhoto,
+  readVideo,
   readWav,
   savePhoto,
+  saveVideo,
   saveWav,
 } from './storage'
-import { uploadArtifact } from './upload'
 import {
   IPC,
   type AnalysisInput,
   type CameraCaptureRequest,
   type EnvInfo,
+  type MockServerState,
+  type PrintMode,
   type PrintRequest,
   type RenderPhotoPdfRequest,
-  type RenderReportPdfRequest,
   type SavePhotoRequest,
+  type SaveVideoRequest,
   type SaveWavRequest,
-  type UploadRequest,
+  type SendReportRequest,
+  type SttRequest,
+  type SubmitEmailRequest,
 } from '../shared/types'
+
+/**
+ * P-07 인쇄 기본값 — 카메라와 같은 규칙이다.
+ * 설치판은 실제 인쇄, 개발 실행(npm run dev)은 가짜 인쇄(종이를 쓰지 않는다). MDV_PRINT=real|fake 로 덮어쓴다.
+ */
+function defaultPrintMode(): PrintMode {
+  const forced = process.env['MDV_PRINT']
+  if (forced === 'real' || forced === 'fake') return forced
+  return app.isPackaged ? 'real' : 'fake'
+}
 
 function envInfo(): EnvInfo {
   return {
@@ -51,6 +71,8 @@ function envInfo(): EnvInfo {
     platform: process.platform,
     arch: process.arch,
     dataRoot: getDataRoot(),
+    packaged: app.isPackaged,
+    printMode: defaultPrintMode(),
   }
 }
 
@@ -65,24 +87,31 @@ export function registerIpcHandlers(): void {
     getMainWindow()?.setFullScreen(on)
   })
   ipcMain.handle(IPC.SYSTEM_REVEAL_PATH, (_e, path: string) => {
-    if (!path.startsWith(getDataRoot())) throw new Error('세션 폴더 밖은 열 수 없습니다')
-    shell.showItemInFolder(path)
+    shell.showItemInFolder(insideDataRoot(path, 'revealPath'))
   })
 
   // ── 세션 폴더 ──
   ipcMain.handle(IPC.SESSION_BEGIN, (_e, prefix?: string) => beginSession(prefix))
   ipcMain.handle(IPC.SESSION_PURGE, (_e, sessionId: string) => purgeSession(sessionId))
 
-  // ── ③ 녹음 (리샘플·WAV 작성은 메인에서 — CLAUDE.md 금지사항 2) ──
+  // ── 녹음 (리샘플·WAV 작성은 메인에서 — CLAUDE.md 금지사항 2) ──
   ipcMain.handle(IPC.RECORDING_SAVE_WAV, (_e, req: SaveWavRequest) => saveWav(req))
   ipcMain.handle(IPC.RECORDING_READ_WAV, (_e, path: string) => readWav(path))
+  ipcMain.handle(IPC.RECORDING_DELETE_WAV, (_e, path: string) => deleteWav(path))
 
-  // ── ② 촬영 ──
+  // ── 받아쓰기 (⚠️ MOCK — src/main/mock/stt.ts) ──
+  ipcMain.handle(IPC.STT_TRANSCRIBE, (_e, req: SttRequest) => transcribe(req))
+
+  // ── 촬영 · 네컷 ──
   ipcMain.handle(IPC.PHOTO_SAVE, (_e, req: SavePhotoRequest) => savePhoto(req))
   ipcMain.handle(IPC.PHOTO_READ, (_e, path: string) => readPhoto(path))
   ipcMain.handle(IPC.PHOTO_RENDER_PDF, (_e, req: RenderPhotoPdfRequest) => renderPhotoPdf(req))
 
-  // ── ② 카메라 사이드카 ──
+  // ── 촬영 장면 영상 (기기 안에만) ──
+  ipcMain.handle(IPC.VIDEO_SAVE, (_e, req: SaveVideoRequest) => saveVideo(req))
+  ipcMain.handle(IPC.VIDEO_READ, (_e, path: string) => readVideo(path))
+
+  // ── 카메라 사이드카 ──
   ipcMain.handle(IPC.CAMERA_STATUS, () => cameraStatus())
   ipcMain.handle(IPC.CAMERA_CONNECT, () => cameraConnect())
   ipcMain.handle(IPC.CAMERA_LIVE_START, () => cameraStartLiveView())
@@ -92,17 +121,30 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IPC.CAMERA_SELF_TEST, () => runCameraSelfTest())
   ipcMain.handle(IPC.CAMERA_OPEN_FOLDER, (_e, which: 'test' | 'logs') => openCameraFolder(which))
 
-  // ── 분석 (⚠️ MOCK — src/main/mock/analysis.ts) ──
+  // ── 정밀 분석 (⚠️ MOCK — src/main/mock/analysis.ts) ──
   ipcMain.handle(IPC.ANALYSIS_RUN, (_e, req: AnalysisInput) => runAnalysis(req))
 
-  // ── ④ 리포트 PDF ──
-  ipcMain.handle(IPC.REPORT_RENDER_PDF, (_e, req: RenderReportPdfRequest) => renderReportPdf(req))
+  // ── 인쇄 ──
+  ipcMain.handle(IPC.PRINT_SILENT, (_e, req: PrintRequest) => {
+    // 인쇄하는 것은 세션 폴더 안에서 만든 PDF뿐이다 (네컷 · D-01 점검표)
+    const pdfPath = insideDataRoot(req.pdfPath, 'print')
+    if (!pdfPath.toLowerCase().endsWith('.pdf')) throw new Error('print: PDF만 인쇄할 수 있습니다')
+    return printSilent({ ...req, pdfPath })
+  })
 
-  // ── ⑤ 인쇄 ──
-  ipcMain.handle(IPC.PRINT_SILENT, (_e, req: PrintRequest) => printSilent(req))
-
-  // ── ⑥ 업로드 ──
-  ipcMain.handle(IPC.UPLOAD_ARTIFACT, (_e, req: UploadRequest) => uploadArtifact(req))
+  // ── 백엔드 서버 (⚠️ 지금은 mock 응답 — src/main/server.ts) ──
+  ipcMain.handle(IPC.SERVER_OPEN_SESSION, () => openSession())
+  ipcMain.handle(IPC.SERVER_LINK_STATUS, (_e, sessionToken: string) => linkStatus(sessionToken))
+  ipcMain.handle(IPC.SERVER_SUBMIT_EMAIL, (_e, req: SubmitEmailRequest) => submitEmail(req))
+  ipcMain.handle(IPC.SERVER_SEND_REPORT, (_e, req: SendReportRequest) => sendReport(req))
+  ipcMain.handle(IPC.SERVER_CLOSE_SESSION, (_e, sessionToken: string) => closeSession(sessionToken))
+  ipcMain.handle(IPC.SERVER_MOCK_GET, () => mockServerGet())
+  ipcMain.handle(IPC.SERVER_MOCK_SET, (_e, state: Partial<MockServerState>) =>
+    mockServerSet(state),
+  )
+  ipcMain.handle(IPC.SERVER_MOCK_KAKAO_LOGIN, (_e, sessionToken: string) =>
+    mockKakaoLogin(sessionToken),
+  )
 }
 
 export function unregisterIpcHandlers(): void {
