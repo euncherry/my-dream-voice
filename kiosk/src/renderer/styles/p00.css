@@ -88,15 +88,16 @@
 }
 
 .p00-start__label {
-  /* 둥근바람은 글자가 줄 상자 가운데보다 조금 아래에 놓인다 — 5px 올려 동그라미와 가운데를 맞춘다 */
+  /* 학교안심 둥근미소는 글자가 줄 상자 가운데보다 조금 위에 놓인다 — 2px 내려 동그라미와 가운데를 맞춘다 */
   position: relative;
-  top: -5px;
-  font-size: 100px;
-  font-weight: 800;
+  top: 2px;
+  font-family: var(--d-font-button);
+  font-size: 104px;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.075em;
   /* 마지막 글자 뒤에 붙는 자간은 빼서 가운데 맞춤이 어긋나지 않게 */
-  margin-right: -0.06em;
+  margin-right: -0.075em;
 }
 
 .p00-start__arrow {

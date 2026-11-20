@@ -57,3 +57,28 @@
   font-style: normal;
   font-display: block;
 }
+
+/*
+ * 학교안심 둥근미소 (Hakgyoansim Dunggeunmiso) — 버튼 글자용 (2026-11-21 디자인 지정)
+ *   쓰는 곳: tokens.css 의 --d-font-button (P-00 [시작하기])
+ *
+ * 교육부 · 17개 시도교육청 · 한국교육학술정보원(KERIS) 배포. 받은 곳: 눈누(projectnoonnu/2408-5) 배포본 — 받은 파일 그대로다.
+ * 라이선스 요약 (산돌구름 안내 기준): SIL Open Font License — 상업적 이용 · 프로그램 탑재 · BI/CI · 수정 · 재배포 가능 / 글꼴 파일 유료 판매 금지
+ * ⚠️ 웹폰트 CDN을 쓰지 않는다 (오프라인 앱 · CLAUDE.md) — 디자인이 준 @font-face 의 CDN 주소 대신 파일을 여기 넣었다.
+ */
+
+@font-face {
+  font-family: 'SchoolSafetyRoundedSmile';
+  src: url('./fonts/HakgyoansimDunggeunmisoTTF-R.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'SchoolSafetyRoundedSmile';
+  src: url('./fonts/HakgyoansimDunggeunmisoTTF-B.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}

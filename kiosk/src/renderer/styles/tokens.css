@@ -56,6 +56,8 @@
   --d-white: #ffffff;
   /* 큰 글자용 글꼴 — 티머니 둥근바람 (fonts.css · 굵기 400 / 800) */
   --d-font-display: 'TMoneyDungunbaram', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
+  /* 버튼 글자용 글꼴 — 학교안심 둥근미소 (fonts.css · 굵기 400 / 700) */
+  --d-font-button: 'SchoolSafetyRoundedSmile', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
 }
 
 :root[data-orientation='portrait'] {
