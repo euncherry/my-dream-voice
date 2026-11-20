@@ -118,6 +118,7 @@
 
 /* ── 터치 안내 ──
    시안(40px)보다 작게 두고, 숨 쉬듯 진해졌다 흐려졌다를 되풀이한다 (2026-11-21 요청 — 터치 유도).
+   한 번 오가는 데 3.2초 (흐려지기 1.6초 · 돌아오기 1.6초), 가장 흐릴 때 불투명도 10% (= 투명도 90%).
    완전히 사라지지는 않는다. 줄 상자(위치 · 높이)는 그대로라 글자가 같은 자리 가운데에 놓인다 */
 .p00-hint {
   position: absolute;
@@ -132,7 +133,7 @@
   line-height: 60px;
   letter-spacing: 0.025em;
   color: var(--d-navy);
-  animation: p00-breathe 1.8s ease-in-out infinite;
+  animation: p00-breathe 3.2s ease-in-out infinite;
 }
 
 @keyframes p00-breathe {
@@ -141,7 +142,7 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.25;
+    opacity: 0.1;
   }
 }
 
