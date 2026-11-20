@@ -1,11 +1,11 @@
 <meta charset="utf-8">
-<title>마이 드림 보이스 화면 흐름도</title>
+<title>마이 드림 보이스 화면 흐름도 v2</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
-/* 레이아웃: 위에 노선도 같은 전체 지도 1장, 아래로 화면별 카드(캡처 + 행동표)가 이어지는 문서 */
+/* 레이아웃: 위에 노선도 같은 전체 지도 1장, 아래로 화면별 카드(캡처·스케치 + 행동표)가 이어지는 문서 */
 :root {
   --paper: #f5f5f6; --sheet: #ffffff; --ink: #1c1c1f; --ink-2: #63636b; --rule: #dedee2;
   --a: #0f7b5f; --b: #2f5fd0; --err: #c23b3b; --err-fill: #c23b3b; --warn: #a86a00;
@@ -52,10 +52,11 @@ dl { margin: 0; }
 .n-frame { fill: none; stroke: var(--rule); stroke-width: 1.5; }
 .node-b .n-frame { stroke: var(--b); stroke-width: 2; }
 .node-b .n-code { fill: var(--b); }
-.node-dev .n-frame { stroke-dasharray: 4 3; stroke: var(--ink-2); }
 .node:hover .n-frame { stroke-width: 3; }
 .n-err rect, .lg-err { fill: var(--err-fill); }
 .map .n-err text, .map .legend .lg-err-t { fill: #fff; font: 600 10px var(--mono); }
+.n-tag rect { fill: var(--warn-soft); }
+.map .n-tag text { fill: var(--warn); font: 600 10.5px var(--sans); }
 .l { fill: none; stroke-width: 2.25; }
 .l.ink { stroke: var(--ink-2); } .l.a { stroke: var(--a); } .l.b { stroke: var(--b); } .l.back { stroke: var(--ink-2); }
 .l.auto { stroke-dasharray: 6 5; }
@@ -64,6 +65,8 @@ dl { margin: 0; }
 .map .lbl-a { fill: var(--a); } .map .lbl-b { fill: var(--b); } .map .lbl-back { fill: var(--ink-2); font-weight: 500; }
 .map .note { font-size: 12.5px; fill: var(--ink-2); }
 .map .legend text { font-size: 13px; fill: var(--ink-2); }
+.grp { fill: none; stroke: var(--ink-2); stroke-width: 1.25; stroke-dasharray: 5 4; }
+.map .grp-t { font-size: 13px; font-weight: 700; fill: var(--ink-2); }
 .jump { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 14px; }
 .jump a { font: 600 13px var(--mono); text-decoration: none; padding: 4px 9px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); }
 .jump a:hover { border-color: var(--ink-2); }
@@ -74,18 +77,25 @@ dl { margin: 0; }
 .code { font-size: 15px; background: var(--ink); color: var(--sheet); padding: 2px 8px; border-radius: 4px; }
 .chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
 .chip-common { background: var(--neutral-soft); color: var(--ink-2); }
+.chip-a { background: var(--a-soft); color: var(--a); }
 .chip-b { background: var(--b-soft); color: var(--b); }
-.chip-dev { background: var(--warn-soft); color: var(--warn); }
-.chip-auto { background: var(--a-soft); color: var(--a); }
+.st { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 4px; border: 1px solid currentColor; }
+.st-new { color: var(--warn); }
+.st-chg { color: var(--ink); }
+.st-same { color: var(--ink-2); }
 .desc { max-width: 76ch; }
 .figs { display: grid; gap: 14px; }
 .figs > * { min-width: 0; }
 .figs-1 { grid-template-columns: minmax(0, 620px); }
 .figs-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .figs-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.figs-phone { grid-template-columns: repeat(3, minmax(0, 190px)); }
+.figs-print { grid-template-columns: minmax(0, 460px) minmax(0, 1fr); align-items: start; }
 .fig { margin: 0; display: grid; gap: 6px; align-content: start; }
 .fig figcaption { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.kind { font-weight: 600; color: var(--ink); }
 .shot { display: block; width: 100%; padding: 0; border: 1px solid var(--rule); border-radius: 4px; background: #101216; cursor: zoom-in; overflow: hidden; }
+.shot.wf { background: #fff; }
 .shot img { display: block; width: 100%; height: auto; }
 .tbl { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -94,20 +104,12 @@ td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); vertical-ali
 tr:last-child td { border-bottom: 0; }
 .scr td:first-child { width: 32%; font-weight: 500; }
 .scr td:last-child { width: 22%; white-space: nowrap; }
-#m-02 td:first-child { width: 20%; }
-#m-02 td:last-child { width: 40%; white-space: normal; }
+.wide td:first-child { width: 28%; }
+.wide td:last-child { width: auto; white-space: normal; }
 .go { text-decoration: none; color: var(--b); font-weight: 600; }
 .go:hover { text-decoration: underline; }
 .go .mono { font-size: 13px; }
 .stay, .none { color: var(--ink-2); }
-.err-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
-.err-grid > * { min-width: 0; }
-.reports { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); gap: 14px; }
-.reports .shot { background: #fff; }
-.pri { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
-.pri-high { background: var(--err-soft); color: var(--err); }
-.pri-mid { background: var(--warn-soft); color: var(--warn); }
-.pri-low { background: var(--neutral-soft); color: var(--ink-2); }
 .panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 22px; min-width: 0; }
 .panel td:first-child { font-weight: 500; white-space: nowrap; }
 .notes { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 76ch; }
@@ -117,9 +119,10 @@ tr:last-child td { border-bottom: 0; }
 .theme button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
 dialog { padding: 0; border: 0; background: transparent; max-width: 96vw; max-height: 96vh; }
 dialog::backdrop { background: rgba(8, 10, 14, .86); }
-dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; height: auto; cursor: zoom-out; }
+dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; height: auto; cursor: zoom-out; background: #fff; }
 @media (max-width: 760px) {
-  .figs-2, .figs-3, .err-grid { grid-template-columns: minmax(0, 1fr); }
+  .figs-2, .figs-3, .figs-print { grid-template-columns: minmax(0, 1fr); }
+  .figs-phone { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .scr { padding: 16px; }
   .panel { padding: 16px; }
   .scr td:last-child { white-space: normal; }
@@ -138,452 +141,525 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
 </div>
 <main class="wrap">
   <header>
-    <div class="eyebrow">USER FLOW · 키오스크 앱 v0.1.0</div>
+    <div class="eyebrow">USER FLOW · 기획 v2</div>
     <h1>마이 드림 보이스 화면 흐름도</h1>
-    <p class="lead">어느 화면에서 무엇을 하면 어느 화면으로 가는지 정리한 문서입니다. 키오스크 앱을 1920×1080 화면으로 직접 돌려 캡처했습니다. 개발 중인 지금 상태 그대로라서, 임시 표시와 개발용 버튼도 함께 보입니다.</p>
+    <p class="lead">어느 화면에서 무엇을 하면 어느 화면으로 가는지 정리한 문서입니다. 2026년 11월 16일 · 18일 · 19일 · 20일에 바뀐 기획을 반영했습니다. 바뀌지 않은 화면은 지금 앱을 1920×1080으로 캡처한 그림이고, 새로 생기거나 크게 바뀐 화면은 구성 스케치입니다. 둘 다 디자인 전 임시 모습이라, 배치와 색은 디자인에서 새로 정합니다.</p>
     <dl class="facts">
-      <div><dt>이런 문서를 부르는 이름</dt><dd><b>유저 플로우(User Flow)</b>, 한국어로 화면 흐름도입니다. 실제 화면을 붙인 형태는 <b>와이어플로우(Wireflow)</b>라고 합니다.</dd></div>
-      <div><dt>두 가지 체험 경로</dt><dd><b style="color:var(--a)">A모드</b>는 네컷 사진만 찍습니다. <b style="color:var(--b)">B모드</b>는 목소리 분석과 보호자 리포트까지 받습니다.</dd></div>
-      <div><dt>기준 시점</dt><dd>2026년 11월 4일, 11월 3일 22:15에 빌드한 앱으로 캡처했습니다.</dd></div>
+      <div><dt>두 가지 체험 경로</dt><dd><b style="color:var(--a)">A모드</b>는 네컷 사진만 찍습니다. <b style="color:var(--b)">B모드</b>는 고른 직업의 시나리오를 따라 문장 2개를 말하고, 보호자가 목소리 리포트를 메일로 받습니다. 경로는 모드 선택에서 갈리고, 동의는 B모드만 받습니다. B모드는 동의 바로 다음에 <b>보호자를 먼저 연결</b>합니다 (카카오 로그인 또는 이메일 입력).</dd></div>
+      <div><dt>그림 보는 법</dt><dd><b>앱 캡처</b>는 지금 앱 화면 그대로입니다. 위쪽 상태 바(화면 번호는 v1 기준)와 오른쪽 아래 버튼 3개는 개발용입니다. <b>구성 스케치</b>는 들어갈 요소와 위치만 잡은 그림입니다.</dd></div>
+      <div><dt>화면 표시</dt><dd><span class="st st-new">새 화면</span> 새로 만듦 · <span class="st st-chg">바뀜</span> 위치나 내용이 바뀜 · <span class="st st-same">그대로</span> 순서만 바뀌거나 그대로</dd></div>
     </dl>
   </header>
+
+  <section>
+    <div class="section-head">
+      <h2>무엇이 바뀌었나</h2>
+      <p class="sub">처음 흐름도(v1)를 보신 분을 위한 요약입니다.</p>
+    </div>
+    <div class="panel tbl"><table>
+      <thead><tr><th>항목</th><th>v1</th><th>v2 (지금)</th></tr></thead>
+      <tbody>
+        <tr><td>동의</td><td>연령 다음 (B) · 직업 다음 (A)</td><td><b>B모드만</b>, 모드 선택 바로 다음. 체크 3개를 모두 해야 시작. A모드는 동의 화면 없이 바로 직업 선택</td></tr>
+        <tr><td>보호자 연결</td><td>체험 끝, 결과 화면의 QR로</td><td><b>체험 전, 동의 바로 다음</b> (B). 카카오 로그인(QR) 또는 이메일 직접 입력. 여기서 세션이 열리고 인쇄가 끝나면 닫힌다</td></tr>
+        <tr><td>연령</td><td>나이(만 4~8세 이상 5개) + 이름 입력</td><td><b>만 4세 · 만 5세 · 만 6세 이상</b> 중 하나 (이름 받지 않음)</td></tr>
+        <tr><td>순서</td><td>직업 → 연령</td><td><b>연령 → 직업</b></td></tr>
+        <tr><td>직업</td><td>8개 중 4개</td><td><b>6개 중 1개</b>. 직업 카드가 그 직업의 네컷 프레임 그림</td></tr>
+        <tr><td>발화</td><td>고른 직업 4개의 대사 4개</td><td>고른 직업의 <b>짧은 시나리오</b>를 따라 <b>타깃 문장 2개</b>를 말한다. 문장을 <b>먼저 들려주고 따라 말하기</b> (만 4세는 어절마다) · 녹음은 버튼으로 · 인식 50% 미만이면 한 번 더</td></tr>
+        <tr><td>촬영</td><td>컷마다 5초 카운트다운</td><td><b>7초 간격</b>으로 4컷. 네 컷 모두 같은 직업 프레임</td></tr>
+        <tr><td>네컷 사진</td><td>세로, 칸마다 다른 직업</td><td><b>가로</b> — 사진 2×2 + 오른쪽 띠(로고). QR 없음</td></tr>
+        <tr><td>추천 직업</td><td>결과 화면과 네컷에 표시</td><td><b>없음</b>. 직업은 역할놀이 소재로만 쓴다</td></tr>
+        <tr><td>분석 중 · 결과 · 인쇄 · QR</td><td>화면 4개</td><td><b>[분석 및 프린트] 한 화면</b>. 촬영 장면 영상을 다시 보여준다 (QR은 보호자 연결 화면으로 옮김)</td></tr>
+        <tr><td>아이가 보는 결과</td><td>긍정 문구 + 추천 직업</td><td>A: 긍정 문구 + SD 캐릭터 · B: <b>리포트 미리보기</b> (관찰 결과는 가림)</td></tr>
+        <tr><td>끝</td><td>종료 화면</td><td>5초 뒤 저절로 닫히는 완료 창</td></tr>
+        <tr><td>QR</td><td>A·B 모두, 화면에만</td><td><b>B만, 보호자 연결 화면에만</b>. 분석 및 프린트 화면 · 인쇄물에는 없다</td></tr>
+        <tr><td>보호자가 받는 법</td><td>QR → PDF 바로 받기</td><td>체험 전 <b>카카오 로그인</b> 또는 <b>이메일 직접 입력</b> → 체험이 끝나면 그 <b>이메일</b>로 리포트</td></tr>
+      </tbody>
+    </table></div>
+  </section>
 
   <section>
     <div class="section-head">
       <h2>전체 지도</h2>
       <p class="sub">화면을 누르면 그 화면의 설명으로 이동합니다.</p>
     </div>
-    <div class="mapbox"><svg class="map" viewBox="0 0 1150 680" role="img" aria-label="화면 이동 전체 지도. P-00, P-01, P-02 다음 A모드는 P-06으로 바로 가고, B모드는 P-03, P-04, P-05를 거쳐 P-06으로 갑니다. A모드는 P-09로, B모드는 P-07, P-08을 거쳐 P-09로 갑니다. 이후 P-10, P-11을 지나 P-00으로 돌아옵니다.">
+    <div class="mapbox"><svg class="map" viewBox="0 0 1150 690" role="img" aria-label="화면 이동 전체 지도. P-00 대기, P-01 모드 선택에서 경로가 갈립니다. B모드는 P-02 동의, P-02a 보호자 연결(카카오 QR 또는 이메일 직접 입력으로 세션이 열림), P-03 연령, P-04 직업, P-05 발화를 거쳐 P-06 촬영으로 가고, A모드는 동의와 보호자 연결 없이 P-04 직업으로 가서 바로 P-06 촬영으로 갑니다. 촬영 뒤 P-07 분석 및 프린트, M-03 완료 창을 지나 세션을 닫고 5초 뒤 P-00으로 돌아옵니다. 보호자 연결 화면에서 카카오를 고르면 보호자가 폰으로 QR을 찍어 카카오 로그인을 하고, 체험이 끝나면 메일로 리포트를 받습니다. 연결이 안 되면 사진만 찍기로 A모드 직업 선택으로 갑니다.">
   <defs>
     <marker id="a-ink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-ink"/></marker><marker id="a-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-a"/></marker><marker id="a-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-b"/></marker><marker id="a-back" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-back"/></marker>
   </defs>
-  <path d="M183 89 H207" class="l ink" marker-end="url(#a-ink)"/>
-  <path d="M375 89 H399" class="l ink" marker-end="url(#a-ink)"/>
-  <path d="M567 89 H591" class="l ink" marker-end="url(#a-ink)"/>
-  <path d="M640 137 V174 H100 V258" class="l b" marker-end="url(#a-b)"/>
-  <text class="lbl lbl-b" x="272" y="166">B · 목소리도 분석받기</text>
-  <path d="M712 137 V258" class="l a" marker-end="url(#a-a)"/>
-  <text class="lbl lbl-a" x="720" y="190">A · 사진만 찍기</text>
-  <path d="M183 331 H207" class="l b" marker-end="url(#a-b)"/>
-  <path d="M375 331 H399" class="l b" marker-end="url(#a-b)"/>
-  <path d="M567 331 H591" class="l b" marker-end="url(#a-b)"/>
-  <path d="M759 331 H783" class="l b auto" marker-end="url(#a-b)"/>
-  <path d="M951 331 H975" class="l b auto" marker-end="url(#a-b)"/>
-  <path d="M1096 379 V500" class="l b" marker-end="url(#a-b)"/>
-  <path d="M676 379 V416 H1024 V500" class="l a auto" marker-end="url(#a-a)"/>
-  <text class="lbl lbl-a" x="686" y="408">A모드는 분석 없이 인쇄로</text>
-  <path d="M977 573 H953" class="l ink" marker-end="url(#a-ink)"/>
-  <path d="M785 573 H761" class="l ink" marker-end="url(#a-ink)"/>
-  <path d="M593 573 H196 V148 H252 V138" class="l back auto" marker-end="url(#a-back)"/>
-  <text class="lbl lbl-back" x="206" y="565">5초 뒤 자동. 세션 삭제 후 처음으로</text>
-  <a href="#d-01" class="node node-dev">
-    <text x="20" y="36"><tspan class="n-code">D-01</tspan><tspan class="n-name" dx="6">하드웨어 체크</tspan></text>
-    <image href="shots/d01-top.jpg" x="20" y="44" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="20" y="44" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-00" class="node node-common">
-    <text x="212" y="36"><tspan class="n-code">P-00</tspan><tspan class="n-name" dx="6">대기</tspan></text>
-    <image href="shots/p00.jpg" x="212" y="44" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="212" y="44" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-01" class="node node-common">
-    <text x="404" y="36"><tspan class="n-code">P-01</tspan><tspan class="n-name" dx="6">모드 선택</tspan></text>
-    <image href="shots/p01.jpg" x="404" y="44" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="404" y="44" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-02" class="node node-common">
-    <text x="596" y="36"><tspan class="n-code">P-02</tspan><tspan class="n-name" dx="6">직업 선택</tspan></text>
-    <image href="shots/p02-b-picked.jpg" x="596" y="44" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="596" y="44" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-03" class="node node-b">
-    <text x="20" y="278"><tspan class="n-code">P-03</tspan><tspan class="n-name" dx="6">연령 입력</tspan></text>
-    <image href="shots/p03-filled.jpg" x="20" y="286" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="20" y="286" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-04" class="node node-b">
-    <text x="212" y="278"><tspan class="n-code">P-04</tspan><tspan class="n-name" dx="6">동의</tspan></text>
-    <image href="shots/p04.jpg" x="212" y="286" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="212" y="286" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-05" class="node node-b">
-    <text x="404" y="278"><tspan class="n-code">P-05</tspan><tspan class="n-name" dx="6">발화</tspan></text>
-    <image href="shots/p05.jpg" x="404" y="286" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="404" y="286" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-06" class="node node-common">
-    <text x="596" y="278"><tspan class="n-code">P-06</tspan><tspan class="n-name" dx="6">촬영</tspan></text>
-    <image href="shots/p06-countdown.jpg" x="596" y="286" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="596" y="286" width="160" height="90" rx="4"/>
-    <g class="n-err"><rect x="710" y="356" width="42" height="16" rx="3"/><text x="731" y="368" text-anchor="middle">M-02</text></g>
-  </a><a href="#p-07" class="node node-b">
-    <text x="788" y="278"><tspan class="n-code">P-07</tspan><tspan class="n-name" dx="6">분석 중</tspan></text>
-    <image href="shots/p07.jpg" x="788" y="286" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="788" y="286" width="160" height="90" rx="4"/>
-    <g class="n-err"><rect x="902" y="356" width="42" height="16" rx="3"/><text x="923" y="368" text-anchor="middle">M-02</text></g>
-  </a><a href="#p-08" class="node node-b">
-    <text x="980" y="278"><tspan class="n-code">P-08</tspan><tspan class="n-name" dx="6">결과</tspan></text>
-    <image href="shots/p08.jpg" x="980" y="286" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="980" y="286" width="160" height="90" rx="4"/>
-    
-  </a><a href="#p-09" class="node node-common">
-    <text x="980" y="520"><tspan class="n-code">P-09</tspan><tspan class="n-name" dx="6">인쇄</tspan></text>
-    <image href="shots/p09-b.jpg" x="980" y="528" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="980" y="528" width="160" height="90" rx="4"/>
-    <g class="n-err"><rect x="1094" y="598" width="42" height="16" rx="3"/><text x="1115" y="610" text-anchor="middle">M-02</text></g>
-  </a><a href="#p-10" class="node node-common">
-    <text x="788" y="520"><tspan class="n-code">P-10</tspan><tspan class="n-name" dx="6">QR 제공</tspan></text>
-    <image href="shots/p10-qr.jpg" x="788" y="528" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="788" y="528" width="160" height="90" rx="4"/>
-    <g class="n-err"><rect x="902" y="598" width="42" height="16" rx="3"/><text x="923" y="610" text-anchor="middle">M-02</text></g>
-  </a><a href="#p-11" class="node node-common">
-    <text x="596" y="520"><tspan class="n-code">P-11</tspan><tspan class="n-name" dx="6">종료</tspan></text>
-    <image href="shots/p11.jpg" x="596" y="528" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="n-frame" x="596" y="528" width="160" height="90" rx="4"/>
-    
-  </a>
-  <text class="note" x="868" y="638" text-anchor="middle">QR → 보호자 폰</text>
-  <text class="note" x="868" y="656" text-anchor="middle">B 리포트 PDF · A 네컷 이미지</text>
-  <g class="legend" transform="translate(20 596)">
+
+  <g class="legend" transform="translate(20 24)">
     <path d="M0 8 H40" class="l ink"/><text x="50" y="12">버튼을 눌러 이동</text>
     <path d="M190 8 H230" class="l ink auto"/><text x="240" y="12">자동으로 이동</text>
-    <path d="M0 34 H40" class="l a"/><text x="50" y="38">A모드 경로</text>
-    <path d="M190 34 H230" class="l b"/><text x="240" y="38">B모드 경로</text>
-    <rect x="0" y="52" width="40" height="16" rx="3" class="lg-err"/><text x="20" y="64" text-anchor="middle" class="lg-err-t">M-02</text><text x="50" y="64">오류 시 안내창이 뜨는 화면</text>
+    <path d="M0 36 H40" class="l a"/><text x="50" y="40">A모드 경로</text>
+    <path d="M190 36 H230" class="l b"/><text x="240" y="40">B모드 경로</text>
+    <rect x="0" y="56" width="40" height="16" rx="3" class="lg-err"/><text x="20" y="68" text-anchor="middle" class="lg-err-t">M-02</text><text x="50" y="68">오류 시 안내창이 뜨는 화면</text>
+    <g class="n-tag"><rect x="0" y="84" width="40" height="16" rx="3"/><text x="20" y="96" text-anchor="middle">바뀜</text></g><text x="50" y="96">v1에서 바뀌거나 새로 생긴 화면</text>
   </g>
+
+  <rect class="grp" x="560" y="6" width="580" height="192" rx="8"/>
+  <text class="grp-t" x="574" y="30">보호자 폰 (B모드 · 카카오를 고른 경우)</text>
+  <a href="#guardian" class="node">
+    <image href="wf/phone-login.svg" x="648" y="44" width="56" height="120"/>
+    <image href="wf/phone-sent.svg" x="760" y="44" width="56" height="120"/>
+    <image href="wf/phone-mail.svg" x="872" y="44" width="56" height="120"/>
+  </a>
+  <path d="M708 104 H754" class="l b" marker-end="url(#a-b)"/>
+  <path d="M820 104 H866" class="l b auto" marker-end="url(#a-b)"/>
+  <text class="note" x="676" y="186" text-anchor="middle">카카오 로그인</text>
+  <text class="note" x="788" y="186" text-anchor="middle">연결됐어요</text>
+  <text class="note" x="900" y="186" text-anchor="middle">메일 도착</text>
+  <text class="note" x="948" y="62">로그인이 끝나면 키오스크가</text>
+  <text class="note" x="948" y="82">알아채고 연령 선택으로</text>
+  <text class="note" x="948" y="102">넘어갑니다. 메일은 체험이</text>
+  <text class="note" x="948" y="122">끝나 키오스크가 데이터를</text>
+  <text class="note" x="948" y="142">보내면 서버가 보냅니다.</text>
+  <path d="M676 242 V203" class="l b" marker-end="url(#a-b)"/>
+  <text class="lbl lbl-b" x="688" y="222">QR 찍기</text>
+
+  <path d="M183 309 H207" class="l ink" marker-end="url(#a-ink)"/>
+  <path d="M375 309 H399" class="l b" marker-end="url(#a-b)"/>
+  <text class="lbl lbl-b" x="387" y="234" text-anchor="middle">B · 목소리도 분석받기</text>
+  <path d="M567 309 H591" class="l b" marker-end="url(#a-b)"/>
+  <path d="M759 309 H783" class="l b" marker-end="url(#a-b)"/>
+  <text class="lbl lbl-b" x="771" y="234" text-anchor="middle">세션 열림</text>
+  <text class="note" x="676" y="376" text-anchor="middle">카카오 QR 또는 이메일 직접 입력</text>
+  <text class="note" x="676" y="396" text-anchor="middle">연결이 안 되면 [사진만 찍기] → A로 P-04</text>
+  <path d="M868 357 V416 H332 V478" class="l b" marker-end="url(#a-b)"/>
+  <path d="M292 357 V478" class="l a" marker-end="url(#a-a)"/>
+  <text class="lbl lbl-a" x="280" y="416" text-anchor="end">A · 사진만 찍기</text>
+  <text class="note" x="280" y="435" text-anchor="end">동의 · 보호자 연결 없이 바로 직업 선택</text>
+  <path d="M375 551 H399" class="l b" marker-end="url(#a-b)"/>
+  <path d="M567 551 H591" class="l b" marker-end="url(#a-b)"/>
+  <path d="M759 551 H783" class="l ink auto" marker-end="url(#a-ink)"/>
+  <path d="M951 551 H975" class="l ink auto" marker-end="url(#a-ink)"/>
+  <path d="M330 599 V634 H640 V604" class="l a" marker-end="url(#a-a)"/>
+  <text class="lbl lbl-a" x="345" y="656">A모드는 발화 없이 촬영으로</text>
+  <path d="M1060 599 V638" class="l back auto" marker-end="url(#a-back)"/>
+  <text class="lbl lbl-back" x="1060" y="660" text-anchor="middle">5초 뒤 처음(P-00)으로</text>
+  <text class="note" x="1060" y="680" text-anchor="middle">세션 닫기 · 기기 데이터 삭제</text>
+
+  <a href="#p-00" class="node node-common">
+    <text x="20" y="256"><tspan class="n-code">P-00</tspan><tspan class="n-name" dx="6">대기</tspan></text>
+    <image href="shots/p00.jpg" x="20" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="20" y="264" width="160" height="90" rx="4"/>
+  </a><a href="#p-01" class="node node-common">
+    <text x="212" y="256"><tspan class="n-code">P-01</tspan><tspan class="n-name" dx="6">모드 선택</tspan></text>
+    <image href="shots/p01.jpg" x="212" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="212" y="264" width="160" height="90" rx="4"/>
+  </a><a href="#p-02" class="node node-b">
+    <text x="404" y="256"><tspan class="n-code">P-02</tspan><tspan class="n-name" dx="6">동의</tspan></text>
+    <g class="n-tag"><rect x="530" y="244" width="34" height="16" rx="3"/><text x="547" y="256" text-anchor="middle">바뀜</text></g>
+    <image href="wf/p02-consent.svg" x="404" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="404" y="264" width="160" height="90" rx="4"/>
+  </a><a href="#p-02a" class="node node-b">
+    <text x="596" y="256"><tspan class="n-code">P-02a</tspan><tspan class="n-name" dx="6">보호자 연결</tspan></text>
+    <g class="n-tag"><rect x="726" y="244" width="30" height="16" rx="3"/><text x="741" y="256" text-anchor="middle">새로</text></g>
+    <image href="wf/p02a-link.svg" x="596" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="596" y="264" width="160" height="90" rx="4"/>
+  </a><a href="#p-03" class="node node-b">
+    <text x="788" y="256"><tspan class="n-code">P-03</tspan><tspan class="n-name" dx="6">연령 선택</tspan></text>
+    <g class="n-tag"><rect x="914" y="244" width="34" height="16" rx="3"/><text x="931" y="256" text-anchor="middle">바뀜</text></g>
+    <image href="wf/p03-age.svg" x="788" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="788" y="264" width="160" height="90" rx="4"/>
+  </a><a href="#p-04" class="node node-common">
+    <text x="212" y="498"><tspan class="n-code">P-04</tspan><tspan class="n-name" dx="6">직업 선택</tspan></text>
+    <g class="n-tag"><rect x="338" y="486" width="34" height="16" rx="3"/><text x="355" y="498" text-anchor="middle">바뀜</text></g>
+    <image href="wf/p04-job.svg" x="212" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="212" y="506" width="160" height="90" rx="4"/>
+  </a><a href="#p-05" class="node node-b">
+    <text x="404" y="498"><tspan class="n-code">P-05</tspan><tspan class="n-name" dx="6">발화</tspan></text>
+    <g class="n-tag"><rect x="530" y="486" width="34" height="16" rx="3"/><text x="547" y="498" text-anchor="middle">바뀜</text></g>
+    <image href="wf/p05-speak.svg" x="404" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="404" y="506" width="160" height="90" rx="4"/>
+  </a><a href="#p-06" class="node node-common">
+    <text x="596" y="498"><tspan class="n-code">P-06</tspan><tspan class="n-name" dx="6">촬영</tspan></text>
+    <g class="n-tag"><rect x="722" y="486" width="34" height="16" rx="3"/><text x="739" y="498" text-anchor="middle">바뀜</text></g>
+    <image href="wf/p06-shoot.svg" x="596" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="596" y="506" width="160" height="90" rx="4"/>
+    <g class="n-err"><rect x="710" y="576" width="42" height="16" rx="3"/><text x="731" y="588" text-anchor="middle">M-02</text></g>
+  </a><a href="#p-07" class="node node-common">
+    <text x="788" y="498"><tspan class="n-code">P-07</tspan><tspan class="n-name" dx="6">분석 및 프린트</tspan></text>
+    <g class="n-tag"><rect x="918" y="486" width="30" height="16" rx="3"/><text x="933" y="498" text-anchor="middle">새로</text></g>
+    <image href="wf/p07-result-b.svg" x="788" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="788" y="506" width="160" height="90" rx="4"/>
+    <g class="n-err"><rect x="902" y="576" width="42" height="16" rx="3"/><text x="923" y="588" text-anchor="middle">M-02</text></g>
+  </a><a href="#m-03" class="node node-common">
+    <text x="980" y="498"><tspan class="n-code">M-03</tspan><tspan class="n-name" dx="6">완료 창</tspan></text>
+    <g class="n-tag"><rect x="1110" y="486" width="30" height="16" rx="3"/><text x="1125" y="498" text-anchor="middle">새로</text></g>
+    <image href="wf/m03-done.svg" x="980" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="n-frame" x="980" y="506" width="160" height="90" rx="4"/>
+  </a>
 </svg></div>
-    <nav class="jump" aria-label="화면 바로 가기"><a href="#d-01">D-01</a><a href="#p-00">P-00</a><a href="#p-01">P-01</a><a href="#p-02">P-02</a><a href="#p-03">P-03</a><a href="#p-04">P-04</a><a href="#p-05">P-05</a><a href="#p-06">P-06</a><a href="#p-07">P-07</a><a href="#p-08">P-08</a><a href="#p-09">P-09</a><a href="#p-10">P-10</a><a href="#p-11">P-11</a><a href="#m-02">M-02</a><a href="#guardian">보호자 폰</a><a href="#gaps">다른 부분</a></nav>
+    <nav class="jump" aria-label="화면 바로 가기"><a href="#p-00">P-00</a><a href="#p-01">P-01</a><a href="#p-02">P-02</a><a href="#p-02a">P-02a</a><a href="#p-03">P-03</a><a href="#p-04">P-04</a><a href="#p-05">P-05</a><a href="#p-06">P-06</a><a href="#p-07">P-07</a><a href="#m-03">M-03</a><a href="#m-02">M-02</a><a href="#guardian">보호자 폰</a><a href="#print">사진 규격</a><a href="#todo">정할 것</a></nav>
   </section>
 
   <section>
     <div class="section-head">
       <h2>화면별 동작</h2>
-      <p class="sub">캡처를 누르면 크게 볼 수 있습니다. 모든 화면 위쪽의 상태 바와 오른쪽 아래 버튼 3개는 개발용이며, 운영 버전에서는 빠집니다.</p>
+      <p class="sub">그림을 누르면 크게 볼 수 있습니다.</p>
     </div>
     <div class="scrs">
-      <section class="scr" id="d-01">
-  <header class="scr-head">
-    <span class="mono code">D-01</span>
-    <h3>하드웨어 체크</h3>
-    <span class="chip chip-dev">개발용</span>
-    
-  </header>
-  <p class="desc">앱을 켜면 처음 나오는 점검 화면입니다. 마이크, 스피커, 카메라, 프린터를 확인합니다. 운영 버전에서는 빠지고 P-00부터 시작합니다.</p>
-  <div class="figs figs-2"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/d01-top.jpg" aria-label="화면 위쪽. 장치 목록은 캡처한 PC 기준입니다 크게 보기"><img src="shots/d01-top.jpg" alt="화면 위쪽. 장치 목록은 캡처한 PC 기준입니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>화면 위쪽. 장치 목록은 캡처한 PC 기준입니다</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/d01-bottom.jpg" aria-label="화면 맨 아래. 인쇄 점검과 시작 버튼 크게 보기"><img src="shots/d01-bottom.jpg" alt="화면 맨 아래. 인쇄 점검과 시작 버튼" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>화면 맨 아래. 인쇄 점검과 시작 버튼</figcaption>
-</figure></div>
-  <div class="tbl"><table>
-    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>[플로우 시작 (P-00)] 누름</td><td>체험 흐름을 시작합니다</td><td><a class="go" href="#p-00"><span class="mono">P-00</span> 대기</a></td></tr><tr><td>[테스트 인쇄 (1장)] 누름</td><td>크기 점검표를 네컷과 같은 경로로 뽑습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>녹음, 스피커, 카메라 점검 버튼</td><td>각 장치를 시험합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr></tbody>
-  </table></div>
-</section>
+
 <section class="scr" id="p-00">
   <header class="scr-head">
-    <span class="mono code">P-00</span>
-    <h3>대기</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    
+    <span class="mono code">P-00</span><h3>대기</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-same">그대로</span>
   </header>
-  <p class="desc">손님을 기다리는 첫 화면입니다.</p>
+  <p class="desc">손님을 기다리는 첫 화면이자 타이틀 화면입니다. 따로 타이틀 화면을 두지 않습니다.</p>
   <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p00.jpg" aria-label="영상 자리는 아직 비어 있습니다 크게 보기"><img src="shots/p00.jpg" alt="영상 자리는 아직 비어 있습니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>영상 자리는 아직 비어 있습니다</figcaption>
-</figure></div>
+    <button class="shot" type="button" data-src="shots/p00.jpg" aria-label="대기 화면 앱 캡처 크게 보기"><img src="shots/p00.jpg" alt="대기 화면 앱 캡처" loading="lazy" width="1920" height="1080"></button>
+    <figcaption><span class="kind">앱 캡처.</span> 영상 자리는 비어 있습니다. 컨셉 문구는 새로 정합니다 (추천 직업이 빠져 기존 문구는 쓰지 않습니다)</figcaption>
+  </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>[시작하기] 누름</td><td>이번 손님의 세션 폴더를 만듭니다</td><td><a class="go" href="#p-01"><span class="mono">P-01</span> 모드 선택</a></td></tr></tbody>
+    <tbody><tr><td>[시작하기] 또는 화면 아무 곳 누름</td><td>이번 손님의 세션을 시작합니다</td><td><a class="go" href="#p-01"><span class="mono">P-01</span> 모드 선택</a></td></tr></tbody>
   </table></div>
 </section>
+
 <section class="scr" id="p-01">
   <header class="scr-head">
-    <span class="mono code">P-01</span>
-    <h3>모드 선택</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    
+    <span class="mono code">P-01</span><h3>모드 선택</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">사진만 찍을지, 목소리 분석까지 받을지 고릅니다. 이 선택이 뒤의 경로를 가릅니다.</p>
+  <p class="desc">사진만 찍을지, 목소리 리포트까지 받을지 고릅니다. <b>여기서 경로가 갈립니다</b> — A는 동의 화면 없이 바로 직업 선택으로, B는 동의 화면으로 갑니다. A는 사진과 촬영 영상을 이 기기 안에서만 쓰고 체험이 끝나면 지우기 때문에, 동의를 받는 대신 이 화면에 안내 한 줄을 둡니다.</p>
   <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p01.jpg" aria-label="p01 크게 보기"><img src="shots/p01.jpg" alt="p01" loading="lazy" width="1920" height="1080"></button>
-  
-</figure></div>
+    <button class="shot" type="button" data-src="shots/p01.jpg" aria-label="모드 선택 앱 캡처 크게 보기"><img src="shots/p01.jpg" alt="모드 선택 앱 캡처" loading="lazy" width="1920" height="1080"></button>
+    <figcaption><span class="kind">앱 캡처.</span> B 카드의 받는 것 안내가 "보호자 메일로 목소리 리포트 (카카오 로그인 또는 이메일 입력)"로 바뀝니다. A 안내 한 줄이 들어갑니다 — "사진과 촬영 영상은 이 기기에서만 쓰고 체험이 끝나면 지워요 · 보호자와 함께 이용해 주세요" (임시 문구, 법무 확인)</figcaption>
+  </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>[A · 사진만 찍기] 누름</td><td>A모드로 기록합니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 직업 선택</a></td></tr><tr><td>[B · 목소리도 분석받기] 누름</td><td>B모드로 기록합니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 직업 선택</a></td></tr><tr><td>[뒤로] 누름</td><td>처음으로 돌아갑니다</td><td><a class="go" href="#p-00"><span class="mono">P-00</span> 대기</a></td></tr></tbody>
+    <tbody>
+      <tr><td>[A · 사진만 찍기] 누름</td><td>A모드로 기록합니다. 동의 화면을 거치지 않습니다</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 직업 선택</a></td></tr>
+      <tr><td>[B · 목소리도 분석받기] 누름</td><td>B모드로 기록합니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 동의</a></td></tr>
+      <tr><td>[뒤로] 누름</td><td>처음으로 돌아갑니다</td><td><a class="go" href="#p-00"><span class="mono">P-00</span> 대기</a></td></tr>
+    </tbody>
   </table></div>
 </section>
+
 <section class="scr" id="p-02">
   <header class="scr-head">
-    <span class="mono code">P-02</span>
-    <h3>직업 선택</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    
+    <span class="mono code">P-02</span><h3>동의</h3>
+    <span class="chip chip-b">B모드</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">직업 8개 중 4개를 고릅니다. 고른 순서가 그대로 발화와 촬영 순서가 됩니다.</p>
-  <div class="figs figs-2"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p02-empty.jpg" aria-label="선택 전. [다음]이 꺼져 있습니다 크게 보기"><img src="shots/p02-empty.jpg" alt="선택 전. [다음]이 꺼져 있습니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>선택 전. [다음]이 꺼져 있습니다</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p02-b-picked.jpg" aria-label="4개 선택. 카드에 순서 번호가 붙고 [다음]이 켜집니다 크게 보기"><img src="shots/p02-b-picked.jpg" alt="4개 선택. 카드에 순서 번호가 붙고 [다음]이 켜집니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>4개 선택. 카드에 순서 번호가 붙고 [다음]이 켜집니다</figcaption>
-</figure></div>
+  <p class="desc">보호자가 읽고 체크하는 화면입니다. <b>B모드에서만</b> 모드 선택 바로 다음에 나오고, 항목 3개(보호자 동반 · 목소리 · 사진·영상)를 모두 체크해야 시작할 수 있습니다. A모드는 이 화면을 거치지 않습니다. 영상 항목은 분석 및 프린트 화면에서 촬영 장면을 다시 보여주기 때문에 들어갑니다 (기기 안에만 두고 체험이 끝나면 지웁니다).</p>
+  <div class="figs figs-2">
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p02-consent.svg" aria-label="동의 화면 처음 상태 크게 보기"><img src="wf/p02-consent.svg" alt="동의 화면 처음 상태" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> 처음 상태 (B모드)</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p02-consent-warn.svg" aria-label="덜 체크하고 시작을 누른 경우 크게 보기"><img src="wf/p02-consent-warn.svg" alt="덜 체크하고 시작을 누른 경우" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> 덜 체크하고 [시작]을 누른 경우. 빠진 항목을 강조하고 안내합니다</figcaption>
+    </figure>
+  </div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>직업 카드 누름</td><td>선택되고 순서 번호가 붙습니다. 4개까지만 고를 수 있습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>고른 카드를 다시 누름</td><td>선택이 풀립니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>[다음] 누름, A모드</td><td>4개를 골라야 켜집니다</td><td><a class="go" href="#p-06"><span class="mono">P-06</span> 촬영</a></td></tr><tr><td>[다음] 누름, B모드</td><td>4개를 골라야 켜집니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 입력</a></td></tr><tr><td>[뒤로] 누름</td><td><span class="none">없음</span></td><td><a class="go" href="#p-01"><span class="mono">P-01</span> 모드 선택</a></td></tr></tbody>
+    <tbody>
+      <tr><td>항목 누름</td><td>체크되거나 풀립니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>모두 체크하고 [시작]</td><td>동의 시각과 항목을 기록합니다</td><td><a class="go" href="#p-02a"><span class="mono">P-02a</span> 보호자 연결</a></td></tr>
+      <tr><td>덜 체크하고 [시작]</td><td>"모두 동의해야 체험을 진행할 수 있어요"</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[자세히] · [전문 보기] 누름</td><td>동의 전문을 보여줍니다. 문구는 법무 검토 뒤 넣습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[뒤로] 누름</td><td>모드를 다시 고를 수 있습니다. 목소리 동의가 싫으면 A(사진만)를 고르면 됩니다</td><td><a class="go" href="#p-01"><span class="mono">P-01</span> 모드 선택</a></td></tr>
+    </tbody>
   </table></div>
 </section>
+
+<section class="scr" id="p-02a">
+  <header class="scr-head">
+    <span class="mono code">P-02a</span><h3>보호자 연결</h3>
+    <span class="chip chip-b">B모드</span><span class="st st-new">새 화면</span>
+  </header>
+  <p class="desc">B모드에서 동의 바로 다음에 나옵니다. 리포트를 받을 보호자를 <b>체험 전에</b> 먼저 연결합니다. 선택지는 두 개입니다 — <b>① 카카오로 간편 로그인</b> (화면의 QR을 보호자 폰으로 찍기) · <b>② 이메일 직접 입력</b> (화면 키보드). 어느 쪽이든 끝나면 이번 체험의 <b>세션이 열리고</b>, 사진 인쇄가 끝나면 닫힙니다. 서버에 연결이 안 되면 다시 시도해 보고, 그래도 안 되면 사진만 찍기(A모드)로 넘어갑니다. 보호자가 폰으로 가입하는 동안 기다리는 시간은 전체 타임아웃을 정할 때 같이 정합니다.</p>
+  <div class="figs figs-2">
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p02a-link.svg" aria-label="보호자 연결 처음 상태 크게 보기"><img src="wf/p02a-link.svg" alt="보호자 연결 처음 상태" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> 처음 상태. 왼쪽 카카오 QR, 오른쪽 이메일 직접 입력</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p02a-email.svg" aria-label="이메일 직접 입력 크게 보기"><img src="wf/p02a-email.svg" alt="이메일 직접 입력" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> 이메일 직접 입력. 화면 키보드와 자주 쓰는 주소 버튼</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p02a-email-confirm.svg" aria-label="이메일 주소 확인 크게 보기"><img src="wf/p02a-email-confirm.svg" alt="이메일 주소 확인" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> [확인]을 누른 뒤. 오타면 다른 사람에게 리포트가 가므로 주소를 크게 한 번 더 보여 줍니다</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p02a-offline.svg" aria-label="서버 연결 실패 크게 보기"><img src="wf/p02a-offline.svg" alt="서버 연결 실패" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> 다시 시도해도 연결이 안 될 때. [사진만 찍기]로 A모드로 넘어갑니다</figcaption>
+    </figure>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
+    <tbody>
+      <tr><td>(자동) 화면 도착</td><td>서버에 세션 열기를 요청하고, 받은 번호로 QR을 띄웁니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>보호자가 QR을 찍고 카카오 로그인을 끝냄</td><td>키오스크가 서버에서 연결을 확인하고 "연결됐어요"를 잠깐 보여 줍니다. 세션이 열립니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 선택</a></td></tr>
+      <tr><td>[이메일 입력하기] 누름</td><td>화면 키보드가 나옵니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>이메일을 넣고 [확인]</td><td>입력한 주소를 크게 보여 주고 확인을 받습니다. 형식이 틀리면(@ 없음 등) 안내합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[맞아요] 누름</td><td>이메일을 서버로 보내고 세션이 열립니다. 기기에는 이메일을 남기지 않습니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 선택</a></td></tr>
+      <tr><td>[고치기] 누름</td><td>입력 화면으로 돌아갑니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(오류) 서버에 연결이 안 됨</td><td>"연결이 잘 안 돼요" + [다시 시도]</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(오류) 다시 해도 안 됨 → [사진만 찍기]</td><td>A모드로 바꿉니다 (동의 기록은 지웁니다)</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 직업 선택</a></td></tr>
+      <tr><td>[뒤로] 누름</td><td>열던 세션은 버립니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 동의</a></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
 <section class="scr" id="p-03">
   <header class="scr-head">
-    <span class="mono code">P-03</span>
-    <h3>연령 입력</h3>
-    <span class="chip chip-b">B모드만</span>
-    
+    <span class="mono code">P-03</span><h3>연령 선택</h3>
+    <span class="chip chip-b">B모드</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">나이와 이름을 받습니다. 나이는 말할 대사를 고르는 데 쓰고, 이름은 보호자 리포트 머리글에 들어갑니다.</p>
-  <div class="figs figs-2"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p03-empty.jpg" aria-label="입력 전. [다음]이 꺼져 있습니다 크게 보기"><img src="shots/p03-empty.jpg" alt="입력 전. [다음]이 꺼져 있습니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>입력 전. [다음]이 꺼져 있습니다</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p03-filled.jpg" aria-label="나이와 이름을 넣으면 켜집니다. 이름은 테스트 값입니다 크게 보기"><img src="shots/p03-filled.jpg" alt="나이와 이름을 넣으면 켜집니다. 이름은 테스트 값입니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>나이와 이름을 넣으면 켜집니다. 이름은 테스트 값입니다</figcaption>
-</figure></div>
+  <p class="desc">나이를 고릅니다. <b>만 4세 · 만 5세 · 만 6세 이상</b> 중 하나입니다. 나이에 따라 시나리오 문장의 길이와 리포트 안내 말투가 정해집니다. 이름(별명)은 더 이상 받지 않습니다.</p>
+  <div class="figs figs-1"><figure class="fig">
+    <button class="shot wf" type="button" data-src="wf/p03-age.svg" aria-label="연령 선택 구성 스케치 크게 보기"><img src="wf/p03-age.svg" alt="연령 선택 구성 스케치" loading="lazy" width="1920" height="1080"></button>
+    <figcaption><span class="kind">구성 스케치.</span> 만 5세를 고른 상태</figcaption>
+  </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>나이 버튼 누름</td><td>연령대와 살펴볼 소리가 화면에 나타납니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>이름 입력</td><td>지금은 물리 키보드로만 입력할 수 있습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>[다음] 누름</td><td>나이와 이름이 둘 다 있어야 켜집니다</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 동의</a></td></tr><tr><td>[뒤로] 누름</td><td><span class="none">없음</span></td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 직업 선택</a></td></tr></tbody>
+    <tbody>
+      <tr><td>나이 버튼 누름</td><td>고른 나이가 표시됩니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[다음] 누름</td><td>나이를 골라야 켜집니다</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 직업 선택</a></td></tr>
+      <tr><td>[뒤로] 누름</td><td>보호자 연결이 이미 끝났으므로, 연결을 버리고 모드 선택부터 다시 합니다 (제안)</td><td><a class="go" href="#p-01"><span class="mono">P-01</span> 모드 선택</a></td></tr>
+    </tbody>
   </table></div>
 </section>
+
 <section class="scr" id="p-04">
   <header class="scr-head">
-    <span class="mono code">P-04</span>
-    <h3>동의</h3>
-    <span class="chip chip-b">B모드만</span>
-    
+    <span class="mono code">P-04</span><h3>직업 선택</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">보호자 동의 화면입니다. 문구는 법무 검토 후 넣을 예정이라 지금은 자리만 있습니다.</p>
+  <p class="desc">직업 6개 중 <b>하나</b>를 고릅니다 — 경찰 · 우주비행사 · 가수 · 크리에이터 · 의사 · 로봇개발자. 카드 그림이 그 직업의 <b>네컷 프레임</b>이라, 아이는 사진이 어떻게 나올지 보고 고릅니다. 직업은 역할놀이 소재일 뿐, 어떤 직업을 추천하지는 않습니다.</p>
   <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p04.jpg" aria-label="p04 크게 보기"><img src="shots/p04.jpg" alt="p04" loading="lazy" width="1920" height="1080"></button>
-  
-</figure></div>
+    <button class="shot wf" type="button" data-src="wf/p04-job.svg" aria-label="직업 선택 구성 스케치 크게 보기"><img src="wf/p04-job.svg" alt="직업 선택 구성 스케치" loading="lazy" width="1920" height="1080"></button>
+    <figcaption><span class="kind">구성 스케치.</span> 우주비행사를 고른 상태. 카드 그림은 직업별 프레임 아트가 나오면 그것으로 바뀝니다</figcaption>
+  </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>[동의하고 시작] 누름</td><td>동의 시각을 기록합니다</td><td><a class="go" href="#p-05"><span class="mono">P-05</span> 발화</a></td></tr><tr><td>[뒤로] 누름</td><td><span class="none">없음</span></td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 입력</a></td></tr></tbody>
+    <tbody>
+      <tr><td>직업 카드 누름</td><td>그 카드가 선택됩니다. 다른 카드를 누르면 선택이 그쪽으로 옮겨 갑니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[다음] 누름, B모드</td><td>하나를 골라야 켜집니다</td><td><a class="go" href="#p-05"><span class="mono">P-05</span> 발화</a></td></tr>
+      <tr><td>[다음] 누름, A모드</td><td>하나를 골라야 켜집니다</td><td><a class="go" href="#p-06"><span class="mono">P-06</span> 촬영</a></td></tr>
+      <tr><td>[뒤로] 누름</td><td>B는 연령, A는 모드 선택으로 돌아갑니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span></a> · <a class="go" href="#p-01"><span class="mono">P-01</span></a></td></tr>
+    </tbody>
   </table></div>
 </section>
+
 <section class="scr" id="p-05">
   <header class="scr-head">
-    <span class="mono code">P-05</span>
-    <h3>발화</h3>
-    <span class="chip chip-b">B모드만</span>
-    
+    <span class="mono code">P-05</span><h3>발화</h3>
+    <span class="chip chip-b">B모드</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">고른 직업과 나이에 맞는 대사 4개를 보여줍니다. 녹음은 아직 연결되지 않아 대사만 표시됩니다.</p>
-  <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p05.jpg" aria-label="녹음 없이 대사만 나옵니다. 대사가 정해지지 않은 직업은 임시 문구입니다 크게 보기"><img src="shots/p05.jpg" alt="녹음 없이 대사만 나옵니다. 대사가 정해지지 않은 직업은 임시 문구입니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>녹음 없이 대사만 나옵니다. 대사가 정해지지 않은 직업은 임시 문구입니다</figcaption>
-</figure></div>
+  <p class="desc">고른 직업의 <b>짧은 시나리오</b>가 흘러갑니다. 아이 차례는 두 번입니다. 4세는 글을 못 읽으므로 <b>문장을 먼저 들려주고 따라 말하게</b> 합니다 — 문장 음성과 자막 → "이제 말해 보자!" → 아이가 <b>[말하기 시작]</b>과 <b>[다 말했어요]</b>를 눌러 녹음합니다. 녹음이 끝나면 캐릭터가 고민하는 표정으로 "잘 듣고 있어요"를 보여 주는 동안 받아쓰기로 확인하고, <b>인식이 50% 미만이면 한 번 더</b> 말하게 합니다. 둘 중 더 잘 인식된 녹음을 쓰고, 점수는 화면에 보이지 않습니다. <b>만 4세는 어절마다 끊어</b> 듣고 따라 말합니다 (예: "출동!" → "사건" → "현장으로!"). 두 번째 문장까지 마치면 촬영으로 넘어갑니다.</p>
+  <div class="figs figs-2">
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p05-speak.svg" aria-label="문장 들려주기 크게 보기"><img src="wf/p05-speak.svg" alt="문장 들려주기" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> ① 문장 음성 + 자막 → "이제 말해 보자!" → [말하기 시작]. 음성 파일은 기획에서 만들어 줍니다</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p05-record.svg" aria-label="녹음 중 크게 보기"><img src="wf/p05-record.svg" alt="녹음 중" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> ② 녹음 중. [다 말했어요]를 누르면 끝납니다. 시나리오 · 효과음은 멈춥니다</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p05-think.svg" aria-label="잘 듣고 있어요 크게 보기"><img src="wf/p05-think.svg" alt="잘 듣고 있어요" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> ③ "잘 듣고 있어요" (고민하는 표정). 뒤에서 받아쓰기 — 평균 2.5~4초</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p05-retry.svg" aria-label="다시 말하기 크게 보기"><img src="wf/p05-retry.svg" alt="다시 말하기" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치.</span> ④ 인식 50% 미만일 때만, 한 번. [다시 듣기]는 이때만 나옵니다</figcaption>
+    </figure>
+  </div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>[발화 완료] 누름</td><td>대사 4개를 기록합니다. 녹음 파일은 생기지 않습니다</td><td><a class="go" href="#p-06"><span class="mono">P-06</span> 촬영</a></td></tr></tbody>
+    <tbody>
+      <tr><td>(자동) 시나리오 진행</td><td>장면과 내레이션이 이어집니다. 시나리오를 보여 주는 방식은 아직 정하지 않았습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동) 아이 차례</td><td>시나리오 소리를 멈추고 문장 음성과 자막을 들려준 뒤 "이제 말해 보자!"</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[말하기 시작] 누름</td><td>녹음을 시작합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[다 말했어요] 누름</td><td>녹음을 끝내고 "잘 듣고 있어요"를 보여 주며 받아쓰기로 확인합니다. 누르지 않을 때의 제한 시간은 문장이 정해지면 정합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동) 인식 50% 이상</td><td>시나리오 다음 장면으로 갑니다. 받아쓰기가 8초를 넘거나 실패해도 그냥 넘어갑니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동) 인식 50% 미만</td><td>"한 번 더 말해 볼까요?" — 한 번만 묻습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[다시 듣기] 누름</td><td>문장 음성부터 다시 들려줍니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>[바로 말하기] 누름</td><td>바로 녹음 단계로 갑니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>다시 말한 뒤</td><td>두 녹음 중 더 잘 인식된 쪽을 남기고 다른 쪽은 지웁니다. 또 50% 미만이어도, 둘 다 무음이어도 넘어갑니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>두 번째 문장까지 마침</td><td>녹음을 마칩니다. 정밀 분석은 촬영 뒤 분석 및 프린트 화면에서 합니다</td><td><a class="go" href="#p-06"><span class="mono">P-06</span> 촬영</a></td></tr>
+    </tbody>
   </table></div>
 </section>
+
 <section class="scr" id="p-06">
   <header class="scr-head">
-    <span class="mono code">P-06</span>
-    <h3>촬영</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    <span class="chip chip-auto">자동 진행</span>
+    <span class="mono code">P-06</span><h3>촬영</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">버튼 없이 자동으로 진행됩니다. 지금은 Canon SDK 승인을 기다리는 중이라 가짜 카메라 영상이 나옵니다.</p>
-  <div class="figs figs-3"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p06-countdown.jpg" aria-label="라이브 화면 + 5초 카운트다운. 거울처럼 좌우가 뒤집혀 보입니다 크게 보기"><img src="shots/p06-countdown.jpg" alt="라이브 화면 + 5초 카운트다운. 거울처럼 좌우가 뒤집혀 보입니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>라이브 화면 + 5초 카운트다운. 거울처럼 좌우가 뒤집혀 보입니다</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p06-review.jpg" aria-label="찍힌 컷을 1.5초 보여주고 다음 컷으로 크게 보기"><img src="shots/p06-review.jpg" alt="찍힌 컷을 1.5초 보여주고 다음 컷으로" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>찍힌 컷을 1.5초 보여주고 다음 컷으로</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p06-result.jpg" aria-label="4컷 완성. 3초 뒤 자동으로 넘어갑니다 크게 보기"><img src="shots/p06-result.jpg" alt="4컷 완성. 3초 뒤 자동으로 넘어갑니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>4컷 완성. 3초 뒤 자동으로 넘어갑니다</figcaption>
-</figure></div>
+  <p class="desc">버튼 없이 자동으로 진행됩니다. 고른 직업 프레임으로 <b>7초 간격</b>으로 4컷을 찍습니다. 촬영하는 동안 화면을 녹화해 두었다가 분석 및 프린트 화면에서 다시 보여줍니다. 4컷이 끝나면 가로 네컷으로 합성합니다 (A · B 같은 프레임, QR 없음).</p>
+  <div class="figs figs-1"><figure class="fig">
+    <button class="shot wf" type="button" data-src="wf/p06-shoot.svg" aria-label="촬영 구성 스케치 크게 보기"><img src="wf/p06-shoot.svg" alt="촬영 구성 스케치" loading="lazy" width="1920" height="1080"></button>
+    <figcaption><span class="kind">구성 스케치.</span> 2번째 컷을 찍기 전. 라이브 화면은 거울처럼 좌우가 뒤집혀 보이고(인쇄물은 그대로), 오른쪽 프레임에 찍은 컷이 차례로 채워집니다. 찍힌 컷을 잠깐 보여줄지는 디자인에서 정합니다</figcaption>
+  </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>(자동) 카운트다운 후 촬영</td><td>4컷을 찍을 때까지 반복합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>(자동) 완성 3초 뒤, A모드</td><td><span class="none">없음</span></td><td><a class="go" href="#p-09"><span class="mono">P-09</span> 인쇄</a></td></tr><tr><td>(자동) 완성 3초 뒤, B모드</td><td><span class="none">없음</span></td><td><a class="go" href="#p-07"><span class="mono">P-07</span> 분석 중</a></td></tr><tr><td>(오류) 카메라 연결이 끊김</td><td>안내창이 뜨고 [다시 시도]가 나타납니다. 찍은 컷은 유지됩니다</td><td><a class="go" href="#m-02"><span class="mono">M-02</span> 오류 안내</a></td></tr></tbody>
+    <tbody>
+      <tr><td>(자동) 7초 카운트다운 후 촬영</td><td>4컷을 찍을 때까지 7초마다 반복합니다. 그동안 화면을 녹화합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동) 4컷 완성</td><td>가로 네컷을 합성합니다</td><td><a class="go" href="#p-07"><span class="mono">P-07</span> 분석 및 프린트</a></td></tr>
+      <tr><td>(오류) 카메라 연결이 끊김</td><td>안내창이 뜨고 [다시 시도]가 나타납니다. 찍은 컷은 유지됩니다</td><td><a class="go" href="#m-02"><span class="mono">M-02</span> 오류 안내</a></td></tr>
+    </tbody>
   </table></div>
 </section>
+
 <section class="scr" id="p-07">
   <header class="scr-head">
-    <span class="mono code">P-07</span>
-    <h3>분석 중</h3>
-    <span class="chip chip-b">B모드만</span>
-    <span class="chip chip-auto">자동 진행</span>
+    <span class="mono code">P-07</span><h3>분석 및 프린트</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-new">새 화면</span>
   </header>
-  <p class="desc">목소리 분석을 기다리는 화면입니다. 지금은 가짜 분석이 3~5초 뒤 임시 결과를 돌려줍니다.</p>
+  <p class="desc"><b>촬영 다음 페이지는 이 한 장뿐입니다.</b> v1의 분석 중 · 결과 · 인쇄 · QR 네 화면을 합쳤습니다. 화면에 있는 동안 촬영 장면 영상을 반복 재생하고, 위쪽 진행도로 지금 단계를 보여줍니다. <b>B모드는 분석 중 → 프린트 중</b>, <b>A모드는 도착하자마자 프린트 중</b>입니다. A모드는 SD 캐릭터와 긍정 문구를 보여줍니다 — A는 말하기가 없으므로 목소리가 아니라 <b>고른 직업 · 사진을 칭찬</b>합니다 (예: "멋진 경찰관이 되었어요!"). B모드는 분석이 끝나면 그 자리에 <b>리포트 미리보기</b>를 띄웁니다 — 메일로 가는 리포트의 앞부분과 같고, 관찰 결과는 가린 채 "자세한 리포트는 보호자님 메일로 보내 드려요"라고 안내합니다. <b>QR은 없습니다</b> — 보호자는 체험 전에 이미 연결됐습니다. 추천 직업은 어디에도 없습니다.</p>
+  <div class="figs figs-3">
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p07-result-b-analyzing.svg" aria-label="분석 및 프린트 화면 B모드 분석 중 크게 보기"><img src="wf/p07-result-b-analyzing.svg" alt="분석 및 프린트 화면 B모드 분석 중" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치, B모드 분석 중.</span> 촬영 장면 영상 · SD 캐릭터 · 보호자 메일 안내</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p07-result-b.svg" aria-label="분석 및 프린트 화면 B모드 분석 끝 크게 보기"><img src="wf/p07-result-b.svg" alt="분석 및 프린트 화면 B모드 분석 끝" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치, B모드 분석 끝.</span> 리포트 미리보기(직업 · 말한 문장 · 살펴본 소리, 관찰 결과는 가림) · "자세한 리포트는 보호자님 메일로" 안내</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/p07-result-a.svg" aria-label="분석 및 프린트 화면 A모드 크게 보기"><img src="wf/p07-result-a.svg" alt="분석 및 프린트 화면 A모드" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">구성 스케치, A모드.</span> 도착하자마자 프린트 중. SD 캐릭터와 직업 칭찬 문구 (목소리 칭찬 아님)</figcaption>
+    </figure>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
+    <tbody>
+      <tr><td>(자동) 화면 도착</td><td>촬영 장면 영상을 반복 재생합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동, A모드) 화면 도착</td><td>바로 인쇄를 시작합니다 — <b>프린트 중</b></td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동, B모드) 화면 도착</td><td>목소리 분석을 시작합니다 — <b>분석 중</b></td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동, B모드) 분석 끝</td><td>리포트 미리보기를 띄우고, 리포트 데이터를 서버로 보내고(뒤에서), 인쇄를 시작합니다 — <b>프린트 중</b></td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동) 인쇄 끝 (B모드는 전송도 끝)</td><td>완료 창을 띄웁니다</td><td><a class="go" href="#m-03"><span class="mono">M-03</span> 완료 창</a></td></tr>
+      <tr><td>(오류) 인쇄 실패</td><td>안내창을 띄운 뒤 완료 창으로 갑니다</td><td><a class="go" href="#m-02"><span class="mono">M-02</span> 오류 안내</a></td></tr>
+      <tr><td>(오류, B모드) 분석 · 전송 실패</td><td>아이 화면에는 띄우지 않습니다. 분석이 실패하면 미리보기 없이 인쇄합니다. 그 뒤 처리(안내 리포트 등)는 서버가 합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="scr" id="m-03">
+  <header class="scr-head">
+    <span class="mono code">M-03</span><h3>완료 창</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-new">새 화면</span>
+  </header>
+  <p class="desc">분석 및 프린트 화면 위에 뜨는 창입니다. v1의 종료 화면을 대신합니다. 5초 뒤 저절로 닫히고, 세션을 닫은 뒤(B모드) 이번 손님의 녹음 · 사진 · 영상을 모두 지우고 처음으로 돌아갑니다.</p>
   <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p07.jpg" aria-label="p07 크게 보기"><img src="shots/p07.jpg" alt="p07" loading="lazy" width="1920" height="1080"></button>
-  
-</figure></div>
+    <button class="shot wf" type="button" data-src="wf/m03-done.svg" aria-label="완료 창 구성 스케치 크게 보기"><img src="wf/m03-done.svg" alt="완료 창 구성 스케치" loading="lazy" width="1920" height="1080"></button>
+    <figcaption><span class="kind">구성 스케치.</span> B모드 리포트는 체험 전에 연결한 보호자 메일로 갑니다</figcaption>
+  </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>(자동) 분석이 끝남</td><td>추천 직업과 긍정 문구를 받습니다</td><td><a class="go" href="#p-08"><span class="mono">P-08</span> 결과</a></td></tr><tr><td>(오류) 분석 실패</td><td>안내창을 띄우고 결과 화면으로 넘어갑니다</td><td><a class="go" href="#m-02"><span class="mono">M-02</span> 오류 안내</a></td></tr></tbody>
+    <tbody><tr><td>(자동) 5초 지남</td><td>세션을 닫고 이번 손님의 데이터를 지웁니다</td><td><a class="go" href="#p-00"><span class="mono">P-00</span> 대기</a></td></tr></tbody>
   </table></div>
 </section>
-<section class="scr" id="p-08">
+
+<section class="scr" id="m-02">
   <header class="scr-head">
-    <span class="mono code">P-08</span>
-    <h3>결과</h3>
-    <span class="chip chip-b">B모드만</span>
-    
+    <span class="mono code">M-02</span><h3>오류 안내</h3>
+    <span class="chip chip-common">A·B 공통</span><span class="st st-same">그대로</span>
   </header>
-  <p class="desc">아이에게 추천 직업과 한 줄 긍정 문구만 보여줍니다. 추천 직업은 지금 고른 4개 중 무작위입니다.</p>
-  <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p08.jpg" aria-label="네컷 사진은 이미지 없이 파일 경로만 나옵니다 크게 보기"><img src="shots/p08.jpg" alt="네컷 사진은 이미지 없이 파일 경로만 나옵니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>네컷 사진은 이미지 없이 파일 경로만 나옵니다</figcaption>
-</figure></div>
-  <div class="tbl"><table>
-    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>[사진 뽑기] 누름</td><td><span class="none">없음</span></td><td><a class="go" href="#p-09"><span class="mono">P-09</span> 인쇄</a></td></tr></tbody>
+  <p class="desc">문제가 생기면 지금 화면 위에 안내창이 뜹니다. 앱은 꺼지지 않습니다. v2에서는 아이가 할 수 있는 일이 있는 경우만 띄웁니다. 분석 · 전송 실패는 띄우지 않습니다. 보호자 연결 화면(P-02a)의 연결 실패도 안내창 대신 그 화면 안에서 처리합니다.</p>
+  <div class="figs figs-2">
+    <figure class="fig">
+      <button class="shot" type="button" data-src="shots/m02-camera.jpg" aria-label="카메라 오류 안내 크게 보기"><img src="shots/m02-camera.jpg" alt="카메라 오류 안내" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">앱 캡처.</span> 촬영 중 카메라 연결이 끊겼을 때</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot" type="button" data-src="shots/m02-print.jpg" aria-label="인쇄 오류 안내 크게 보기"><img src="shots/m02-print.jpg" alt="인쇄 오류 안내" loading="lazy" width="1920" height="1080"></button>
+      <figcaption><span class="kind">앱 캡처.</span> 인쇄가 실패했을 때</figcaption>
+    </figure>
+  </div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>경우</th><th>안내 문구</th></tr></thead>
+    <tbody>
+      <tr><td>카메라 연결이 끊김</td><td>카메라를 준비하고 있어요. 옆의 직원에게 알려주세요!</td></tr>
+      <tr><td>인쇄 실패</td><td>사진 출력이 조금 늦어지고 있어요. 옆의 직원에게 알려주세요!</td></tr>
+    </tbody>
   </table></div>
 </section>
-<section class="scr" id="p-09">
+
+<section class="scr" id="guardian">
   <header class="scr-head">
-    <span class="mono code">P-09</span>
-    <h3>인쇄</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    
+    <h3>보호자 폰</h3>
+    <span class="chip chip-b">B모드</span><span class="st st-new">새 화면</span>
   </header>
-  <p class="desc">화면에 들어오면 인쇄용 PDF를 자동으로 만들고 업로드를 시작합니다. 인쇄 자체는 지금 버튼을 눌러야 나갑니다.</p>
-  <div class="figs figs-2"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p09-b.jpg" aria-label="B모드. 리포트 PDF까지 만들어집니다 크게 보기"><img src="shots/p09-b.jpg" alt="B모드. 리포트 PDF까지 만들어집니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>B모드. 리포트 PDF까지 만들어집니다</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p09-a.jpg" aria-label="A모드. 네컷 PDF만 만들어집니다. 이 캡처는 업로드 미설정 상태입니다 크게 보기"><img src="shots/p09-a.jpg" alt="A모드. 네컷 PDF만 만들어집니다. 이 캡처는 업로드 미설정 상태입니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>A모드. 네컷 PDF만 만들어집니다. 이 캡처는 업로드 미설정 상태입니다</figcaption>
-</figure></div>
-  <div class="tbl"><table>
-    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>(자동) 화면 진입</td><td>네컷 PDF 생성, B모드는 리포트 PDF도 생성, 업로드 시작</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>[사일런트 인쇄 실행] 누름</td><td>고른 프린터로 대화상자 없이 인쇄합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>(오류) 인쇄 실패</td><td>안내창이 뜨고 [확인]을 누르면 이 화면으로 돌아옵니다</td><td><a class="go" href="#m-02"><span class="mono">M-02</span> 오류 안내</a></td></tr><tr><td>[다음] 누름</td><td>인쇄를 안 눌러도 넘어갑니다</td><td><a class="go" href="#p-10"><span class="mono">P-10</span> QR 제공</a></td></tr></tbody>
+  <p class="desc">키오스크 밖, 보호자 폰에서 보는 화면입니다. 백엔드 서버가 띄웁니다. <b>보호자 연결(P-02a)에서 카카오를 고른 경우에만</b> 씁니다 — 화면의 QR을 찍으면 바로 카카오 로그인으로 가고, 클릭만으로 끝납니다. 로그인이 끝나면 키오스크는 저절로 연령 선택으로 넘어갑니다. 리포트는 체험이 끝난 뒤 카카오 계정 이메일로 갑니다 (PDF 첨부 + 본문 + 네컷 이미지). 메일을 언제 어떻게 보낼지는 서버가 정합니다 — 키오스크는 데이터를 보내면 끝입니다.</p>
+  <div class="figs figs-phone">
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/phone-login.svg" aria-label="카카오 로그인 크게 보기"><img src="wf/phone-login.svg" alt="카카오 로그인" loading="lazy" width="400" height="860"></button>
+      <figcaption>① 카카오 로그인 · 동의. 카카오가 띄우는 화면입니다</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/phone-sent.svg" aria-label="연결됐어요 크게 보기"><img src="wf/phone-sent.svg" alt="연결됐어요" loading="lazy" width="400" height="860"></button>
+      <figcaption>② "연결됐어요". 아이는 키오스크에서 체험을 이어 갑니다</figcaption>
+    </figure>
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/phone-mail.svg" aria-label="메일 도착 크게 보기"><img src="wf/phone-mail.svg" alt="메일 도착" loading="lazy" width="400" height="860"></button>
+      <figcaption>③ 메일 도착. 체험이 끝나 키오스크가 데이터를 보내면 서버가 보냅니다</figcaption>
+    </figure>
+  </div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>이런 경우</th><th>보호자가 보는 것</th></tr></thead>
+    <tbody>
+      <tr><td>카카오 계정에 쓸 수 있는 이메일이 없음</td><td>"카카오 계정의 이메일을 확인해 주세요" — 키오스크에서 [이메일 직접 입력]을 골라도 됩니다</td></tr>
+      <tr><td>다른 사람이 같은 QR을 찍음</td><td>"이미 연결된 QR이에요" (QR 하나에 처음 연결된 1명만)</td></tr>
+      <tr><td>소리를 하나도 살펴보지 못함</td><td>"오늘은 목소리를 살펴보지 못했어요" 안내 리포트가 메일로 갑니다</td></tr>
+      <tr><td>체험이 중간에 끝나 데이터가 안 옴</td><td>서버가 정합니다</td></tr>
+    </tbody>
   </table></div>
 </section>
-<section class="scr" id="p-10">
-  <header class="scr-head">
-    <span class="mono code">P-10</span>
-    <h3>QR 제공</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    
-  </header>
-  <p class="desc">보호자가 폰으로 찍어 결과물을 받는 화면입니다. B모드는 리포트 PDF, A모드는 네컷 이미지를 받습니다. 업로드 결과에 따라 화면이 달라집니다.</p>
-  <div class="figs figs-2"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p10-qr.jpg" aria-label="업로드 성공. 이 QR은 캡처용 임시 서버 주소라 찍어도 열리지 않습니다 크게 보기"><img src="shots/p10-qr.jpg" alt="업로드 성공. 이 QR은 캡처용 임시 서버 주소라 찍어도 열리지 않습니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>업로드 성공. 이 QR은 캡처용 임시 서버 주소라 찍어도 열리지 않습니다</figcaption>
-</figure><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p10-failed.jpg" aria-label="업로드 실패. 클라우드를 아직 배포하지 않아 지금 앱은 항상 이 화면이 나옵니다 크게 보기"><img src="shots/p10-failed.jpg" alt="업로드 실패. 클라우드를 아직 배포하지 않아 지금 앱은 항상 이 화면이 나옵니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>업로드 실패. 클라우드를 아직 배포하지 않아 지금 앱은 항상 이 화면이 나옵니다</figcaption>
-</figure></div>
-  <div class="tbl"><table>
-    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>(자동) 업로드 성공</td><td>QR을 보여줍니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>(자동) 업로드 진행 중</td><td>"결과물을 준비하고 있어요…"를 보여줍니다</td><td><span class="stay">이 화면에 그대로</span></td></tr><tr><td>(오류) 업로드 실패</td><td>안내창을 띄우고 "인쇄물만 제공됩니다"를 보여줍니다</td><td><a class="go" href="#m-02"><span class="mono">M-02</span> 오류 안내</a></td></tr><tr><td>[완료] 누름</td><td><span class="none">없음</span></td><td><a class="go" href="#p-11"><span class="mono">P-11</span> 종료</a></td></tr></tbody>
-  </table></div>
-</section>
-<section class="scr" id="p-11">
-  <header class="scr-head">
-    <span class="mono code">P-11</span>
-    <h3>종료</h3>
-    <span class="chip chip-common">A·B 공통</span>
-    <span class="chip chip-auto">자동 진행</span>
-  </header>
-  <p class="desc">인사하고 5초를 센 뒤 처음으로 돌아갑니다. 돌아가면서 이번 세션의 사진, PDF 등 로컬 파일을 지웁니다.</p>
-  <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p11.jpg" aria-label="p11 크게 보기"><img src="shots/p11.jpg" alt="p11" loading="lazy" width="1920" height="1080"></button>
-  
-</figure></div>
-  <div class="tbl"><table>
-    <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
-    <tbody><tr><td>(자동) 5초 뒤</td><td>세션 폴더 삭제, 세션 초기화</td><td><a class="go" href="#p-00"><span class="mono">P-00</span> 대기</a></td></tr></tbody>
-  </table></div>
-</section>
+
     </div>
   </section>
 
-  <section class="scr" id="m-02">
-    <header class="scr-head">
-      <span class="mono code">M-02</span>
-      <h3>오류 안내</h3>
-      <span class="chip chip-common">A·B 공통</span>
-    </header>
-    <p class="desc">문제가 생기면 지금 화면 위에 안내창이 뜹니다. 앱은 꺼지지 않습니다. 안내창의 작은 회색 글씨는 개발용 상세 내용으로, 운영 버전에서는 빠집니다.</p>
-    <div class="err-grid">
-      <figure class="fig">
-  <button class="shot" type="button" data-src="shots/m02-camera.jpg" aria-label="촬영 중 카메라 연결이 끊겼을 때 크게 보기"><img src="shots/m02-camera.jpg" alt="촬영 중 카메라 연결이 끊겼을 때" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>촬영 중 카메라 연결이 끊겼을 때</figcaption>
-</figure>
-      <figure class="fig">
-  <button class="shot" type="button" data-src="shots/m02-print.jpg" aria-label="인쇄가 실패했을 때 크게 보기"><img src="shots/m02-print.jpg" alt="인쇄가 실패했을 때" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>인쇄가 실패했을 때</figcaption>
-</figure>
-      <figure class="fig">
-  <button class="shot" type="button" data-src="shots/m02-upload.jpg" aria-label="업로드가 실패했을 때 크게 보기"><img src="shots/m02-upload.jpg" alt="업로드가 실패했을 때" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>업로드가 실패했을 때</figcaption>
-</figure>
+  <section id="print" class="panel">
+    <div class="section-head">
+      <h2>네컷 사진 규격 (디자이너용)</h2>
+      <p class="sub">화면이 아니라, 분석 및 프린트 화면에서 프린터로 나오는 4×6인치 사진의 규격입니다. <b>가로</b>로 뽑습니다 — 왼쪽에 사진 2×2, 오른쪽에 좁은 세로 띠. <b>A · B 같은 프레임이고 QR은 넣지 않습니다</b> (2026년 11월 20일 — 보호자를 체험 전에 연결하므로 필요 없어졌습니다).</p>
     </div>
-    <div class="figs figs-1"><figure class="fig">
-  <button class="shot" type="button" data-src="shots/p06-error.jpg" aria-label="카메라 오류 안내를 닫은 뒤의 P-06. [다시 시도]와 개발용 [placeholder로 계속]이 나타납니다 크게 보기"><img src="shots/p06-error.jpg" alt="카메라 오류 안내를 닫은 뒤의 P-06. [다시 시도]와 개발용 [placeholder로 계속]이 나타납니다" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>카메라 오류 안내를 닫은 뒤의 P-06. [다시 시도]와 개발용 [placeholder로 계속]이 나타납니다</figcaption>
-</figure></div>
-    <div class="tbl"><table>
-      <thead><tr><th>상황</th><th>안내 문구</th><th>[확인]을 누르면</th></tr></thead>
+    <div class="figs figs-print">
+    <figure class="fig">
+      <button class="shot wf" type="button" data-src="wf/print.svg" aria-label="인쇄물 구성 스케치 크게 보기"><img src="wf/print.svg" alt="인쇄물 구성 스케치" loading="lazy" width="1844" height="1240"></button>
+      <figcaption><span class="kind">구성 스케치.</span> 빨간 점선은 실제 종이, 파란 점선은 안전 영역입니다. QR 자리는 없습니다</figcaption>
+    </figure>
+    <div class="tbl"><table class="wide">
+      <thead><tr><th>항목</th><th>규격</th></tr></thead>
       <tbody>
-        <tr><td>카메라 연결이 끊김</td><td>카메라를 준비하고 있어요. 옆의 직원에게 알려주세요!</td><td><a class="go" href="#p-06"><span class="mono">P-06</span> 촬영</a>에 머뭅니다. [다시 시도]를 누르면 찍은 컷을 유지한 채 이어서 찍습니다</td></tr>
-        <tr><td>분석 실패</td><td>목소리를 듣는 데 시간이 조금 더 걸렸어요. 사진은 그대로 나와요!</td><td><a class="go" href="#p-08"><span class="mono">P-08</span> 결과</a>로 이미 넘어가 있습니다</td></tr>
-        <tr><td>인쇄 실패</td><td>사진 출력이 조금 늦어지고 있어요. 옆의 직원에게 알려주세요!</td><td><a class="go" href="#p-09"><span class="mono">P-09</span> 인쇄</a>에 머뭅니다</td></tr>
-        <tr><td>업로드 실패</td><td>오늘은 인쇄물만 제공돼요. 사진 잘 챙겨가세요!</td><td><a class="go" href="#p-10"><span class="mono">P-10</span> QR 제공</a>에 머뭅니다. "인쇄물만 제공됩니다"가 보입니다</td></tr>
+        <tr><td>작업 크기</td><td><b>1844 × 1240 px</b> · 300dpi · 가로 · RGB(sRGB)</td></tr>
+        <tr><td>실제 종이</td><td>가운데 1800 × 1200 px (6×4인치). 바깥 약 20px는 잘릴 수 있습니다</td></tr>
+        <tr><td>안전 영역</td><td>글자 · 로고 · 캐릭터 얼굴은 가장자리에서 60px 안쪽에. 배경은 끝까지 채웁니다</td></tr>
+        <tr><td>프레임</td><td><b>직업별 6종</b> (프레임 전체가 직업별). 직업 선택 화면의 카드 그림으로도 씁니다</td></tr>
+        <tr><td>사진 칸</td><td>가로 칸 4개, 모두 같은 크기. 카메라 원본이 3:2라 3:2에 가까울수록 덜 잘립니다. 칸 좌표를 받습니다</td></tr>
+        <tr><td>QR 자리</td><td><b>없음</b> (2026년 11월 20일). 이미 QR 자리를 넣은 시안이 있으면 빼도 됩니다</td></tr>
+        <tr><td>색</td><td>포토 프린터는 모니터보다 조금 진하게 나옵니다. 시안이 나오면 실제로 인쇄해 봅니다</td></tr>
       </tbody>
     </table></div>
+  </div>
   </section>
 
-  <section class="scr" id="guardian">
-    <header class="scr-head">
-      <span class="mono code">폰</span>
-      <h3>보호자가 QR을 찍은 뒤</h3>
-      <span class="chip chip-b">B모드 리포트</span>
-    </header>
-    <p class="desc">키오스크 밖에서 보호자 폰으로 받는 결과물입니다. B모드는 리포트 PDF, A모드는 네컷 이미지입니다. 다운로드는 클라우드를 배포해야 실제로 동작하므로 폰으로 여는 과정은 아직 확인하지 못했습니다. 아래는 예시 데이터를 넣은 리포트 템플릿입니다.</p>
-    <div class="reports">
-      <figure class="fig">
-  <button class="shot" type="button" data-src="shots/report-all.jpg" aria-label="전부 잘 인식된 경우 크게 보기"><img src="shots/report-all.jpg" alt="전부 잘 인식된 경우" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>전부 잘 인식된 경우</figcaption>
-</figure>
-      <figure class="fig">
-  <button class="shot" type="button" data-src="shots/report-some.jpg" aria-label="일부 다르게 인식된 경우 크게 보기"><img src="shots/report-some.jpg" alt="일부 다르게 인식된 경우" loading="lazy" width="1920" height="1080"></button>
-  <figcaption>일부 다르게 인식된 경우</figcaption>
-</figure>
-    </div>
-  </section>
-
-  <section id="gaps">
-    <div class="section-head">
-      <h2>화면 정의서와 다른 부분</h2>
-      <p class="sub">PAGE_SPEC.md에 적힌 동작과 지금 앱을 비교했습니다. 왼쪽 분류는 참고용입니다. 운영 전에 처리할 항목을 고르는 데 쓰시면 됩니다.</p>
-    </div>
-    <div class="panel"><div class="tbl"><table>
-      <thead><tr><th>분류</th><th>대상</th><th>정의서</th><th>지금 앱</th></tr></thead>
-      <tbody><tr><td><span class="pri pri-high">먼저 결정</span></td><td style="white-space:normal">P-04a 동의 (A모드)</td><td>사진 동의를 받은 뒤 촬영</td><td>화면이 없습니다. A모드는 동의 없이 바로 촬영으로 갑니다</td></tr><tr><td><span class="pri pri-high">먼저 결정</span></td><td style="white-space:normal">P-04 동의</td><td>법무 검토한 문구 + [사진만 찍을래요]로 A모드 전환</td><td>문구가 비어 있고, [사진만 찍을래요] 버튼이 없습니다</td></tr><tr><td><span class="pri pri-high">먼저 결정</span></td><td style="white-space:normal">M-01 무조작 안내</td><td>60초 동안 조작이 없으면 안내 후 처음으로 복귀, 세션 삭제</td><td>없습니다. 손님이 중간에 떠나면 입력한 이름과 화면이 그대로 남습니다</td></tr><tr><td><span class="pri pri-high">먼저 결정</span></td><td style="white-space:normal">P-00 세션 초기화</td><td>이전 손님 데이터를 지우고 시작</td><td>P-11을 거치면 지워집니다. [뒤로]로 돌아오면 이름과 고른 직업이 남습니다 (코드 기준)</td></tr><tr><td><span class="pri pri-mid">기능 미완</span></td><td style="white-space:normal">P-05 발화</td><td>카운트다운, 자동 녹음 4회, 레벨 미터, 재시도</td><td>대사 표시와 [발화 완료] 버튼뿐입니다. 녹음 파일이 생기지 않습니다</td></tr><tr><td><span class="pri pri-mid">기능 미완</span></td><td style="white-space:normal">P-06 촬영</td><td>Canon R100으로 촬영</td><td>가짜 카메라입니다. Canon SDK 승인 후 교체합니다</td></tr><tr><td><span class="pri pri-mid">기능 미완</span></td><td style="white-space:normal">P-07 · P-08 분석과 추천</td><td>실제 분석 결과로 추천</td><td>가짜 분석입니다. 추천 직업은 고른 4개 중 무작위입니다</td></tr><tr><td><span class="pri pri-mid">기능 미완</span></td><td style="white-space:normal">P-09 인쇄</td><td>화면에 들어오면 자동 인쇄, 끝나면 자동으로 P-10</td><td>버튼을 눌러야 인쇄됩니다. 안 눌러도 넘어갈 수 있고, 프린터 선택창이 보입니다</td></tr><tr><td><span class="pri pri-low">다듬기</span></td><td style="white-space:normal">P-09 인쇄 실패</td><td>안내 후 P-10으로 계속 진행</td><td>안내창을 닫으면 P-09에 머뭅니다. [다음]을 또 눌러야 합니다</td></tr><tr><td><span class="pri pri-mid">기능 미완</span></td><td style="white-space:normal">P-10 QR</td><td>업로드한 결과물의 QR</td><td>클라우드를 배포하지 않아 항상 "인쇄물만 제공됩니다"가 나옵니다</td></tr><tr><td><span class="pri pri-low">다듬기</span></td><td style="white-space:normal">P-10 자동 이동</td><td>[완료] 또는 20초 뒤 자동으로 P-11, 남은 시간 표시</td><td>[완료] 버튼으로만 넘어갑니다</td></tr><tr><td><span class="pri pri-low">다듬기</span></td><td style="white-space:normal">P-00 시작</td><td>화면 아무 곳이나 터치, 어트랙트 영상</td><td>[시작하기] 버튼만 동작합니다. 영상 자리는 비어 있습니다</td></tr><tr><td><span class="pri pri-mid">기능 미완</span></td><td style="white-space:normal">P-03 이름 입력</td><td>터치 키패드</td><td>물리 키보드가 있어야 입력할 수 있습니다</td></tr><tr><td><span class="pri pri-low">다듬기</span></td><td style="white-space:normal">P-08 결과</td><td>네컷 사진 미리보기</td><td>사진 대신 파일 경로가 글자로 나옵니다</td></tr><tr><td><span class="pri pri-low">다듬기</span></td><td style="white-space:normal">[뒤로] 버튼</td><td>진행 중인 화면을 빼고 모든 화면에 제공</td><td>P-01~P-04에만 있습니다. P-05, P-08, P-09, P-10에는 없습니다</td></tr><tr><td><span class="pri pri-low">다듬기</span></td><td style="white-space:normal">운영 시작 화면</td><td>P-00부터 시작. 개발용 표시 없음</td><td>D-01부터 시작합니다. 상단 바, 오른쪽 아래 버튼, PLACEHOLDER 표시가 보입니다</td></tr></tbody>
-    </table></div></div>
-  </section>
-
-  <section>
-    <div class="section-head"><h2>캡처 조건</h2></div>
+  <section id="todo" class="panel">
+    <div class="section-head"><h2>디자인에서 정할 것</h2></div>
     <ul class="notes">
-      <li>실제 프린터로는 아무것도 보내지 않았습니다. 인쇄 실패 화면은 없는 프린터 이름을 골라 만들었습니다.</li>
-      <li>P-10의 QR 화면은 이 PC 안의 임시 서버로 업로드 성공을 만들어 띄웠습니다. 지금 키오스크에 깔린 앱에서는 나오지 않습니다.</li>
-      <li>카메라 끊김은 앱의 "USB 분리 흉내" 기능으로 만들었습니다. 실제 R100으로는 아직 확인하지 못했습니다.</li>
-      <li>실행해서 확인하지 못한 경로가 둘 있습니다. P-07 분석 실패와 P-10 업로드 진행 중 화면은 코드로만 확인해 캡처가 없습니다.</li>
-      <li>[뒤로]로 돌아왔을 때 이름과 선택이 남는 동작도 코드로 확인한 내용입니다.</li>
+      <li><b>컨셉 문구</b> (P-00 대기). 추천 직업이 빠져 기존 "내 목소리는 어떤 직업에 어울릴까?"는 쓰지 않습니다</li>
+      <li><b>직업별 네컷 프레임 6종</b> (가로) — 직업 선택 화면(P-04)의 카드 그림으로도 씁니다. 규격은 위 <a href="#print">인쇄물</a> 표</li>
+      <li><b>시나리오 연출</b> (P-05 발화) — 그림 · 애니메이션 · 내레이션. 아이 차례는 문장 음성 + 자막 → "이제 말해 보자!" → 버튼으로 정해졌습니다 (음성 · 멘트 파일은 기획에서 제공)</li>
+      <li><b>"잘 듣고 있어요" 연출</b> (P-05) — 캐릭터가 고민하는 표정(갸우뚱). 2.5~4초 동안 보입니다</li>
+      <li><b>보호자 연결 화면</b> (P-02a) — 카카오 QR · 이메일 입력 두 선택지, 화면 키보드, 주소 확인 창, 연결 실패 화면</li>
+      <li><b>리포트 미리보기 모양</b> (P-07 B모드) — 관찰 결과를 가리는 방법과 "보호자 메일로 보내 드려요" 안내</li>
+      <li><b>긍정 문구 세트와 SD 캐릭터</b> (P-07 A모드, B모드 분석 중). A모드 문구는 직업 · 사진 칭찬만 — 말하기를 안 했으므로 목소리 칭찬은 B모드에만</li>
+      <li><b>촬영 장면 영상</b>의 길이와 구간 (P-06에서 녹화, P-07에서 재생)</li>
+      <li><b>진행도 표현</b> (P-07). B모드는 분석 중 → 프린트 중, A모드는 프린트 중</li>
+      <li><b>완료 창 문구</b> (M-03)</li>
+      <li><b>A 안내 한 줄의 위치</b> (P-01) — A 카드 안 또는 화면 아래</li>
+      <li>동의 전문은 법무 검토 뒤 들어갑니다 (P-02). A모드를 동의 없이 안내로 운영해도 되는지와 안내 문구도 법무 확인 (P-01). 이메일 직접 입력 화면의 고지 문구도 법무 확인 (P-02a)</li>
+      <li>보호자가 폰으로 가입하는 동안 기다리는 시간 · 무조작 타임아웃 (P-02a) — 전체 타임아웃을 정할 때 같이 정합니다</li>
     </ul>
   </section>
 </main>
-<dialog id="zoom" aria-label="캡처 크게 보기"><img id="zoom-img" alt=""></dialog>
+<dialog id="zoom" aria-label="그림 크게 보기"><img id="zoom-img" alt=""></dialog>
 <script>
   (function () {
     var d = document.getElementById('zoom');
