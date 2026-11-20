@@ -1,18 +1,29 @@
 /**
- * P-00 [대기] — 타이틀 화면 겸용 (별도 타이틀 화면 없음)
+ * P-00 [대기] — 타이틀 화면 겸용 (별도 타이틀 화면 없음) · 🎨 디자인 입힘 (2026-11-21)
  *
- * 근거: PAGE_SPEC §3 P-00 · V2_PLAN §3
+ * 근거: PAGE_SPEC §3 P-00 · 디자인 시안(타이틀 화면 1920×1080)
  * 액션: [시작하기] 또는 화면 아무 곳이나 터치 → 세션 시작 → P-01[모드 선택]
  * 데이터: 세션 초기화 — 이전 세션의 남은 데이터를 지우고 새 세션 폴더를 받는다 (스토어 beginSession)
  *
- * ⚠️ 컨셉 문구 · 어트랙트 루프는 미확정이다 — 화면 디자인 때 새로 정한다 (PAGE_SPEC P-00 미결).
- *    v1의 컨셉 문구는 추천 직업이 빠지면서 폐기됐다 — 다시 넣지 않는다.
+ * 그림은 assets/ 에 있다 — 배경(bg/sky) · 제목(brand/title-ko · logo-en) · 캐릭터 2명 · 별 2개.
+ * 배치는 1920×1080 좌표 그대로다 (components/Stage.tsx가 창 크기에 맞춰 통째로 줄인다) — 값은 styles/p00.css.
+ *
+ * 컨셉 문구 "꿈을 찍고, 목소리를 담아요"는 디자인 시안의 문구다 (v1 문구는 추천 직업이 빠지면서 폐기).
+ * 어트랙트 영상은 없다 — 캐릭터 · 별이 천천히 떠 있는 움직임만 넣었다 (멈춘 화면은 고장으로 보이므로 · PAGE_SPEC §2-5).
  */
 
 import { useRef, useState, type ReactNode } from 'react'
-import { DevStrip, Placeholder, Screen } from '../components/Screen'
+import { DevStrip, Screen } from '../components/Screen'
+import { Stage } from '../components/Stage'
 import { useSession } from '../store/session'
-import '../styles/select.css'
+import skyUrl from '../assets/bg/sky.webp'
+import logoEnUrl from '../assets/brand/logo-en.png'
+import titleKoUrl from '../assets/brand/title-ko.png'
+import policeBoyUrl from '../assets/characters/police-boy.webp'
+import astronautGirlUrl from '../assets/characters/astronaut-girl.webp'
+import starCoralUrl from '../assets/deco/star-coral.png'
+import starYellowUrl from '../assets/deco/star-yellow.png'
+import '../styles/p00.css'
 
 export function P00Attract(): ReactNode {
   const beginSession = useSession((s) => s.beginSession)
@@ -42,33 +53,54 @@ export function P00Attract(): ReactNode {
   }
 
   return (
-    <Screen id="P-00" note="화면 아무 곳이나 터치 → P-01[모드 선택]">
-      {/* 터치 영역 — 바닥이든 본문이든 안쪽 어디를 눌러도 클릭이 여기로 올라와 start()가 한 번 불린다 */}
-      <div className="p00-root" onClick={() => void start()}>
-        {/* 본문 밖(양옆 여백 · 위쪽 띠)까지 덮는 투명한 바닥 */}
-        <div className="p00-backdrop" aria-hidden="true" />
+    <Screen id="P-00" designed>
+      {/* 터치 영역 — 화면 어디를 눌러도 클릭이 여기로 올라와 start()가 한 번 불린다 */}
+      <div className="p00" onClick={() => void start()}>
+        <Stage background={skyUrl}>
+          <img className="p00-logo-en" src={logoEnUrl} alt="MY DREAM VOICE" draggable={false} />
 
-        <div className="p00-body">
-          <h1 className="screen__title">마이 드림 보이스</h1>
+          <img className="p00-star p00-star--coral" src={starCoralUrl} alt="" draggable={false} />
+          <img className="p00-star p00-star--yellow" src={starYellowUrl} alt="" draggable={false} />
 
-          <div className="p00-concept">
-            <Placeholder
-              label="컨셉 문구 미확정 — 화면 디자인 때 새로 정함 (PAGE_SPEC P-00)"
-              width="100%"
-            />
-          </div>
+          <img className="p00-char p00-char--police" src={policeBoyUrl} alt="" draggable={false} />
+          <img
+            className="p00-char p00-char--astronaut"
+            src={astronautGirlUrl}
+            alt=""
+            draggable={false}
+          />
 
-          <div className="p00-loop">
-            <Placeholder label="어트랙트 루프 (영상 / 애니메이션) — 콘텐츠 미확정" width="100%" />
-          </div>
+          <h1 className="p00-title">
+            <img src={titleKoUrl} alt="마이 드림 보이스" draggable={false} />
+          </h1>
+
+          <p className="p00-tagline">꿈을 찍고, 목소리를 담아요</p>
 
           {/* 핸들러를 따로 달지 않는다 — 누르면 클릭이 바깥 터치 영역으로 올라간다 (두 번 불리지 않게) */}
-          <button type="button" className="btn btn--primary btn--lg p00-start" disabled={busy}>
-            시작하기
+          <button type="button" className="p00-start" disabled={busy}>
+            <span className="p00-start__label">시작하기</span>
+            <span className="p00-start__arrow" aria-hidden="true">
+              <svg viewBox="0 0 48 48" width="100%" height="100%">
+                <path
+                  d="M11 24h25M26 13l11 11-11 11"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="6.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
           </button>
 
-          {error && <DevStrip label="세션 시작 실패">{error}</DevStrip>}
-        </div>
+          <p className="p00-hint">화면 어디든 터치해 주세요</p>
+        </Stage>
+
+        {error && (
+          <div className="p00-dev">
+            <DevStrip label="세션 시작 실패">{error}</DevStrip>
+          </div>
+        )}
       </div>
     </Screen>
   )

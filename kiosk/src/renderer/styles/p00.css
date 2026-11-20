@@ -1,0 +1,202 @@
+/*
+ * p00.css — P-00 [대기] · 타이틀 화면 (디자인 입힘 · 2026-11-21)
+ *
+ * 좌표는 전부 1920×1080 도화지 기준 px다 (components/Stage.tsx가 창 크기에 맞춰 통째로 줄인다).
+ * 디자인 시안(타이틀 화면)에 맞춰 놓은 값이다 — 시안이 바뀌면 여기만 고친다.
+ */
+
+.p00 {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  cursor: pointer;
+  /* 배경 그림이 뜨기 전 · 화면 비율이 달라 남는 자리의 바탕색 (하늘색) */
+  background: var(--d-sky);
+}
+
+.p00 img {
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* ── 위쪽 영문 로고 ── */
+.p00-logo-en {
+  position: absolute;
+  left: 743px;
+  top: 32px;
+  width: 434px;
+}
+
+/* ── 제목 ── */
+.p00-title {
+  position: absolute;
+  left: 545px;
+  top: 104px;
+  width: 837px;
+  margin: 0;
+}
+
+.p00-title img {
+  width: 100%;
+}
+
+/* ── 컨셉 문구 ── */
+.p00-tagline {
+  position: absolute;
+  left: 0;
+  top: 636px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 72px;
+  letter-spacing: 0.01em;
+  color: var(--d-navy);
+}
+
+/* ── [시작하기] ── */
+.p00-start {
+  position: absolute;
+  left: 570px;
+  top: 759px;
+  width: 780px;
+  height: 187px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+  /* 시안의 알약은 아래쪽에 두께(그늘)가 있어 글자가 살짝 위에 놓인다 */
+  padding: 0 0 6px;
+  border: 0;
+  border-radius: 94px;
+  background: #fff;
+  box-shadow:
+    0 14px 30px rgba(45, 120, 190, 0.22),
+    inset 0 -6px 0 rgba(180, 215, 245, 0.55);
+  font-family: var(--d-font-display);
+  color: var(--d-navy);
+  cursor: pointer;
+}
+
+.p00-start:disabled {
+  opacity: 0.75;
+}
+
+.p00-start__label {
+  font-size: 108px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.p00-start__arrow {
+  flex: 0 0 auto;
+  width: 94px;
+  height: 94px;
+  border-radius: 50%;
+  background: var(--d-coral);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.p00-start__arrow svg {
+  width: 72%;
+  height: 72%;
+}
+
+/* ── 터치 안내 ── */
+.p00-hint {
+  position: absolute;
+  left: 0;
+  top: 971px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 60px;
+  color: var(--d-navy);
+}
+
+/* ── 캐릭터 ── */
+.p00-char {
+  position: absolute;
+}
+
+.p00-char--police {
+  left: -95px;
+  top: 72px;
+  width: 811px;
+  animation: p00-float 5.2s ease-in-out infinite;
+}
+
+.p00-char--astronaut {
+  left: 1233px;
+  top: 125px;
+  width: 752px;
+  animation: p00-float 6s ease-in-out -2.4s infinite;
+}
+
+/* ── 별 ── */
+.p00-star {
+  position: absolute;
+}
+
+.p00-star--coral {
+  left: 1417px;
+  top: 48px;
+  width: 95px;
+  animation: p00-twinkle 4.4s ease-in-out infinite;
+}
+
+.p00-star--yellow {
+  left: 1743px;
+  top: 704px;
+  width: 93px;
+  animation: p00-twinkle 5s ease-in-out -1.8s infinite;
+}
+
+/* ── 움직임 — 멈춘 화면은 고장으로 보인다 (PAGE_SPEC §2-5). 시안에는 없는 연출이라 아주 약하게만 ── */
+@keyframes p00-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes p00-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.08) rotate(6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p00-char,
+  .p00-star {
+    animation: none;
+  }
+}
+
+/* 개발용 — 세션 시작 실패 안내 (손님 화면에는 없다) */
+.p00-dev {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 5;
+  background: rgba(16, 18, 22, 0.85);
+  border-radius: 10px;
+}

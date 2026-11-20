@@ -296,3 +296,34 @@ body {
   font-family: inherit;
   cursor: pointer;
 }
+
+/* ────────────────────────────────────────────────
+   디자인을 입힌 화면 — 위쪽 띠 없이 창 전체 (components/Screen.tsx `designed` · components/Stage.tsx)
+   ──────────────────────────────────────────────── */
+
+/* .screen__bar 는 display: flex 라 hidden 속성만으로는 안 감춰진다 */
+.screen__bar[hidden] {
+  display: none;
+}
+
+/* 창 전체를 덮는 바깥 틀 — 배경 그림은 여기에 깔아, 화면 비율이 달라 남는 띠까지 이어지게 한다 */
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 1920×1080 도화지 — 가운데에 놓고 창 크기에 맞춰 통째로 줄이거나 늘린다 (배율은 Stage.tsx가 넣는다) */
+.stage__canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: center;
+}

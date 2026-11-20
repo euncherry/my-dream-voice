@@ -12,7 +12,7 @@
  *   → 공통 클래스(.btn · .ph)를 덮어쓸 때는 클래스 두 개로 적어, 실리는 순서와 무관하게 이기게 한다
  *     (예: .btn.p01-card).
  *
- * 클래스 이름: 화면별은 .p00- ~ .p04-, 다섯 화면이 같이 쓰는 틀은 .pick
+ * 클래스 이름: 화면별은 .p01- ~ .p04- (P-00은 디자인을 입혀 p00.css로 옮겼다), 다섯 화면이 같이 쓰는 틀은 .pick
  *   (.sel 은 hardware.css 가 D-01에서 이미 쓰고 있어 피했다).
  */
 
@@ -78,57 +78,6 @@
   border-color: var(--c-accent);
   background: color-mix(in srgb, var(--c-accent) 22%, var(--c-surface-2));
   box-shadow: 0 0 0 4px var(--c-accent);
-}
-
-/* ────────────────────────────────────────────────
-   P-00 [대기]
-   ──────────────────────────────────────────────── */
-
-/* 터치 영역 — 상자를 만들지 않는다. 안쪽(바닥 + 본문) 어디를 눌러도 클릭이 여기로 올라온다 */
-.p00-root {
-  display: contents;
-}
-
-/* 본문 밖(양옆 여백 · 위쪽 띠)까지 덮는 투명한 바닥 — "화면 아무 곳이나 터치" */
-.p00-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  cursor: pointer;
-}
-
-.p00-body {
-  position: relative;
-  z-index: 1;
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gap-md);
-  padding-bottom: var(--gap-xs);
-  cursor: pointer;
-}
-
-.p00-concept {
-  flex: 0 0 auto;
-  width: min(100%, 760px);
-  display: flex;
-}
-
-/* 어트랙트 루프 자리 — 남는 높이를 다 쓴다 */
-.p00-loop {
-  flex: 1 1 auto;
-  min-height: 0;
-  width: min(100%, 1100px);
-  display: flex;
-}
-
-.btn.p00-start {
-  flex: 0 0 auto;
-  min-width: 360px;
 }
 
 /* ────────────────────────────────────────────────
