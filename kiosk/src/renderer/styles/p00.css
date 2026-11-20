@@ -47,15 +47,15 @@
 .p00-tagline {
   position: absolute;
   left: 0;
-  top: 636px;
+  top: 633px;
   width: 1920px;
   margin: 0;
   text-align: center;
   font-family: var(--d-font-display);
-  font-size: 54px;
-  font-weight: 700;
+  font-size: 48px;
+  font-weight: 800;
   line-height: 72px;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
   color: var(--d-navy);
 }
 
@@ -88,10 +88,15 @@
 }
 
 .p00-start__label {
-  font-size: 108px;
-  font-weight: 700;
+  /* 둥근바람은 글자가 줄 상자 가운데보다 조금 아래에 놓인다 — 5px 올려 동그라미와 가운데를 맞춘다 */
+  position: relative;
+  top: -5px;
+  font-size: 100px;
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  /* 마지막 글자 뒤에 붙는 자간은 빼서 가운데 맞춤이 어긋나지 않게 */
+  margin-right: -0.06em;
 }
 
 .p00-start__arrow {
@@ -114,14 +119,15 @@
 .p00-hint {
   position: absolute;
   left: 0;
-  top: 971px;
+  top: 969px;
   width: 1920px;
   margin: 0;
   text-align: center;
   font-family: var(--d-font-display);
-  font-size: 44px;
-  font-weight: 700;
+  font-size: 40px;
+  font-weight: 800;
   line-height: 60px;
+  letter-spacing: 0.025em;
   color: var(--d-navy);
 }
 

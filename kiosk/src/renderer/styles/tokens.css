@@ -54,8 +54,8 @@
   --d-navy: #112a69; /* 글자 */
   --d-coral: #fe6a4e; /* 강조 (화살표 동그라미 · 밑줄) */
   --d-white: #ffffff;
-  /* ⚠️ 시안의 글꼴(둥글고 굵은 제목용 글꼴)은 파일을 받지 못했다 — 받으면 fonts.css에 싣고 여기 맨 앞에 넣는다 */
-  --d-font-display: 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
+  /* 큰 글자용 글꼴 — 티머니 둥근바람 (fonts.css · 굵기 400 / 800) */
+  --d-font-display: 'TMoneyDungunbaram', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
 }
 
 :root[data-orientation='portrait'] {

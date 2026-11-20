@@ -31,3 +31,29 @@
  * ⚠️ 이모지(🌟)는 Pretendard에 없어 OS 폰트(Segoe UI Emoji)로 대체 렌더된다.
  *    PDF 출력에서 어떻게 나오는지 5단계에서 확인할 것 (REPORT_TEMPLATE.md §5)
  */
+
+/*
+ * 티머니 둥근바람 (Tmoney RoundWind) — 디자인 화면의 큰 글자용 (2026-11-21 디자인 지정)
+ *   쓰는 곳: tokens.css 의 --d-font-display (P-00 "꿈을 찍고…" · [시작하기] · "화면 어디든 터치해 주세요")
+ *
+ * 저작권 ㈜티머니. 받은 곳: 눈누(projectnoonnu/noonfonts_20-07) 배포본 — **받은 파일 그대로**다 (변환 · 수정하지 않았다).
+ * 라이선스 요약 (산돌구름 안내 기준 — 확정은 티머니 공식 안내로 확인할 것):
+ *   개인 · 기업 무료 사용 · 프로그램/웹 탑재 가능 / 유료 판매 · 수정해서 재배포 금지 / **BI · CI(회사명 · 로고 · 슬로건) 사용 불가**
+ * ⚠️ 웹폰트 CDN을 쓰지 않는다 (오프라인 앱 · CLAUDE.md) — 디자인이 준 @font-face 의 CDN 주소 대신 파일을 여기 넣었다.
+ */
+
+@font-face {
+  font-family: 'TMoneyDungunbaram';
+  src: url('./fonts/TmoneyRoundWindRegular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'TMoneyDungunbaram';
+  src: url('./fonts/TmoneyRoundWindExtraBold.woff') format('woff');
+  font-weight: 800;
+  font-style: normal;
+  font-display: block;
+}
