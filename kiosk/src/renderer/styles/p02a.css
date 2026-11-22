@@ -1,377 +1,869 @@
 /*
- * p02a.css — P-02a [보호자 연결] + 이메일용 화면 키보드 (components/EmailKeyboard.tsx)
+ * p02a.css — P-02a [보호자 연결] (디자인 입힘 · 2026-11-22) + 이메일용 화면 키보드 (components/EmailKeyboard.tsx)
  *
- * ⚠️ 색 · 글꼴 · 크기 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다.
- *    지금은 구조와 동작만 확인한다. 색 · 간격은 tokens.css 변수로 쓴다.
+ * 좌표는 전부 1920×1080 도화지 기준 px다 (components/Stage.tsx가 창 크기에 맞춰 통째로 줄인다).
+ * 디자인 시안(보호자 연결 화면 2000×1126)에서 잰 값을 0.96배 해서 옮겼다 (자주 쓰는 주소 · 화면 키보드 모양은
+ * 이메일 입력 화면 시안 1672×941 · 2026-11-23) — 시안이 바뀌면 여기만 고친다.
+ * [← 뒤로] · 별의 움직임은 공통 부품이다 (styles/design.css). 시안의 색 · 글꼴은 tokens.css의 --d-* 를 쓴다
+ * (흰색 · 누르는 동안 · 흐린 모습의 옅은 색 몇 개만 이 파일에 바로 적는다).
  *
- * 한 화면 수납 (PAGE_SPEC §2-8) — 1280×800 창부터 1920×1080까지 스크롤 없이 들어가야 한다.
- *   세로는 flex + min-height: 0 으로 남는 높이를 나눠 쓴다: 머리(제목) · 개발용 띠는 고정,
- *   가운데(QR 카드 · 화면 키보드)가 남는 높이만큼 줄거나 늘어난다.
+ * 시안은 "연결 선택"(2026-11-22)과 "이메일 입력"(2026-11-23 — 자주 쓰는 주소 · 키보드 모양만 입힘, 나머지는 체크리스트 결정 표 ⑭)
+ * 두 장이다. 그 밖의 모습(준비 중 · 이메일 입력의 배치 · 주소 확인 창 · 연결됐어요 · 연결 실패)은
+ * 같은 모양으로 만든 것이다 — P02aGuardianLink.tsx 머리말. 아래에서 "시안에 없는 모습"이라고 적은 곳이 그것이다.
  *
- * 이 파일은 app.css보다 먼저 실릴 수 있다(모듈 import 순서). 공통 클래스(.modal · .devstrip · .btn--sm)를
+ * 이 파일은 app.css보다 먼저 실릴 수 있다(모듈 import 순서). 공통 클래스(.devstrip · .btn--sm · .ph--tag)를
  * 덮는 규칙은 클래스 두 개(.p02a-… .공통)로 써서 순서와 상관없이 이기게 한다.
  */
 
 .p02a {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: var(--gap-xs);
+  /* 배경 그림이 뜨기 전 · 화면 비율이 달라 남는 자리의 바탕색 (하늘색) */
+  background: var(--d-sky);
 }
 
-/* ── 머리 — 제목 줄 ──
-   왼쪽 위 [← 뒤로](위에서 24px · 높이 88px)와 겹치지 않게: 높이는 그 아래 끝까지, 좌우는 버튼 폭만큼 비운다 */
-.p02a-head {
-  flex: 0 0 auto;
-  min-height: 72px;
-  padding: 0 160px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+.p02a img {
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
+/* ── 위쪽 영문 로고 (P-00 · P-01 · P-02와 같은 그림 · 같은 자리) ── */
+.p02a-logo {
+  position: absolute;
+  left: 743px;
+  top: -28px;
+  width: 434px;
+}
+
+/* ── 제목 · 안내 한 줄 ── */
 .p02a-title {
+  position: absolute;
+  left: 0;
+  top: 93px;
+  width: 1920px;
   margin: 0;
-  font-size: clamp(30px, 3.4vw, var(--fs-title));
+  text-align: center;
+  font-family: var(--d-font-button);
+  font-size: 91px;
+  font-weight: 700;
+  line-height: 100px;
+  color: var(--d-navy);
+  -webkit-text-stroke: 1.8px currentColor;
+  paint-order: stroke fill;
+}
+
+.p02a-sub {
+  position: absolute;
+  left: 0;
+  top: 195px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 41px;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 56px;
+  color: var(--d-navy);
 }
 
-/* 이메일 입력 — 키보드에 높이를 내주려고 제목을 작게 */
-.p02a-title--sm {
-  font-size: clamp(26px, 2.8vw, 44px);
-}
-
-/* ── 가운데 — 상태마다 내용이 바뀐다 ── */
-.p02a-main {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gap-md);
+/* ── 별 (움직임은 공통 — design.css) ── */
+.p02a-star {
+  position: absolute;
+  left: 1791px;
+  top: 255px;
+  width: 78px;
+  rotate: -14deg;
+  animation:
+    d-star-bob 5.4s ease-in-out -2s infinite,
+    d-star-sway 6.6s ease-in-out -4.2s infinite;
 }
 
 /* ────────────────────────────────────────────────
-   연결 선택 — ① 카카오 QR  ② 이메일 직접 입력
+   연결 선택 — 흰 카드 두 장: ① 카카오 QR  ② 이메일 직접 입력
    ──────────────────────────────────────────────── */
 
-.p02a-choices {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  max-height: 640px;
-  display: grid;
-  /* 스케치 비율 — QR 카드가 조금 넓다 */
-  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
-  grid-template-rows: minmax(0, 1fr);
-  gap: var(--gap-md);
-}
-
 .p02a-card {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--gap-xs);
-  padding: var(--gap-md);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
-  border-radius: var(--radius);
+  position: absolute;
+  top: 279px;
+  height: 669px;
+  border-radius: 70px;
+  background: #fff;
+  /* 바깥으로 번지는 파란 그림자 — 이 시안의 카드는 P-01 · P-02와 달리 안쪽 아래에 하늘색 두께가 없다 */
+  box-shadow: 0 5px 14px 5px rgb(var(--d-glow) / 0.88);
+  color: var(--d-navy);
 }
 
+.p02a-card--kakao {
+  left: 239px;
+  width: 756px;
+}
+
+.p02a-card--email {
+  left: 1028px;
+  width: 674px;
+}
+
+/* 카드 제목 — [카카오 표시] ① 글자 */
 .p02a-card__title {
+  position: absolute;
+  top: 50px;
+  height: 66px;
   margin: 0;
-  font-size: clamp(22px, 2.3vw, var(--fs-heading));
-  font-weight: 800;
-}
-
-.p02a-card__lead {
-  margin: 0;
-  font-size: clamp(18px, 1.9vw, 28px);
-  font-weight: 700;
-}
-
-.p02a-card__sub {
-  margin: 0;
-  font-size: clamp(15px, 1.5vw, 22px);
-  color: var(--c-text-dim);
-}
-
-/* QR — 카드에 남는 높이를 다 쓰는 정사각형 */
-.p02a-qr {
-  position: relative;
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
   display: flex;
   align-items: center;
+  font-family: var(--d-font-button);
+  font-size: 47px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 1px currentColor;
+  paint-order: stroke fill;
+}
+
+/* 시안의 왼쪽 카드는 캐릭터가 왼쪽 아래를 가려서 내용이 카드 가운데보다 조금 오른쪽에 놓인다 */
+.p02a-card--kakao .p02a-card__title {
+  left: 109px;
+}
+
+/* 시안의 오른쪽 카드 제목은 왼쪽보다 조금 크다 (왼쪽은 카카오 표시가 붙어 폭이 모자라 줄인 것) */
+.p02a-card--email .p02a-card__title {
+  left: 0;
+  width: 100%;
   justify-content: center;
+  font-size: 53px;
+}
+
+.p02a-card--email .p02a-num {
+  width: 58px;
+  height: 58px;
+  margin-right: 18px;
+  font-size: 37px;
+}
+
+.p02a-kakao {
+  flex: 0 0 auto;
+  width: 66px;
+  height: 66px;
+  margin-right: 25px;
+}
+
+/* ① ② — 글꼴의 동그라미 숫자 대신 직접 그린다 (글꼴마다 모양이 달라서) */
+.p02a-num {
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  margin-right: 14px;
+  display: grid;
+  place-items: center;
+  border: 5px solid currentColor;
+  border-radius: 50%;
+  font-size: 32px;
+  line-height: 1;
+  -webkit-text-stroke: 0.6px currentColor;
+}
+
+/* QR 자리 — 흰 네모 판. QR은 여백 없이 그리고(P02aGuardianLink.tsx) 이 판과 흰 카드가 QR 둘레의 여백 노릇을 한다 */
+.p02a-qr {
+  position: absolute;
+  left: 232px;
+  top: 134px;
+  width: 314px;
+  height: 302px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1.5px rgb(14 39 85 / 0.05),
+    0 3px 12px rgb(14 39 85 / 0.14);
 }
 
 .p02a-qr__img {
+  width: 262px;
+  height: 262px;
+}
+
+/* 준비 중 (시안에 없는 모습) — 세션을 여는 동안 · 로그인 확인을 다시 하는 동안 QR 자리에 뜬다 */
+.p02a-qr__wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  font-family: var(--d-font-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--d-navy);
+}
+
+.p02a-card__lead {
   position: absolute;
-  top: 0;
-  left: 50%;
-  height: 100%;
-  max-width: 100%;
-  aspect-ratio: 1 / 1;
-  transform: translateX(-50%);
-  object-fit: contain;
-  border-radius: 8px;
-  /* 줄여 그려도 점이 번지지 않게 */
-  image-rendering: pixelated;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-button);
+  font-size: 42.8px;
+  font-weight: 700;
+  line-height: 49px;
+  white-space: nowrap;
+  -webkit-text-stroke: 0.8px currentColor;
+  paint-order: stroke fill;
 }
 
-.p02a-qr .ph {
-  height: 100%;
-  max-width: 100%;
-  aspect-ratio: 1 / 1;
+.p02a-card--kakao .p02a-card__lead {
+  left: 161px;
+  top: 454px;
+  width: 500px;
 }
 
-/* 그림 자리 (이메일 카드) */
-.p02a-card__art {
-  flex: 1 1 0;
-  min-height: 0;
+/* 시안의 오른쪽 안내는 왼쪽보다 조금 작다 */
+.p02a-card--email .p02a-card__lead {
+  left: 0;
+  top: 416px;
   width: 100%;
+  font-size: 38.4px;
+}
+
+.p02a-card__sub {
+  position: absolute;
+  left: 162px;
+  top: 561px;
+  width: 500px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 29.7px;
+  font-weight: 400;
+  line-height: 39px;
+  white-space: nowrap;
+  /* 시안의 굵기는 이 글꼴의 보통(400)과 아주 굵게(800) 사이다 — 보통에 같은 색 외곽선을 둘러 맞춘다 */
+  -webkit-text-stroke: 0.9px currentColor;
+  paint-order: stroke fill;
+}
+
+/* 편지 봉투 그림 */
+.p02a-mail {
+  position: absolute;
+  left: 175px;
+  top: 166px;
+  width: 300px;
+}
+
+/* ── 알약 버튼 — [시작하기] · [선택하기] · [시작]과 같은 꼴 (흰 알약 + 파란 그림자 + 주황 동그라미 화살표) ──
+   크기 · 자리는 쓰는 곳에서 정한다. 두 번째 선택지([고치기] · 두 번째 실패의 [다시 시도])는 화살표만 뺀다 —
+   .p02a-pill--plain 은 그것을 알리는 이름일 뿐 따로 꾸밈은 없다 */
+.p02a-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  /* 아래 5px은 두께(그늘)라서 글자 · 동그라미는 그 위쪽의 가운데에 놓는다 */
+  padding: 0 0 5px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(#fff 18%, #f4f8fe 55%, #ecf4fd 90%);
+  /* 시안에서 잰 꼴 — 알약 아래로 옅은 하늘색 두께(6px)가 보이고, 그 밑에 파란 그림자가 번진다 */
+  box-shadow:
+    inset 0 -4px 5px rgb(var(--d-glow) / 0.08),
+    0 0 0 1.5px rgb(var(--d-glow) / 0.12),
+    0 6px 1px 0 #cfe6fd,
+    0 4px 12px 2px rgb(var(--d-glow) / 0.22),
+    0 16px 12px -4px rgb(var(--d-glow) / 0.8);
+  color: var(--d-navy);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 0.08s ease-out,
+    color 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+.p02a-pill:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* 누를 수 없을 때 (시안에 없는 모습) — P-02 [시작]의 흐린 모습과 같은 꼴 */
+.p02a-pill:disabled {
+  background: #f2f5f9;
+  box-shadow:
+    inset 0 -4px 5px rgb(var(--d-glow) / 0.05),
+    0 0 0 1.5px rgb(var(--d-glow) / 0.1),
+    0 6px 0 0 #e3ebf4,
+    0 14px 12px -5px rgb(var(--d-glow) / 0.4);
+  /* 반투명이 아니라 섞은 색으로 — 외곽선과 글자가 겹치는 곳이 진해 보이지 않게 */
+  color: color-mix(in srgb, var(--d-navy) 34%, #f2f5f9);
+  cursor: default;
+}
+
+.p02a-pill:disabled .p02a-pill__arrow {
+  background: #bcc8d8;
+}
+
+.p02a-pill__label {
+  position: relative;
+  top: 1px;
+  font-family: var(--d-font-button);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.1px currentColor;
+  paint-order: stroke fill;
+}
+
+.p02a-pill__arrow {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--d-coral);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  transition: background-color 0.2s ease-out;
+}
+
+.p02a-pill__arrow svg {
+  width: 81%;
+  height: 81%;
+}
+
+.p02a-pill:focus-visible,
+.p02a-key:focus-visible,
+.p02a-domain:focus-visible {
+  outline: 5px solid var(--d-navy);
+  outline-offset: 3px;
+}
+
+/* [이메일 입력하기 →] */
+.p02a-go {
+  position: absolute;
+  left: 37px;
+  top: 496px;
+  width: 588px;
+  height: 112px;
+  gap: 25px;
+  /* 시안의 글자 · 동그라미는 알약 가운데보다 조금 오른쪽 · 세로로는 한가운데에 놓인다 */
+  padding: 0 0 0 22px;
+}
+
+.p02a-go .p02a-pill__label {
+  font-size: 51.2px;
+}
+
+/* 맨 아래 한 줄 */
+.p02a-foot {
+  position: absolute;
+  left: 0;
+  top: 975px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 34.3px;
+  font-weight: 800;
+  line-height: 54px;
+  color: var(--d-navy);
+}
+
+/* ── 폰을 든 캐릭터 · 발밑 구름 — 왼쪽 카드의 왼쪽 아래 모서리 앞에 선다. 꾸밈이라 터치는 받지 않는다 ── */
+.p02a-char {
+  position: absolute;
+  left: -2px;
+  top: 568px;
+  width: 442px;
+  /* 그림이 도화지 아래(1080)로 36px 나간다 — 창 비율이 달라 아래에 띠가 남을 때 몸통이 삐져나와 보이지 않게 자른다.
+     1920×1080에서는 달라지는 것이 없다 (그 자리는 구름이 가린다) */
+  clip-path: inset(0 0 36px 0);
+}
+
+.p02a-cloud {
+  position: absolute;
+  left: -10px;
+  top: 940px;
+  width: 520px;
+  /* 구름 그림의 아랫변도 도화지 아래(1092)에 놓인다 — 같은 까닭으로 1080에서 자른다 */
+  clip-path: inset(0 0 33.4px 0);
+}
+
+/* ────────────────────────────────────────────────
+   이메일 입력 (배치 · 입력칸 · [확인]은 시안에 없는 모습 · 자주 쓰는 주소 · 키보드 모양은 2026-11-23 시안) — 흰 카드 안에 입력칸 · [확인] · 자주 쓰는 주소 · 화면 키보드
+   ──────────────────────────────────────────────── */
+
+/* 키보드에 높이를 내주려고 제목을 작게 · 조금 위로 */
+.p02a-title--sm {
+  top: 78px;
+  font-size: 72px;
+  line-height: 84px;
+  -webkit-text-stroke-width: 1.5px;
+}
+
+/* 제목 아래 한 줄 — 이메일 입력 고지 문구 자리 (법무 검토 전 — SPEC T-7. 지금은 PLACEHOLDER 꼬리표만 있다) */
+.p02a-legal {
+  position: absolute;
+  left: 0;
+  top: 166px;
+  width: 1920px;
+  height: 30px;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.p02a-card__art .ph {
-  height: min(100%, 220px);
-  max-width: 100%;
-  aspect-ratio: 4 / 3;
-}
-
-/* ────────────────────────────────────────────────
-   이메일 입력 — 입력칸 · [확인] · 자주 쓰는 주소 · 화면 키보드
-   ──────────────────────────────────────────────── */
-
 .p02a-email {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  max-width: 1400px;
+  position: absolute;
+  left: 190px;
+  top: 204px;
+  width: 1540px;
+  height: 850px;
+  padding: 34px 50px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: var(--gap-xs);
+  gap: 18px;
+  border-radius: 70px;
+  background: #fff;
+  box-shadow: 0 5px 14px 5px rgb(var(--d-glow) / 0.88);
+  color: var(--d-navy);
 }
 
 .p02a-entry {
   flex: 0 0 auto;
+  height: 116px;
   display: flex;
   align-items: stretch;
-  gap: var(--gap-xs);
+  gap: 22px;
 }
 
 /* 입력칸 — <input>이 아니다 (OS 화면 키보드가 뜨지 않게) */
 .p02a-entry__box {
   flex: 1 1 0;
   min-width: 0;
-  /* 1280×800 창에서는 88px, 1920×1080에서는 스케치(115px)만큼 */
-  height: clamp(var(--touch-min), 10.5vh, 116px);
-  padding: 0 var(--gap-md);
+  padding: 0 34px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 2px;
   overflow: hidden;
   text-align: left;
-  background: var(--c-surface);
-  border: 2px solid var(--c-accent);
-  border-radius: var(--radius);
+  border: 4px solid var(--d-check);
+  border-radius: 32px;
+  background: #fff;
 }
 
 .p02a-entry__box[data-invalid='true'] {
-  border-color: var(--c-danger);
+  border-color: var(--d-warn);
+  background: #fff3f0;
 }
 
+/* 글자 크기는 화면이 정한다 (P02aGuardianLink.tsx useFitText) — 한 줄에 들어가는 동안은 54px,
+   넘치면 32px까지 줄이고, 그래도 넘치면 두 줄 (data-wrap). 32px 두 줄 + 안내 한 줄이 칸 높이(108px)에 들어간다 */
 .p02a-entry__value {
-  font-size: var(--fs-heading);
-  font-weight: 700;
-  line-height: 1.15;
-  word-break: break-all;
+  font-family: var(--d-font-display);
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1.12;
 }
 
-/* 긴 주소 — 글자를 줄여 두 줄로 */
-.p02a-entry__value[data-long='true'] {
-  font-size: var(--fs-body);
+/* 폭을 재는 알맹이 — 평소에는 한 줄, 줄 바꿈이 켜지면 글자 사이 어디서든 꺾인다 (입력칸 · 주소 확인 창이 같이 쓴다) */
+.p02a-fit {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+[data-wrap='true'] > .p02a-fit {
+  display: inline;
+  white-space: normal;
+  word-break: break-all;
 }
 
 .p02a-entry__caret {
   display: inline-block;
-  width: 3px;
-  height: 1em;
-  margin-left: 2px;
-  vertical-align: -0.12em;
-  background: var(--c-accent);
+  width: 4px;
+  height: 0.95em;
+  margin-left: 3px;
+  vertical-align: -0.1em;
+  border-radius: 2px;
+  background: var(--d-check);
   animation: p02a-blink 1s steps(1) infinite;
 }
 
-@keyframes p02a-blink {
-  50% {
-    opacity: 0;
-  }
-}
-
 .p02a-entry__notice {
-  font-size: var(--fs-caption);
-  font-weight: 700;
-  color: var(--c-danger);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--d-font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 28px;
+  color: var(--d-warn);
   white-space: nowrap;
 }
 
+/* [확인 →] */
 .p02a-entry__ok {
   flex: 0 0 auto;
-  min-width: 180px;
+  width: 290px;
+  gap: 22px;
 }
 
-/* 자주 쓰는 주소 — 버튼 구성 · 모양은 디자인에서 */
+.p02a-entry__ok .p02a-pill__label {
+  font-size: 56px;
+}
+
+.p02a-entry__ok .p02a-pill__arrow {
+  width: 68px;
+  height: 68px;
+}
+
+/* ── 자주 쓰는 주소 — 하늘색 알약 (이메일 입력 화면 시안 2026-11-23) ──
+   흰 키보드 키와 한눈에 다르게: 키보드는 옅은 판 안의 흰 키, 이 버튼은 판 밖 흰 카드 위의 하늘색 알약이다.
+   보이는 알약은 높이 62px — 누를 수 있는 자리는 위아래로 넓혀 88px을 채운다 (PAGE_SPEC §2-2) */
 .p02a-domains {
   flex: 0 0 auto;
+  height: 72px;
   display: flex;
   align-items: center;
-  gap: var(--gap-xs);
+  gap: 20px;
 }
 
 .p02a-domain {
-  min-height: clamp(56px, 7vh, 72px);
-  padding: 0 var(--gap-md);
-  font-family: inherit;
-  font-size: clamp(17px, 1.7vw, var(--fs-body));
-  font-weight: 700;
+  position: relative;
+  height: 62px;
+  padding: 0 40px 4px;
+  border: 0;
+  border-radius: 31px;
+  background: linear-gradient(var(--d-chip-top) 10%, var(--d-chip-bottom) 95%);
+  /* 시안에서 잰 꼴 — 위쪽 안에 흰 빛 · 아래쪽 안에 옅은 파랑 · 바깥 아래로 번지는 파란 그림자 (딱딱한 테두리는 없다) */
+  box-shadow:
+    inset 0 2px 1px rgb(255 255 255 / 0.7),
+    inset 0 -3px 4px rgb(var(--d-glow) / 0.16),
+    0 3px 6px rgb(var(--d-glow) / 0.3);
+  font-family: var(--d-font-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
   white-space: nowrap;
-  color: var(--c-text);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-line);
-  border-radius: 999px;
+  color: var(--d-navy);
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    filter 0.1s ease-out,
+    scale 0.08s ease-out;
 }
 
+.p02a-domain::before {
+  content: '';
+  position: absolute;
+  inset: -13px -6px;
+}
+
+/* 누르는 동안 — 알약이 조금 짙어지고 살짝 들어간다 */
 .p02a-domain:active:not(:disabled) {
-  border-color: var(--c-accent);
+  filter: brightness(0.92) saturate(1.25);
+  scale: 0.96;
 }
 
-.p02a-domain:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* ── 화면 키보드 (EmailKeyboard) — 10칸 × 5줄. 남는 높이를 줄 수로 나눠 키를 최대한 크게 ──
-   1280×800 창에서 키 높이 약 64px, 1920×1080에서 약 107px */
+/* ── 화면 키보드 (EmailKeyboard) — 옅은 하늘색 판 안에 흰 키 10칸 × 5줄 (이메일 입력 화면 시안 2026-11-23) ──
+   남는 높이를 줄 수로 나눈다 (키 하나 약 127×95px) */
 .p02a-kbd {
   flex: 1 1 0;
   min-height: 0;
-  max-height: 560px;
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
   grid-template-rows: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: 12px 14px;
+  padding: 16px 24px 18px;
+  border-radius: 28px;
+  background: var(--d-tray);
+  box-shadow: inset 0 0 0 1.5px var(--d-tray-line);
 }
 
 .p02a-key {
   min-width: 0;
   min-height: 0;
-  padding: 0;
-  font-family: inherit;
-  font-size: clamp(22px, 3.4vh, 40px);
-  font-weight: 700;
-  color: var(--c-text);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-line);
-  border-radius: 12px;
+  padding: 0 0 4px;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  /* 시안에서 잰 꼴 — 아래에 파란 두께 2px + 옅게 번지는 그림자 */
+  box-shadow:
+    0 2px 0 var(--d-key-rim),
+    0 5px 8px rgb(var(--d-glow) / 0.28);
+  font-family: var(--d-font-display);
+  font-size: 50px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--d-navy);
   cursor: pointer;
   /* 빠르게 이어 눌러도 두 번 누르기 확대로 먹히지 않게 */
   touch-action: manipulation;
+  transition:
+    background-color 0.1s ease-out,
+    box-shadow 0.08s ease-out,
+    translate 0.08s ease-out;
 }
 
+/* 누르는 동안 — 키가 두께만큼 내려앉고 옅은 하늘색이 든다 */
 .p02a-key:active:not(:disabled) {
-  background: var(--c-accent);
-  border-color: var(--c-accent);
+  background: #e3f2fe;
+  translate: 0 2px;
+  box-shadow:
+    0 0 0 var(--d-key-rim),
+    0 2px 4px rgb(var(--d-glow) / 0.22);
 }
 
-.p02a-key:disabled {
-  opacity: 0.5;
+.p02a-key:disabled,
+.p02a-domain:disabled {
   cursor: default;
 }
 
-/* [⌫ 지우기] — 마지막 줄 오른쪽 3칸 (스케치) */
+/* [⌫ 지우기] — 마지막 줄 오른쪽 3칸 (스케치). 시안의 특수 키처럼 파란 키 */
 .p02a-key--back {
   grid-column: 8 / span 3;
-  font-size: clamp(18px, 2.8vh, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 40px;
+  background: linear-gradient(var(--d-key-special-top), var(--d-key-special-bottom));
+  box-shadow:
+    inset 0 0 0 1.5px rgb(var(--d-glow) / 0.22),
+    0 2px 0 var(--d-key-special-rim),
+    0 5px 8px rgb(var(--d-glow) / 0.3);
+}
+
+.p02a-key--back:active:not(:disabled) {
+  background: linear-gradient(#b8ddfd, #95cdfb);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(var(--d-glow) / 0.3),
+    0 0 0 var(--d-key-special-rim),
+    0 2px 4px rgb(var(--d-glow) / 0.25);
+}
+
+/* 지우기 표시 — 직접 그린 그림 (글자와 같은 굵기 · 둥근 끝) */
+.p02a-key__bksp {
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  margin-top: 4px;
 }
 
 /* ────────────────────────────────────────────────
-   주소 확인 창 — 입력 화면 위에 뜬다 (스케치 p02a-email-confirm)
-   화면 틀(.screen__body) 전체를 덮되 [← 뒤로](z-index 2)는 그 위에 남아 눌린다
+   주소 확인 창 (시안에 없는 모습 — P-02의 [자세히] 창과 같은 꼴) — 입력 화면 위에 뜬다
+   도화지(1920×1080) 안에 그려서 화면과 같이 줄어든다. 바깥 어두운 막은 창 밖 남는 띠까지 덮는다
    ──────────────────────────────────────────────── */
 
 .p02a-scrim {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 10;
   display: grid;
   place-items: center;
-  padding: var(--gap-md);
-  background: rgba(6, 8, 12, 0.72);
+  background: rgb(14 39 85 / 0.5);
+  box-shadow: 0 0 0 4000px rgb(14 39 85 / 0.5);
 }
 
-.p02a-scrim .modal {
-  width: min(1100px, 100%);
-  max-height: 100%;
+.p02a-confirm {
+  width: 1180px;
+  padding: 62px 70px 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  border-radius: 70px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(8 30 70 / 0.35);
+  color: var(--d-navy);
+  text-align: center;
 }
 
 .p02a-confirm__ask {
-  font-size: var(--fs-heading);
+  font-family: var(--d-font-button);
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.2;
+  -webkit-text-stroke: 1.3px currentColor;
+  paint-order: stroke fill;
 }
 
 /* 입력한 주소 — 오타를 알아볼 수 있게 크게 */
 .p02a-confirm__address {
+  align-self: stretch;
   margin: 0;
-  padding: var(--gap-sm);
-  font-size: clamp(30px, 4.2vw, 72px);
+  padding: 30px 36px 34px;
+  border: 2px solid var(--d-row-line);
+  border-radius: 37px;
+  background: var(--d-row);
+  font-family: var(--d-font-display);
+  /* 글자 크기는 화면이 정한다 (useFitText) — 한 줄에 들어가는 동안은 68px, 넘치면 44px까지 줄이고 그래도 넘치면 줄 바꿈 */
+  font-size: 68px;
   font-weight: 800;
   line-height: 1.2;
-  word-break: break-all;
-  background: var(--c-surface-2);
-  border-radius: var(--radius);
 }
 
-/* 전달 중 — 버튼 줄(.btn--lg 120px)과 같은 높이를 잡아 창이 출렁이지 않게 */
+.p02a-confirm__note {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--d-font-display);
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* 버튼 줄과 전달 중 표시는 같은 높이를 잡아 창이 출렁이지 않게 */
+.p02a-confirm__actions,
 .p02a-confirm__wait {
-  min-height: 120px;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.p02a-confirm__wait {
+  flex-direction: column;
+  gap: 18px;
+}
+
+.p02a-confirm__actions .p02a-pill,
+.p02a-status__actions .p02a-pill {
+  height: 118px;
+  min-width: 340px;
+  padding: 0 50px 5px;
+  gap: 24px;
+}
+
+.p02a-confirm__actions .p02a-pill__label,
+.p02a-status__actions .p02a-pill__label {
+  font-size: 56px;
+}
+
+/* ────────────────────────────────────────────────
+   연결됐어요 · 연결 실패 (시안에 없는 모습) — 가운데 흰 카드
+   ──────────────────────────────────────────────── */
+
+.p02a-status {
+  position: absolute;
+  left: 460px;
+  top: 262px;
+  width: 1000px;
+  height: 600px;
+  padding: 40px 60px 46px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--gap-sm);
+  gap: 30px;
+  border-radius: 70px;
+  background: #fff;
+  box-shadow: 0 5px 14px 5px rgb(var(--d-glow) / 0.88);
+  color: var(--d-navy);
+  text-align: center;
+}
+
+.p02a-status__mark {
+  flex: 0 0 auto;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+/* 남색 동그라미 + 흰 체크 — P-02의 체크한 네모와 같은 색 */
+.p02a-status__mark--ok {
+  width: 170px;
+  height: 170px;
+  background: var(--d-check);
+  color: #fff;
+  animation: p02a-pop 0.45s ease-out;
+}
+
+.p02a-status__mark--ok svg {
+  width: 122px;
+  height: 122px;
+}
+
+.p02a-status__mark--off {
+  border: 2px solid var(--d-row-line);
+  background: var(--d-row);
+  color: var(--d-navy);
+}
+
+.p02a-status__mark--off svg {
+  width: 100px;
+  height: 100px;
+}
+
+.p02a-status__slash {
+  stroke: var(--d-coral);
+}
+
+.p02a-status__title {
+  margin: 0;
+  font-family: var(--d-font-button);
+  font-size: 66px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.4px currentColor;
+  paint-order: stroke fill;
+}
+
+.p02a-status[data-kind='linked'] .p02a-status__title {
+  font-size: 92px;
+  -webkit-text-stroke-width: 1.8px;
+}
+
+.p02a-status__tag {
+  margin: -14px 0 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.p02a-status__actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+/* ── PLACEHOLDER 꼬리표 — 도화지 위에서는 글자가 작아 보여서 조금 키운다 ── */
+.p02a .ph--tag {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  -webkit-text-stroke: 0;
 }
 
 /* ────────────────────────────────────────────────
-   진행 표시 (준비 중 · 전달 중) — 연출은 디자인에서
+   진행 표시 — 점 세 개 (준비 중 · 전달 중)
    ──────────────────────────────────────────────── */
 
 .p02a-wait {
   display: flex;
-  gap: var(--gap-sm);
+  gap: 16px;
 }
 
 .p02a-wait span {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--c-accent);
+  background: rgb(var(--d-glow));
   animation: p02a-wait 1.2s ease-in-out infinite;
 }
 
@@ -396,26 +888,71 @@
   }
 }
 
+@keyframes p02a-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes p02a-pop {
+  0% {
+    scale: 0.6;
+    opacity: 0;
+  }
+  60% {
+    scale: 1.08;
+    opacity: 1;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p02a-star,
+  .p02a-status__mark--ok {
+    animation: none;
+  }
+
+  /* 진행 표시는 멈추지 않는다 — 멈춘 화면은 고장으로 보인다 (PAGE_SPEC §2-5). 크기 변화만 뺀다 */
+  .p02a-wait span {
+    animation-name: p02a-blink;
+    animation-timing-function: ease-in-out;
+  }
+
+  .p02a-pill,
+  .p02a-pill__arrow,
+  .p02a-key,
+  .p02a-domain {
+    transition: none;
+  }
+}
+
 /* ────────────────────────────────────────────────
-   개발용 띠 — 맨 아래 왼쪽 (오른쪽 아래는 DevBar 자리). 확인 창이 떠 있어도 눌리게 그 위에 둔다
+   개발용 띠 — 맨 아래 왼쪽 (오른쪽 아래는 DevBar 자리). 도화지 밖에 둬서 창과 같이 줄어들지 않는다.
+   확인 창이 떠 있어도 눌리게 그 위에 둔다. 손님 화면에는 없다 (운영 빌드에서 뺀다 — V2_PLAN)
    ──────────────────────────────────────────────── */
 
 .p02a-dev {
-  position: relative;
-  z-index: 3;
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-start;
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 20;
+  background: rgba(16, 18, 22, 0.85);
+  border-radius: 10px;
 }
 
-/* 키보드에 높이를 내주려고 이 화면에서만 띠를 낮춘다 */
 .p02a-dev .devstrip {
   flex-wrap: nowrap;
-  padding: 2px var(--gap-xs);
-  background: var(--c-bg);
+  padding: 3px var(--gap-xs);
 }
 
 .p02a-dev .btn--sm {
   min-height: 32px;
   white-space: nowrap;
+}
+
+.p02a-dev .ph--tag {
+  font-size: 12px;
+  padding: 2px 8px;
 }

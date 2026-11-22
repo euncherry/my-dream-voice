@@ -16,7 +16,9 @@
  * 주소는 화면(P02aGuardianLink)의 지역 상태에만 있고, 여기서는 기억하지도 기록하지도 않는다
  * (직접 입력한 이메일은 기기에 남기지 않는다 — PAGE_SPEC P-02a · CLAUDE.md 금지사항 4).
  *
- * ⚠️ 키 크기 · 모양은 임시다 — 피그마 디자인이 오면 입힌다 (styles/p02a.css의 .p02a-kbd · .p02a-key).
+ * 🎨 키 크기 · 모양은 styles/p02a.css의 .p02a-kbd · .p02a-key — 이메일 입력 화면 시안(2026-11-23)대로
+ *    옅은 하늘색 판 안의 흰 키, [⌫ 지우기]는 파란 특수 키. 그 시안의 키 배치(⌫ 자리 · ⇧ · + · .com)는 아직 따르지 않았다
+ *    (V2_BUILD_CHECKLIST 결정 표 ⑭).
  */
 
 import { useEffect, type MouseEvent, type ReactNode } from 'react'
@@ -123,7 +125,18 @@ export function EmailKeyboard({
         onMouseDown={keepFocus}
         onClick={onBackspace}
       >
-        ⌫ 지우기
+        {/* 지우기 표시(⌫)는 글꼴에 맡기지 않고 직접 그린다 — 화면 글꼴에 이 글자가 없어 다른 글꼴의 가는 그림이 나온다 */}
+        <svg className="p02a-key__bksp" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <path
+            d="M18 10h21a3 3 0 0 1 3 3v22a3 3 0 0 1-3 3H18L5 24Z M24 19l9 10 M33 19l-9 10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="5.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        지우기
       </button>
     </div>
   )

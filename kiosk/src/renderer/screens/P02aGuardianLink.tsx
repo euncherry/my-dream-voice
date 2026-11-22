@@ -1,9 +1,9 @@
 /**
- * P-02a [보호자 연결] — B모드 전용 (2026-11-20)
+ * P-02a [보호자 연결] — B모드 전용 (2026-11-20) · 🎨 디자인 입힘 (2026-11-22)
  *
  * 리포트 받을 보호자를 체험 전에 정한다. 여기서 세션이 열리고, 인쇄가 끝나면(M-03) 닫힌다.
  * 근거: PAGE_SPEC "P-02a [보호자 연결]" · SPEC §2(보호자 연결은 동의 바로 다음 · 서버에 연결이 안 되면)
- *       · §6-1(역할 나누기) · §6-4(세션 번호 · QR)
+ *       · §6-1(역할 나누기) · §6-4(세션 번호 · QR) · 디자인 시안(보호자 연결 화면)
  * 스케치: docs/user-flow/wf/p02a-link · p02a-email · p02a-email-confirm · p02a-offline
  *
  * 화면 상태 (phase)
@@ -20,22 +20,65 @@
  * 상태마다 할 일(요청 · 타이머)은 그 상태의 effect가 맡는다 — 상태가 바뀌거나 화면을 떠나면 effect 정리가
  * 타이머를 지우고 늦게 온 응답을 버린다.
  *
+ * 🎨 그림은 assets/ 에 있다 — 배경(bg/sky) · 로고(brand/logo-en) · 폰을 든 우주인(characters/astronaut-phone) ·
+ *    발밑 구름(deco/cloud-front) · 별(deco/star-yellow) · 카카오 표시(icons/kakao) · 편지 봉투(icons/mail-at).
+ *    배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/p02a.css. [← 뒤로]는 공통 부품이다.
+ *
+ *    시안은 두 장이다 — **연결 선택(link)** · **이메일 입력**(2026-11-23 — 자주 쓰는 주소 · 키보드 모양만 입혔다, 나머지는 체크리스트
+ *    결정 표 ⑭). 그 밖은 같은 모양으로 만들었다 (확인 필요 — 체크리스트 7-4):
+ *      · 준비 중(opening · checking) — 연결 선택 화면 그대로, QR 자리에 점 세 개 + "준비 중". [이메일 입력하기]는 흐리게 잠긴다
+ *        (checking — 로그인 확인 실패 뒤 [다시 시도] — 에는 [← 뒤로]가 없다)
+ *        (세션 열기는 보통 1초 안에 끝난다 — 그 사이 화면이 통째로 바뀌었다 돌아오지 않게)
+ *      · 이메일 입력(email) — 흰 카드 안에 입력칸 · [확인] · 자주 쓰는 주소 · 화면 키보드 (자주 쓰는 주소 · 키보드 모양만 시안대로)
+ *      · 주소 확인 창(confirm · sending) — 흰 창 + [고치기] / [맞아요]. 창이 떠 있는 동안 [← 뒤로]는 없다 ([고치기]로 돌아간다)
+ *      · 연결됐어요(linked) · 연결 실패(error) — 가운데 흰 카드
+ *
+ * 연달아 두드린 터치를 막는다 — 화면이 바뀐 직후 · 상태(phase)가 바뀐 직후(손님이 눌러서든 서버 대답으로든) 0.4초(TAP_GUARD_MS)는
+ *   버튼 · 화면 키를 받지 않는다. [이메일 입력하기] 자리에는 화면 키보드가, [확인] · [고치기] 자리에도 다른 버튼이 온다 —
+ *   두 번 두드리면 둘째 터치가 글자를 치거나 다음 버튼을 누르기 때문이다.
+ *
  * ⚠️ 개인정보 — 직접 입력한 이메일은 이 컴포넌트의 지역 상태(email)에만 있다.
  *    세션 스토어 · localStorage · console · 오류 메시지에 넣지 않는다.
  *    서버가 받은 직후와 화면을 떠날 때 지운다. guardianLink에는 주소를 넣지 않는다 (CLAUDE.md 금지사항 4).
  *
  * ⚠️ MOCK — 서버는 아직 가짜다 (src/main/mock/server.ts · API 합의 전 — SPEC T-14).
  *    렌더러는 window.api.server.* 만 부르므로 실제 서버가 붙어도 이 화면은 그대로다.
- *    로그인 확인 주기 · 실패 기준 · 문구는 전부 임시다 (T-14 · T-7). 무조작 타임아웃(M-01)은 아직 없다 (T-18).
+ *    로그인 확인 주기 · 실패 기준은 임시다 (T-14). 무조작 타임아웃(M-01)은 아직 없다 (T-18).
+ *
+ * ⚠️ 문구 — 연결 선택 화면의 글자는 시안 문구다. 시안에 없는 모습의 글자(이메일 입력 · 주소 확인 · 연결 실패)는 임시이고,
+ *    이메일 입력 고지 문구는 법무 검토 전이다 (SPEC T-7). 그 자리에는 PLACEHOLDER 꼬리표를 남겨 둔다 —
+ *    임의로 고지 · 약관 문구를 써 넣지 않는다.
  */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import QRCode from 'qrcode'
+import { BackButton } from '../components/BackButton'
 import { EmailKeyboard } from '../components/EmailKeyboard'
-import { DevStrip, Placeholder, PlaceholderTag, Screen } from '../components/Screen'
-import { useSession } from '../store/session'
-import { LINKED_SHOW_MS, LINK_POLL_FAIL_LIMIT, LINK_POLL_MS } from '@shared/constants'
+import { DevStrip, PlaceholderTag, Screen } from '../components/Screen'
+import { Stage } from '../components/Stage'
+import { justChangedScreen, useSession } from '../store/session'
+import {
+  LINKED_SHOW_MS,
+  LINK_POLL_FAIL_LIMIT,
+  LINK_POLL_MS,
+  TAP_GUARD_MS,
+} from '@shared/constants'
 import type { GuardianLink, MockServerState, ServerFailReason } from '@shared/types'
+import skyUrl from '../assets/bg/sky.webp'
+import logoEnUrl from '../assets/brand/logo-en.png'
+import astronautPhoneUrl from '../assets/characters/astronaut-phone.webp'
+import cloudFrontUrl from '../assets/deco/cloud-front.webp'
+import starYellowUrl from '../assets/deco/star-yellow.png'
+import kakaoUrl from '../assets/icons/kakao.webp'
+import mailAtUrl from '../assets/icons/mail-at.webp'
 import '../styles/p02a.css'
 
 type Phase =
@@ -62,7 +105,7 @@ const RETRY_PHASE: Record<FailedJob, Phase> = {
   email: 'confirm',
 }
 
-/** 위쪽 개발용 띠에 띄우는 상태 이름 */
+/** 개발용 띠에 띄우는 상태 이름 */
 const PHASE_NOTE: Record<Phase, string> = {
   opening: '준비 중',
   link: '연결 선택',
@@ -80,14 +123,24 @@ const EMAIL_MAX_LENGTH = 80
 /** 형식 검사 — @ 와 점이 있는 주소. 메인(src/main/server.ts)이 보내기 전에 한 번 더 본다 */
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-/** 자주 쓰는 주소 — 스케치의 4개 (버튼 구성은 디자인에서). 누르면 @ 뒤를 그 주소로 채운다 */
+/** 자주 쓰는 주소 — 스케치의 4개. 누르면 @ 뒤를 그 주소로 채운다 */
 const EMAIL_DOMAINS = ['@naver.com', '@gmail.com', '@daum.net', '@hanmail.net'] as const
 
-/** 주소가 이보다 길면 입력칸 글자를 줄여 두 줄로 보여 준다 */
-const LONG_ADDRESS = 36
+/** 입력칸의 글자 크기 (px) — 한 줄에 들어가는 동안은 큰 쪽, 넘치면 작은 쪽까지 줄이고 그래도 넘치면 두 줄 (styles/p02a.css) */
+const ENTRY_FONT = { max: 54, min: 32 } as const
 
-/** QR 이미지 한 변 (px) — 화면에서는 카드 높이에 맞춰 줄여 그린다 */
-const QR_PIXELS = 512
+/** 주소 확인 창의 글자 크기 (px) — 같은 방식. 오타를 알아보게 되도록 크게 */
+const CONFIRM_FONT = { max: 68, min: 44 } as const
+
+/**
+ * [사진만 찍기]는 연결 실패 카드가 뜬 뒤 이만큼 지나야 받는다 (임시값).
+ * 처음 실패의 [다시 시도] 자리에 두 번째 실패의 [사진만 찍기]가 온다 — [다시 시도]를 급하게 거듭 누르던 손에
+ * 사진만 찍기(동의 기록을 지우고 A모드로)가 눌리지 않게, 카드를 읽을 틈을 둔다.
+ */
+const PHOTO_ONLY_SETTLE_MS = 1_000
+
+/** QR 이미지 한 변 (px) — 화면에는 262px로 그린다 (styles/p02a.css). 딱 두 배로 만들어 줄여도 점이 번지지 않게 한다 */
+const QR_PIXELS = 524
 
 interface OpenedSession {
   /** 서버가 준 세션 번호 (SPEC §6-4) */
@@ -120,7 +173,44 @@ function closeStoredLink(keep?: string): void {
   if (stored && stored !== keep) closeQuietly(stored)
 }
 
-/** 진행 표시 — 기다리는 동안 화면이 멈춘 것처럼 보이지 않게 (PAGE_SPEC §2-5). 연출은 디자인에서 */
+/**
+ * 글자가 한 줄에 들어가게 글자 크기를 줄인다 (max → min). min에서도 넘치면 줄을 바꾼다 (data-wrap="true").
+ * 글자 수로 어림하면 m · w · 숫자가 많은 주소가 넘친다 — 그려진 폭을 재서 맞춘다.
+ * 돌려주는 ref는 바깥 요소에 단다. 그 첫 자식(.p02a-fit)이 재는 대상이다.
+ * 크기 · 줄 바꿈은 요소에 바로 적는다 — 주소는 어디에도 따로 두지 않는다.
+ */
+function useFitText<T extends HTMLElement>(
+  text: string,
+  { max, min }: { max: number; min: number },
+): RefObject<T> {
+  const ref = useRef<T>(null)
+
+  useLayoutEffect(() => {
+    const box = ref.current
+    const inner = box?.firstElementChild
+    if (!box || !(inner instanceof HTMLElement)) return
+
+    // 가장 큰 크기 · 한 줄로 놓고 잰다 (도화지 좌표 — 창 크기에 맞춰 줄인 배율과 무관하다)
+    box.dataset.wrap = 'false'
+    box.style.fontSize = `${max}px`
+    const style = getComputedStyle(box)
+    const room = box.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 1
+    const need = inner.offsetWidth
+    if (need <= room || need === 0) return
+
+    const fit = Math.floor(((max * room) / need) * 10) / 10
+    if (fit >= min) {
+      box.style.fontSize = `${fit}px`
+    } else {
+      box.style.fontSize = `${min}px`
+      box.dataset.wrap = 'true'
+    }
+  }, [text, max, min])
+
+  return ref
+}
+
+/** 진행 표시 — 기다리는 동안 화면이 멈춘 것처럼 보이지 않게 (PAGE_SPEC §2-5) */
 function WaitDots(): ReactNode {
   return (
     <div className="p02a-wait" aria-hidden="true">
@@ -128,6 +218,64 @@ function WaitDots(): ReactNode {
       <span />
       <span />
     </div>
+  )
+}
+
+/** 알약 버튼 오른쪽의 주황 동그라미 화살표 ([시작하기] · [선택하기] · [시작]과 같은 그림) */
+function PillArrow(): ReactNode {
+  return (
+    <span className="p02a-pill__arrow" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="100%" height="100%" focusable="false">
+        <path
+          d="M11 24h25M26 13l11 11-11 11"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="6.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  )
+}
+
+/** "연결됐어요" — 남색 동그라미 안의 흰 체크 (P-02의 체크한 네모와 같은 체크 표시) */
+function LinkedMark(): ReactNode {
+  return (
+    <span className="p02a-status__mark p02a-status__mark--ok" aria-hidden="true">
+      <svg viewBox="0 0 48 48" focusable="false">
+        <path
+          d="M11 25.5l9 9L37.5 15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="6.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  )
+}
+
+/** 연결 실패 — 끊긴 신호 표시 (부채꼴 신호 위에 주황 빗금) */
+function OfflineMark(): ReactNode {
+  return (
+    <span className="p02a-status__mark p02a-status__mark--off" aria-hidden="true">
+      <svg viewBox="0 0 96 96" focusable="false">
+        <g fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round">
+          <path d="M17 42a44 44 0 0 1 62 0" />
+          <path d="M30 55a26 26 0 0 1 36 0" />
+        </g>
+        <circle cx="48" cy="70" r="6.5" fill="currentColor" />
+        <path
+          className="p02a-status__slash"
+          d="M24 18l48 62"
+          fill="none"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
   )
 }
 
@@ -162,6 +310,19 @@ export function P02aGuardianLink(): ReactNode {
   /** 로그인 확인 effect가 지금 상태를 읽는다 (상태가 바뀔 때마다 타이머를 다시 잡지 않으려고 ref로) */
   const phaseRef = useRef(phase)
   phaseRef.current = phase
+
+  /** 상태가 마지막으로 바뀐 때 — 그 직후의 터치는 받지 않는다 (파일 머리 주석 "연달아 두드린 터치") */
+  const phaseChangedAt = useRef(-Infinity)
+  const prevPhaseRef = useRef<Phase | null>(null)
+  useLayoutEffect(() => {
+    const prev = prevPhaseRef.current
+    prevPhaseRef.current = phase
+    // 준비가 끝나 QR이 뜬 것(준비 중 → 연결 선택)만은 화면 모양이 그대로다(QR 자리만 채워진다) — 막지 않는다
+    if (phase === 'link' && (prev === 'opening' || prev === 'checking')) return
+    phaseChangedAt.current = performance.now()
+  }, [phase])
+  const tappedTooSoon = (): boolean =>
+    justChangedScreen() || performance.now() - phaseChangedAt.current < TAP_GUARD_MS
 
   /** 열어 둔 세션을 버린다. 닫은 세션이 있었으면 true */
   const discardOpenSession = useCallback((): boolean => {
@@ -247,7 +408,8 @@ export function P02aGuardianLink(): ReactNode {
     if (!qrUrl) return
     let cancelled = false
 
-    void QRCode.toDataURL(qrUrl, { width: QR_PIXELS, margin: 2 }).then(
+    // 둘레 여백은 넣지 않는다 — 흰 판과 흰 카드가 QR 둘레의 여백 노릇을 한다 (styles/p02a.css .p02a-qr)
+    void QRCode.toDataURL(qrUrl, { width: QR_PIXELS, margin: 0 }).then(
       (dataUrl) => {
         if (!cancelled) setQrImage(dataUrl)
       },
@@ -381,7 +543,8 @@ export function P02aGuardianLink(): ReactNode {
   // ── 손님 조작 ────────────────────────────────────────────────
 
   function handleBack(): void {
-    if (phase === 'email' || phase === 'confirm') {
+    if (tappedTooSoon()) return
+    if (phase === 'email') {
       // 이메일 입력을 그만두고 연결 선택으로 — 치던 주소는 남기지 않는다 (로그인 확인은 계속 돌고 있다)
       setEmail('')
       setFormatNotice(false)
@@ -394,18 +557,27 @@ export function P02aGuardianLink(): ReactNode {
     back()
   }
 
+  /** [이메일 입력하기] */
+  function handleOpenEmail(): void {
+    if (tappedTooSoon()) return
+    setPhase('email')
+  }
+
   function handleKey(char: string): void {
+    if (tappedTooSoon()) return
     setFormatNotice(false)
     setEmail((value) => (value.length < EMAIL_MAX_LENGTH ? value + char : value))
   }
 
   function handleBackspace(): void {
+    if (tappedTooSoon()) return
     setFormatNotice(false)
     setEmail((value) => value.slice(0, -1))
   }
 
   /** 자주 쓰는 주소 — @ 뒤를 통째로 바꾼다 (@ 가 아직 없으면 뒤에 붙인다) */
   function handleDomain(domain: string): void {
+    if (tappedTooSoon()) return
     setFormatNotice(false)
     setEmail((value) => {
       const at = value.indexOf('@')
@@ -416,6 +588,7 @@ export function P02aGuardianLink(): ReactNode {
 
   /** [확인] — 형식이 맞으면 주소 확인 창, 틀리면 안내를 띄우고 입력 화면 그대로 */
   function handleSubmitInput(): void {
+    if (tappedTooSoon()) return
     if (!EMAIL_SHAPE.test(email)) {
       setFormatNotice(true)
       return
@@ -424,7 +597,20 @@ export function P02aGuardianLink(): ReactNode {
     setPhase('confirm')
   }
 
+  /** 주소 확인 창의 [고치기] — 입력으로 돌아간다 (주소는 그대로) */
+  function handleEditAgain(): void {
+    if (tappedTooSoon()) return
+    setPhase('email')
+  }
+
+  /** 주소 확인 창의 [맞아요] — 서버로 보낸다 */
+  function handleSend(): void {
+    if (tappedTooSoon()) return
+    setPhase('sending')
+  }
+
   function handleRetry(): void {
+    if (tappedTooSoon()) return
     if (!failedJob) return
     // 실패한 일을 다시 한다 (이메일 전달은 주소 확인 창부터). 열린 세션이 없으면(세션 열기 실패) 세션 열기부터다
     setPhase(sessionToken ? RETRY_PHASE[failedJob] : 'opening')
@@ -432,6 +618,9 @@ export function P02aGuardianLink(): ReactNode {
 
   /** [사진만 찍기] — 열던 세션을 닫고 A모드로 (스토어가 동의 기록을 지우고 P-04로 보낸다) */
   function handlePhotoOnly(): void {
+    if (tappedTooSoon()) return
+    // 연결 실패 카드가 뜬 직후에는 받지 않는다 (PHOTO_ONLY_SETTLE_MS)
+    if (performance.now() - phaseChangedAt.current < PHOTO_ONLY_SETTLE_MS) return
     discardOpenSession()
     closeStoredLink()
     setEmail('')
@@ -462,137 +651,177 @@ export function P02aGuardianLink(): ReactNode {
   // ── 화면 ─────────────────────────────────────────────────────
 
   const inputOpen = phase === 'email'
+  const confirmOpen = phase === 'confirm' || phase === 'sending'
+  /** 이메일 입력 화면 (그 위에 주소 확인 창이 뜨는 상태까지) — 키보드에 자리를 내주려고 캐릭터가 없다 */
+  const showEmail = inputOpen || confirmOpen
+  // 입력칸 · 확인 창 요소는 그 화면에서만 있다 — 없는 동안은 빈 글자로 둬서, 요소가 다시 생길 때 폭을 새로 재게 한다
+  // (연결 실패 → [다시 시도]로 주소가 그대로인 채 돌아오는 경우)
+  const entryRef = useFitText<HTMLDivElement>(showEmail ? email : '', ENTRY_FONT)
+  const confirmRef = useFitText<HTMLParagraphElement>(confirmOpen ? email : '', CONFIRM_FONT)
   const offerPhotoOnly = failCount >= 2
   const mockNetworkLabel =
     mockNetwork === null ? '확인 중' : mockNetwork === 'offline' ? '끊김' : '연결됨'
-  // 요청이 오가는 중(전달 · 다시 확인) · 연결됨 · 연결 실패에는 [뒤로]가 없다 (연결 실패는 스케치대로)
-  const canGoBack =
-    phase === 'opening' || phase === 'link' || phase === 'email' || phase === 'confirm'
+  /** 연결 선택 화면을 그리는 상태 — 준비 중(세션 열기 · 다시 확인)에도 같은 화면이고 QR 자리만 "준비 중"이다 */
+  const showLink = phase === 'opening' || phase === 'checking' || phase === 'link'
+  /** QR을 보여 줄 수 있나 — 세션이 열렸고 그림도 다 그렸다 */
+  const qrReady = phase === 'link' && qrImage !== null
+  // 요청이 오가는 중(전달 · 다시 확인) · 주소 확인 창 · 연결됨 · 연결 실패에는 [뒤로]가 없다 (연결 실패는 스케치대로)
+  const canGoBack = phase === 'opening' || phase === 'link' || phase === 'email'
 
   let view: ReactNode
 
-  if (phase === 'opening' || phase === 'checking') {
-    view = (
-      <div className="p02a-main">
-        <WaitDots />
-        <h1 className="p02a-title">준비 중</h1>
-        <PlaceholderTag
-          label={`${phase === 'opening' ? '세션 여는 중' : '로그인 확인을 다시 하는 중'} — 문구 · 진행 연출 미확정`}
-        />
-      </div>
-    )
-  } else if (phase === 'link') {
+  if (showLink) {
     view = (
       <>
-        <header className="p02a-head">
-          <h1 className="p02a-title">리포트를 받을 보호자님을 연결해 주세요</h1>
-          <p className="screen__sub">
-            목소리 리포트는 보호자님 메일로 보내 드려요 <PlaceholderTag label="문구 미확정 (SPEC T-7)" />
-          </p>
-        </header>
-        <div className="p02a-main">
-          <div className="p02a-choices">
-            <section className="p02a-card">
-              <h2 className="p02a-card__title">① 카카오로 간편 로그인</h2>
-              <div className="p02a-qr">
-                {qrImage ? (
-                  <img className="p02a-qr__img" src={qrImage} alt="카카오 로그인 QR" />
-                ) : (
-                  <Placeholder label="QR 그리는 중" />
-                )}
+        <h1 className="p02a-title">보호자님을 연결해 주세요</h1>
+        <p className="p02a-sub">목소리 리포트는 보호자님 메일로 보내 드려요</p>
+
+        <section className="p02a-card p02a-card--kakao">
+          <h2 className="p02a-card__title">
+            <img className="p02a-kakao" src={kakaoUrl} alt="" draggable={false} />
+            <span className="p02a-num">1</span>
+            <span className="p02a-card__name">카카오로 간편 로그인</span>
+          </h2>
+          <div className="p02a-qr">
+            {qrReady ? (
+              <img
+                className="p02a-qr__img"
+                src={qrImage ?? undefined}
+                alt="카카오 로그인 QR"
+                draggable={false}
+              />
+            ) : (
+              // 세션을 여는 중 · 로그인 확인을 다시 하는 중 — PAGE_SPEC P-02a "받는 동안 준비 중 표시"
+              <div className="p02a-qr__wait" role="status">
+                <WaitDots />
+                <span>준비 중</span>
               </div>
-              <p className="p02a-card__lead">폰 카메라로 QR을 찍어 주세요</p>
-              <p className="p02a-card__sub">카카오 로그인이 끝나면 저절로 다음으로 넘어가요</p>
-            </section>
-            <section className="p02a-card">
-              <h2 className="p02a-card__title">② 이메일 직접 입력</h2>
-              <div className="p02a-card__art">
-                <Placeholder label="이메일 그림" />
-              </div>
-              <p className="p02a-card__lead">카카오 계정이 없어도 괜찮아요</p>
-              <button className="btn btn--primary btn--lg" onClick={() => setPhase('email')}>
-                이메일 입력하기
-              </button>
-            </section>
+            )}
           </div>
-        </div>
+          <p className="p02a-card__lead">
+            폰 카메라로 QR을
+            <br />
+            찍어 주세요
+          </p>
+          <p className="p02a-card__sub">
+            카카오 로그인이 끝나면
+            <br />
+            자동으로 넘어가요
+          </p>
+        </section>
+
+        <section className="p02a-card p02a-card--email">
+          <h2 className="p02a-card__title">
+            <span className="p02a-num">2</span>
+            <span className="p02a-card__name">이메일 직접 입력</span>
+          </h2>
+          <img className="p02a-mail" src={mailAtUrl} alt="" draggable={false} />
+          <p className="p02a-card__lead">카카오 계정이 없어도 괜찮아요</p>
+          {/* 준비 중에는 잠근다 — 세션이 열려야 주소를 보낼 수 있다 */}
+          <button
+            type="button"
+            className="p02a-pill p02a-go"
+            disabled={phase !== 'link'}
+            onClick={handleOpenEmail}
+          >
+            <span className="p02a-pill__label">이메일 입력하기</span>
+            <PillArrow />
+          </button>
+        </section>
+
+        <p className="p02a-foot">연결이 완료되면 다음 화면으로 넘어가요</p>
       </>
     )
-  } else if (phase === 'email' || phase === 'confirm' || phase === 'sending') {
+  } else if (showEmail) {
     view = (
       <>
-        <header className="p02a-head">
-          <h1 className="p02a-title p02a-title--sm">보호자님 이메일을 입력해 주세요</h1>
+        <h1 className="p02a-title p02a-title--sm">보호자님 이메일을 입력해 주세요</h1>
+        <p className="p02a-legal">
           <PlaceholderTag label="이메일 입력 고지 문구 미확정 — 법무 (SPEC T-7)" />
-        </header>
-        <div className="p02a-main">
-          <div className="p02a-email">
-            <div className="p02a-entry">
-              {/* <input>을 쓰지 않는다 — OS 화면 키보드가 뜨지 않게. 글자는 화면 키보드로만 들어온다 */}
-              <div className="p02a-entry__box" data-invalid={formatNotice}>
-                <div className="p02a-entry__value" data-long={email.length > LONG_ADDRESS}>
+        </p>
+
+        <div className="p02a-email">
+          <div className="p02a-entry">
+            {/* <input>을 쓰지 않는다 — OS 화면 키보드가 뜨지 않게. 글자는 화면 키보드로만 들어온다 */}
+            <div className="p02a-entry__box" data-invalid={formatNotice}>
+              <div className="p02a-entry__value" ref={entryRef}>
+                <span className="p02a-fit">
                   {email}
                   {inputOpen && <span className="p02a-entry__caret" aria-hidden="true" />}
-                </div>
-                {formatNotice && (
-                  <div className="p02a-entry__notice" role="alert">
-                    이메일 주소를 다시 확인해 주세요{' '}
-                    <PlaceholderTag label="형식 안내 — 임시 문구 (문서에 없음)" />
-                  </div>
-                )}
+                </span>
               </div>
-              <button
-                className="btn btn--primary p02a-entry__ok"
-                disabled={!inputOpen || email.length === 0}
-                onClick={handleSubmitInput}
-              >
-                확인
-              </button>
+              {formatNotice && (
+                <div className="p02a-entry__notice" role="alert">
+                  이메일 주소를 다시 확인해 주세요{' '}
+                  <PlaceholderTag label="형식 안내 — 임시 문구 (문서에 없음)" />
+                </div>
+              )}
             </div>
-            <div className="p02a-domains">
-              {EMAIL_DOMAINS.map((domain) => (
-                <button
-                  key={domain}
-                  type="button"
-                  className="p02a-domain"
-                  disabled={!inputOpen}
-                  onClick={() => handleDomain(domain)}
-                >
-                  {domain}
-                </button>
-              ))}
-              <PlaceholderTag label="자주 쓰는 주소 버튼 — 디자인에서" />
-            </div>
-            <EmailKeyboard
-              onKey={handleKey}
-              onBackspace={handleBackspace}
-              onEnter={handleSubmitInput}
-              disabled={!inputOpen}
-            />
+            <button
+              type="button"
+              className="p02a-pill p02a-entry__ok"
+              disabled={!inputOpen || email.length === 0}
+              onClick={handleSubmitInput}
+            >
+              <span className="p02a-pill__label">확인</span>
+              <PillArrow />
+            </button>
           </div>
+          <div className="p02a-domains">
+            {EMAIL_DOMAINS.map((domain) => (
+              <button
+                key={domain}
+                type="button"
+                className="p02a-domain"
+                disabled={!inputOpen}
+                onClick={() => handleDomain(domain)}
+              >
+                {domain}
+              </button>
+            ))}
+          </div>
+          <EmailKeyboard
+            onKey={handleKey}
+            onBackspace={handleBackspace}
+            onEnter={handleSubmitInput}
+            disabled={!inputOpen}
+          />
         </div>
 
         {/* 주소 확인 — 오타면 다른 사람에게 리포트가 가므로 크게 한 번 더 보여 준다 (SPEC §2) */}
-        {!inputOpen && (
-          <div className="p02a-scrim">
-            <div className="modal p02a-confirm">
+        {confirmOpen && (
+          <div
+            className="p02a-scrim"
+            role="dialog"
+            aria-modal="true"
+            aria-label="이 주소로 보내 드릴까요?"
+          >
+            <div className="p02a-confirm">
               <strong className="p02a-confirm__ask">이 주소로 보내 드릴까요?</strong>
-              <p className="p02a-confirm__address">{email}</p>
-              <p className="screen__sub">
-                체험이 끝나면 이 주소로 리포트가 가요 <PlaceholderTag label="문구 미확정 (SPEC T-7)" />
+              <p className="p02a-confirm__address" ref={confirmRef}>
+                <span className="p02a-fit">{email}</span>
+              </p>
+              <p className="p02a-confirm__note">
+                체험이 끝나면 이 주소로 리포트가 가요{' '}
+                <PlaceholderTag label="문구 미확정 (SPEC T-7)" />
               </p>
               {phase === 'sending' ? (
-                <div className="p02a-confirm__wait">
+                <div className="p02a-confirm__wait" role="status">
                   <WaitDots />
-                  <PlaceholderTag label="이메일 전달 중 — 문구 · 진행 연출 미확정" />
+                  <PlaceholderTag label="이메일 전달 중 — 문구 미확정" />
                 </div>
               ) : (
-                <div className="row">
-                  <button className="btn btn--lg" onClick={() => setPhase('email')}>
-                    고치기
+                <div className="p02a-confirm__actions">
+                  <button
+                    type="button"
+                    className="p02a-pill p02a-pill--plain"
+                    onClick={handleEditAgain}
+                  >
+                    <span className="p02a-pill__label">고치기</span>
                   </button>
-                  <button className="btn btn--primary btn--lg" onClick={() => setPhase('sending')}>
-                    맞아요
+                  <button type="button" className="p02a-pill" onClick={handleSend}>
+                    <span className="p02a-pill__label">맞아요</span>
+                    <PillArrow />
                   </button>
                 </div>
               )}
@@ -603,31 +832,35 @@ export function P02aGuardianLink(): ReactNode {
     )
   } else if (phase === 'linked') {
     view = (
-      <div className="p02a-main">
-        <Placeholder label="연결 완료 그림" width={220} height={150} />
-        <h1 className="p02a-title">연결됐어요</h1>
-        <PlaceholderTag label="문구 · 연출 미확정" />
+      <div className="p02a-status" data-kind="linked" role="status">
+        <LinkedMark />
+        <h1 className="p02a-status__title">연결됐어요</h1>
       </div>
     )
   } else {
     // 연결 실패 — 처음에는 [다시 시도]만, 다시 해도 안 되면 [사진만 찍기]까지
     view = (
-      <div className="p02a-main">
-        <Placeholder label="연결 끊김 그림" width={220} height={150} />
-        <h1 className="p02a-title">
+      <div className="p02a-status" data-kind="error" role="alert">
+        <OfflineMark />
+        <h1 className="p02a-status__title">
           {offerPhotoOnly ? '지금은 사진만 찍을 수 있어요' : '연결이 잘 안 돼요'}
         </h1>
-        <PlaceholderTag label="문구 미확정 (SPEC T-7)" />
-        <div className="row">
+        <p className="p02a-status__tag">
+          <PlaceholderTag label="문구 미확정 (SPEC T-7)" />
+        </p>
+        <div className="p02a-status__actions">
           <button
-            className={offerPhotoOnly ? 'btn btn--lg' : 'btn btn--primary btn--lg'}
+            type="button"
+            className={offerPhotoOnly ? 'p02a-pill p02a-pill--plain' : 'p02a-pill'}
             onClick={handleRetry}
           >
-            다시 시도
+            <span className="p02a-pill__label">다시 시도</span>
+            {!offerPhotoOnly && <PillArrow />}
           </button>
           {offerPhotoOnly && (
-            <button className="btn btn--primary btn--lg" onClick={handlePhotoOnly}>
-              사진만 찍기
+            <button type="button" className="p02a-pill" onClick={handlePhotoOnly}>
+              <span className="p02a-pill__label">사진만 찍기</span>
+              <PillArrow />
             </button>
           )}
         </div>
@@ -636,11 +869,29 @@ export function P02aGuardianLink(): ReactNode {
   }
 
   return (
-    <Screen id="P-02a" note={PHASE_NOTE[phase]} onBack={canGoBack ? handleBack : undefined}>
-      <div className="p02a">
-        {view}
+    <Screen id="P-02a" designed>
+      <div className="p02a" data-phase={phase}>
+        <Stage background={skyUrl}>
+          <img className="p02a-logo" src={logoEnUrl} alt="MY DREAM VOICE" draggable={false} />
+
+          {canGoBack && <BackButton onClick={handleBack} />}
+
+          <img className="p02a-star" src={starYellowUrl} alt="" draggable={false} />
+
+          {view}
+
+          {/* 폰을 든 캐릭터 — 왼쪽 카드의 왼쪽 아래 모서리 앞에 서 있고, 발밑은 구름이 가린다 (이메일 입력 화면에는 없다) */}
+          {!showEmail && (
+            <>
+              <img className="p02a-char" src={astronautPhoneUrl} alt="" draggable={false} />
+              <img className="p02a-cloud" src={cloudFrontUrl} alt="" draggable={false} />
+            </>
+          )}
+        </Stage>
+
+        {/* 개발용 — 손님 화면에는 없다. 도화지 밖(창 기준)에 둔다 */}
         <div className="p02a-dev">
-          <DevStrip label="MOCK 서버">
+          <DevStrip label={`MOCK 서버 · ${PHASE_NOTE[phase]}`}>
             <button
               className="btn btn--sm"
               disabled={!polling || !sessionToken}
@@ -656,7 +907,7 @@ export function P02aGuardianLink(): ReactNode {
               MOCK 서버: {mockNetworkLabel}
             </button>
             {/* MOCK: QR 주소는 가짜다 (https://mock-server.invalid/…) — 실제 서버가 붙으면 이 표시를 뺀다 */}
-            {phase === 'link' && <PlaceholderTag label="MOCK 서버 — 폰으로 찍어도 열리지 않습니다" />}
+            {phase === 'link' && <PlaceholderTag label="MOCK — QR을 폰으로 찍어도 열리지 않습니다" />}
           </DevStrip>
         </div>
       </div>
