@@ -4,7 +4,7 @@
  * 좌표는 1920×1080 도화지 기준 px다 (components/Stage.tsx가 창 크기에 맞춰 통째로 줄인다).
  * 색 · 글꼴은 tokens.css의 --d-* 만 쓴다.
  *
- * 지금 있는 것: [← 뒤로] (.d-back — components/BackButton.tsx)
+ * 지금 있는 것: [← 뒤로] (.d-back — components/BackButton.tsx) · 별이 떠다니는 움직임(@keyframes d-star-bob · d-star-sway)
  * 화면마다 다른 것(카드 · 버튼 크기 · 배치)은 그 화면의 CSS에 둔다 (p00.css · p01.css …).
  */
 
@@ -71,4 +71,30 @@
   top: 1px;
   -webkit-text-stroke: 1px currentColor;
   paint-order: stroke fill;
+}
+
+/* ── 별의 움직임 — 잔잔하게 떠다닌다 (2026-11-22 "별만 · 잔잔하게") ──
+   화면마다 별에 이 둘을 겹쳐 건다 (서로 다른 속성이라 함께 돈다). 주기 · 지연은 별마다 다르게 줘서 같은 길을 되풀이하지 않게 한다:
+     animation: d-star-bob 6s ease-in-out -1.2s infinite, d-star-sway 7s ease-in-out -4.8s infinite;
+   별의 기울기는 rotate 속성으로 따로 준다 — 움직임(translate · transform)은 그 위에 얹힌다.
+   폭을 키우지 않는다 (키운 버전은 너무 둥실거려서 되돌렸다). 별이 커졌다 돌아오는 움직임은 뺐다 (2026-11-22).
+   prefers-reduced-motion 처리는 쓰는 화면의 CSS에서 한다 */
+@keyframes d-star-bob {
+  0%,
+  100% {
+    translate: 0 5px;
+  }
+  50% {
+    translate: 0 -11px;
+  }
+}
+
+@keyframes d-star-sway {
+  0%,
+  100% {
+    transform: translateX(-8px) rotate(-5deg);
+  }
+  50% {
+    transform: translateX(8px) rotate(5deg);
+  }
 }

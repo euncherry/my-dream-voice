@@ -14,8 +14,9 @@
  * 배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/p01.css.
  *
  * 움직이는 것은 별 네 개뿐이다 (2026-11-22 지정 — 별만 · 잔잔하게). 저마다 다른 박자로 조금씩 떠다니고,
- *   9초에 한 번씩 돌아가며 살짝 커졌다 돌아온다. 캐릭터 · 카드 · 버튼은 멈춰 있다.
- *   "더 화려하게"(폭을 키우고 빛 조각이 튀는 것)를 넣었다가 너무 둥실거려서 되돌렸다 — 다시 키우지 않는다.
+ *   7.2초에 한 번씩 돌아가며 별 옆에 반짝이가 잠깐 나타났다 사라진다 (강조는 이것뿐 — 별은 커지지 않는다).
+ *   캐릭터 · 카드 · 버튼은 멈춰 있다.
+ *   정한 과정: 폭을 2배쯤 키운 "더 화려하게"는 너무 둥실거려서 되돌렸고, 별이 한 번씩 커지는 것도 뺐다 — 다시 넣지 않는다.
  *   멈춘 화면은 고장으로 보이므로(PAGE_SPEC §2-5) 움직임을 아예 없애지는 않는다.
  *
  * 카드 글자는 이름과 한 줄 설명뿐이다 (2026-11-22 지정 — 카드를 가볍게).
@@ -68,6 +69,21 @@ const MODE_CARDS: ModeCard[] = [
   },
 ]
 
+/**
+ * 별 하나 — 떠다니는 상자 안에 별 그림과 반짝이 두 개가 들어 있다.
+ * 상자가 조금씩 떠다니고(위아래 · 좌우 · 기울기), 차례가 오면 별 옆에 반짝이가 잠깐 나타났다 사라진다 (별 그림은 커지지 않는다).
+ * 자리 · 크기 · 박자는 className으로 받는다 (styles/p01.css). 꾸밈이라 터치는 받지 않는다.
+ */
+function Star({ className, src }: { className: string; src: string }): ReactNode {
+  return (
+    <span className={`p01-starbox ${className}`} aria-hidden="true">
+      <img className="p01-starbox__img" src={src} alt="" draggable={false} />
+      <i className="p01-starbox__spark p01-starbox__spark--1" />
+      <i className="p01-starbox__spark p01-starbox__spark--2" />
+    </span>
+  )
+}
+
 export function P01ModeSelect(): ReactNode {
   const setMode = useSession((s) => s.setMode)
   const next = useSession((s) => s.next)
@@ -88,8 +104,8 @@ export function P01ModeSelect(): ReactNode {
 
           <BackButton onClick={back} />
 
-          <img className="p01-star p01-star--yellow" src={starYellowUrl} alt="" draggable={false} />
-          <img className="p01-star p01-star--coral" src={starCoralUrl} alt="" draggable={false} />
+          <Star className="p01-star p01-star--yellow" src={starYellowUrl} />
+          <Star className="p01-star p01-star--coral" src={starCoralUrl} />
 
           <h1 className="p01-title">어떤 체험을 해볼까요?</h1>
           <p className="p01-sub">원하는 체험을 골라 주세요</p>
@@ -104,7 +120,7 @@ export function P01ModeSelect(): ReactNode {
               {/* 그림 — 색 덩어리 위에 캐릭터. 캐릭터는 덩어리 아랫줄에서 잘리고 위로는 카드 밖까지 올라온다 */}
               <span className="p01-art" aria-hidden="true">
                 <Blob className="p01-art__blob" />
-                <img className="p01-art__star" src={starYellowUrl} alt="" draggable={false} />
+                <Star className="p01-art__star" src={starYellowUrl} />
                 <span className="p01-art__clip">
                   <img className="p01-art__char" src={card.art} alt="" draggable={false} />
                 </span>
