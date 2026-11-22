@@ -63,21 +63,26 @@
 .p00-start {
   position: absolute;
   left: 570px;
-  top: 759px;
+  top: 756px;
   width: 780px;
-  height: 187px;
+  height: 193px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 35px;
+  gap: 26px;
   /* 시안의 알약은 아래쪽에 두께(그늘)가 있어 글자가 살짝 위에 놓인다 */
-  padding: 0 0 6px;
+  padding: 0 0 7px;
   border: 0;
-  border-radius: 94px;
+  border-radius: 97px;
   background: #fff;
+  /* 버튼 시안(2026-11-22)에서 잰 값 — 위에서부터:
+     ① 알약 안쪽 아래의 하늘색 두께  ② 안쪽 가장자리에 옅게 도는 푸른 기운
+     ③ 가장자리에 바짝 붙은 옅은 빛  ④ 아래로 번지는 파란 그림자 (아래가 가장 진하고, 옆은 중간, 위는 거의 없다) */
   box-shadow:
-    0 14px 30px rgba(45, 120, 190, 0.22),
-    inset 0 -6px 0 rgba(180, 215, 245, 0.55);
+    inset 0 -12px 6px rgb(var(--d-glow) / 0.22),
+    inset 0 -14px 28px 4px rgb(var(--d-glow) / 0.11),
+    0 6px 8px -1px rgb(var(--d-glow) / 0.25),
+    0 14px 27px -2px rgb(var(--d-glow) / 0.96);
   font-family: var(--d-font-display);
   color: var(--d-navy);
   cursor: pointer;
@@ -92,18 +97,23 @@
   position: relative;
   top: 2px;
   font-family: var(--d-font-button);
-  font-size: 104px;
+  font-size: 103px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.075em;
-  /* 마지막 글자 뒤에 붙는 자간은 빼서 가운데 맞춤이 어긋나지 않게 */
-  margin-right: -0.075em;
+  /* 시안의 글자는 이 글꼴의 가장 굵은 굵기(700)보다 획이 굵고 글자 폭이 5%쯤 넓다 —
+     같은 색 외곽선(2px)을 두르고 가로로 5% 늘려 맞춘다 */
+  -webkit-text-stroke: 2px currentColor;
+  paint-order: stroke fill;
+  transform: scaleX(1.05);
+  letter-spacing: 0.02em;
+  /* 가로로 늘린 만큼(양쪽 2.5%씩) 자리를 잡아 주고, 마지막 글자 뒤에 붙는 자간은 뺀다 — 가운데 맞춤이 어긋나지 않게 */
+  margin: 0 0.07em 0 0.09em;
 }
 
 .p00-start__arrow {
   flex: 0 0 auto;
-  width: 94px;
-  height: 94px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   background: var(--d-coral);
   color: #fff;
@@ -112,8 +122,8 @@
 }
 
 .p00-start__arrow svg {
-  width: 72%;
-  height: 72%;
+  width: 81%;
+  height: 81%;
 }
 
 /* ── 터치 안내 ──

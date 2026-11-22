@@ -54,6 +54,7 @@
   --d-navy: #112a69; /* 글자 */
   --d-coral: #fe6a4e; /* 강조 (화살표 동그라미 · 밑줄) */
   --d-white: #ffffff;
+  --d-glow: 37 160 255; /* 버튼의 파란 그림자 — rgb(var(--d-glow) / 알파)로 쓴다 (#25a0ff) */
   /* 큰 글자용 글꼴 — 티머니 둥근바람 (fonts.css · 굵기 400 / 800) */
   --d-font-display: 'TMoneyDungunbaram', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
   /* 버튼 글자용 글꼴 — 학교안심 둥근미소 (fonts.css · 굵기 400 / 700) */
