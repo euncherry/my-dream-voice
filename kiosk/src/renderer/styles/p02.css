@@ -57,7 +57,8 @@
   margin: 0;
   text-align: center;
   font-family: var(--d-font-display);
-  font-size: 43px;
+  /* 시안(43px)보다 작게 — 2026-11-22 지정. 줄 상자(위치 · 높이)는 그대로라 글자가 같은 자리 가운데에 놓인다 */
+  font-size: 36px;
   font-weight: 800;
   line-height: 56px;
   color: var(--d-navy);
@@ -311,11 +312,35 @@
     0 12px 19px -2px rgb(var(--d-glow) / 1);
   color: var(--d-navy);
   cursor: pointer;
-  transition: transform 0.08s ease-out;
+  transition:
+    transform 0.08s ease-out,
+    color 0.2s ease-out,
+    box-shadow 0.2s ease-out;
 }
 
 .p02-start:active {
   transform: scale(0.97);
+}
+
+/* 세 줄을 다 체크하기 전 — "아직 누를 때가 아니다"라는 흐린 모습 (2026-11-22 지정 · 시안에 없는 모습).
+   눌리기는 한다 — 누르면 넘어가지 않고 안내가 뜬다 (PAGE_SPEC P-02). 그래서 disabled로 막지 않고 모양만 흐리게 한다 */
+.p02-start[data-ready='false'] {
+  background: #f2f5f9;
+  box-shadow:
+    inset 0 -7px 7px rgb(var(--d-glow) / 0.08),
+    0 0 0 1.5px rgb(var(--d-glow) / 0.1),
+    0 6px 12px -3px rgb(var(--d-glow) / 0.45);
+  /* 반투명이 아니라 섞은 색으로 — 외곽선과 글자가 겹치는 곳이 진해 보이지 않게 */
+  color: color-mix(in srgb, var(--d-navy) 34%, #f2f5f9);
+}
+
+.p02-start[data-ready='false'] .p02-start__arrow {
+  background: #bcc8d8;
+}
+
+/* 다 체크한 순간 한 번 통 튄다 — 이제 눌러도 된다는 표시 */
+.p02-start[data-ready='true'] {
+  animation: p02-ready 0.45s ease-out;
 }
 
 .p02-start__label {
@@ -342,6 +367,7 @@
   color: #fff;
   display: grid;
   place-items: center;
+  transition: background-color 0.2s ease-out;
 }
 
 .p02-start__arrow svg {
@@ -429,6 +455,16 @@
   transform: scale(0.97);
 }
 
+@keyframes p02-ready {
+  0%,
+  100% {
+    scale: 1;
+  }
+  45% {
+    scale: 1.05;
+  }
+}
+
 @keyframes p02-shake {
   0%,
   100% {
@@ -450,11 +486,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .p02-star,
-  .p02-item[data-missing='true'] {
+  .p02-item[data-missing='true'],
+  .p02-start[data-ready='true'] {
     animation: none;
   }
 
-  .p02-start {
+  .p02-start,
+  .p02-start__arrow {
     transition: none;
   }
 }

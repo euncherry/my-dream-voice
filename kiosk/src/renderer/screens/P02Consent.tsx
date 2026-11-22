@@ -16,6 +16,7 @@
  *   · 덜 체크하고 [시작]을 눌렀을 때 — 제목 아래 한 줄이 안내("모두 동의해야 체험을 진행할 수 있어요")로 바뀌고,
  *     빠진 줄에 붉은(--d-warn) 테두리가 생기며 한 번 흔들린다
  *   · [자세히] · [전문 보기] 창
+ *   · [시작] — 세 줄을 다 체크하기 전에는 흐린 모습(누르면 안내), 다 체크하면 또렷해지며 한 번 통 튄다 (2026-11-22 지정)
  * 사진 항목의 덧붙임 말("영상은 분석 및 프린트 화면 재생용, 체험 종료 시 삭제" — PAGE_SPEC)은 시안의 줄에 없어서
  *   그 항목의 [자세히] 창으로 옮겼다 (내용을 없애지는 않았다).
  *
@@ -214,7 +215,8 @@ export function P02Consent(): ReactNode {
           <img className="p02-char" src={astronautGuideUrl} alt="" draggable={false} />
           <img className="p02-cloud" src={cloudFrontUrl} alt="" draggable={false} />
 
-          <button type="button" className="p02-start" onClick={start}>
+          {/* 다 체크하기 전에는 흐린 모습이다 (data-ready) — 그래도 눌리고, 누르면 안내가 뜬다 */}
+          <button type="button" className="p02-start" data-ready={allChecked} onClick={start}>
             <span className="p02-start__label">시작</span>
             <span className="p02-start__arrow" aria-hidden="true">
               <svg viewBox="0 0 48 48" width="100%" height="100%" focusable="false">
