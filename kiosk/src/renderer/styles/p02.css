@@ -118,6 +118,7 @@
   border-radius: 37px;
   background: var(--d-row);
   overflow: hidden;
+  transition: background-color 0.12s ease-out;
 }
 
 /* 체크한 줄 (시안에 없는 모습) — 테두리가 남색으로 */
@@ -151,8 +152,17 @@
   padding-left: 48px;
 }
 
-.p02-item__check:active {
-  background: rgb(var(--d-glow) / 0.08);
+/* 누르는 동안 — 줄 전체가 살짝 짙어진다. 체크 영역을 누르든 [자세히]를 누르든 [자세히] 자리까지 똑같이 (2026-11-22 지정).
+   버튼 하나만 짙어지면 줄이 두 조각으로 보여서, 버튼이 아니라 줄(li)의 바탕을 바꾼다 */
+.p02-item:has(.p02-item__check:active),
+.p02-item:has(.p02-item__more:active) {
+  background: color-mix(in srgb, rgb(var(--d-glow)) 9%, var(--d-row));
+}
+
+.p02-item[data-missing='true']:has(.p02-item__check:active),
+.p02-item[data-missing='true']:has(.p02-item__more:active) {
+  /* 붉은 바탕 위에서는 파란 기운 대신 붉은 기운을 조금 더한다 (파랑을 섞으면 회색이 된다) */
+  background: color-mix(in srgb, var(--d-warn) 9%, #fff3f0);
 }
 
 .p02-item__box {
@@ -241,7 +251,6 @@
   padding-right: 21px;
 }
 
-.p02-item__more:active,
 .p02-full:active {
   opacity: 0.6;
 }
