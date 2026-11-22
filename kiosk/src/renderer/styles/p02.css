@@ -1,0 +1,460 @@
+/*
+ * p02.css — P-02 [동의] (디자인 입힘 · 2026-11-22)
+ *
+ * 좌표는 전부 1920×1080 도화지 기준 px다 (components/Stage.tsx가 창 크기에 맞춰 통째로 줄인다).
+ * 디자인 시안(동의 화면 1672×941)에서 잰 값을 1.148배 해서 옮겼다 — 시안이 바뀌면 여기만 고친다.
+ * [← 뒤로] · 별의 움직임은 공통 부품이다 (styles/design.css).
+ *
+ * 시안에 없는 모습(체크한 줄 · 빠진 줄 강조 · 안내 · [자세히] 창)은 같은 모양으로 만든 것이다 — P02Consent.tsx 머리말.
+ */
+
+.p02 {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  /* 배경 그림이 뜨기 전 · 화면 비율이 달라 남는 자리의 바탕색 (하늘색) */
+  background: var(--d-sky);
+}
+
+.p02 img {
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* ── 위쪽 영문 로고 (P-00 · P-01과 같은 그림 · 같은 자리) ── */
+.p02-logo {
+  position: absolute;
+  left: 743px;
+  top: -28px;
+  width: 434px;
+}
+
+/* ── 제목 · 안내 한 줄 ── */
+.p02-title {
+  position: absolute;
+  left: 0;
+  top: 92px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-button);
+  font-size: 88px;
+  font-weight: 700;
+  line-height: 100px;
+  color: var(--d-navy);
+  -webkit-text-stroke: 1.8px currentColor;
+  paint-order: stroke fill;
+}
+
+.p02-sub {
+  position: absolute;
+  left: 0;
+  top: 199px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 43px;
+  font-weight: 800;
+  line-height: 56px;
+  color: var(--d-navy);
+}
+
+/* 덜 체크하고 [시작]을 눌렀을 때 — 같은 자리의 글자가 안내로 바뀐다 (시안에 없는 모습) */
+.p02-sub[data-warn='true'] {
+  color: var(--d-warn);
+}
+
+/* ── 별 (움직임은 공통 — design.css) ── */
+.p02-star {
+  position: absolute;
+  left: 1791px;
+  top: 259px;
+  width: 78px;
+  rotate: -14deg;
+  animation:
+    d-star-bob 5.4s ease-in-out -2s infinite,
+    d-star-sway 6.6s ease-in-out -4.2s infinite;
+}
+
+/* ── 흰 카드 ── */
+.p02-card {
+  position: absolute;
+  left: 238px;
+  top: 273px;
+  width: 1464px;
+  height: 615px;
+  border-radius: 80px;
+  background: #fff;
+  /* P-01 카드와 같은 꼴 — 아래쪽 안에 옅은 하늘색 두께 + 바깥으로 번지는 파란 그림자 */
+  box-shadow:
+    inset 0 -10px 8px -2px rgb(var(--d-glow) / 0.14),
+    0 8px 12px 4px rgb(var(--d-glow) / 0.9);
+}
+
+.p02-list {
+  position: absolute;
+  left: 66px;
+  top: 47px;
+  width: 1337px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ── 체크 한 줄 = [체크 영역(줄 전체)] + [자세히 >] ── */
+.p02-item {
+  height: 138px;
+  display: flex;
+  align-items: stretch;
+  border: 2px solid var(--d-row-line);
+  border-radius: 37px;
+  background: var(--d-row);
+  overflow: hidden;
+}
+
+/* 체크한 줄 (시안에 없는 모습) — 테두리가 남색으로 */
+.p02-item[data-checked='true'] {
+  border-color: var(--d-check);
+}
+
+/* 덜 체크하고 [시작]을 눌렀을 때 빠진 줄 (시안에 없는 모습) — 붉은(--d-warn) 테두리 · 옅은 바탕 · 한 번 흔들 */
+.p02-item[data-missing='true'] {
+  border: 4px solid var(--d-warn);
+  background: #fff3f0;
+  animation: p02-shake 0.5s ease-in-out;
+}
+
+.p02-item__check {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 50px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--d-navy);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* 테두리가 굵어진 만큼(2 → 4px) 안쪽을 줄여 글자가 움직이지 않게 */
+.p02-item[data-missing='true'] .p02-item__check {
+  padding-left: 48px;
+}
+
+.p02-item__check:active {
+  background: rgb(var(--d-glow) / 0.08);
+}
+
+.p02-item__box {
+  flex: 0 0 auto;
+  width: 80px;
+  height: 80px;
+  display: grid;
+  place-items: center;
+  border: 5.5px solid var(--d-check);
+  border-radius: 18px;
+  background: #fff;
+  color: #fff;
+}
+
+.p02-item__box svg {
+  width: 62px;
+  height: 62px;
+  opacity: 0;
+}
+
+.p02-item[data-checked='true'] .p02-item__box {
+  background: var(--d-check);
+}
+
+.p02-item[data-checked='true'] .p02-item__box svg {
+  opacity: 1;
+}
+
+.p02-item[data-missing='true'] .p02-item__box {
+  border-color: var(--d-warn);
+}
+
+/* [필수] */
+.p02-item__badge {
+  flex: 0 0 auto;
+  margin-left: 30px;
+  width: 94px;
+  height: 45px;
+  /* 시안에서는 [필수] · 문구 · [자세히]가 한 줄에 놓인다 — 글자를 4px 올린다 */
+  padding-bottom: 8px;
+  display: grid;
+  place-items: center;
+  border-radius: 23px;
+  background: #fde0de;
+  font-family: var(--d-font-display);
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1;
+  color: #9c3a30;
+}
+
+.p02-item__label {
+  /* 시안의 글자는 네모 가운데보다 조금 위에 놓인다 */
+  position: relative;
+  top: -5px;
+  margin-left: 27px;
+  font-family: var(--d-font-display);
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* [자세히 >] — 줄 오른쪽. 누르는 자리는 줄 높이 전체다 */
+.p02-item__more {
+  flex: 0 0 auto;
+  width: 222px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 23px 6px 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--d-font-display);
+  font-size: 41px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--d-navy);
+  cursor: pointer;
+}
+
+.p02-item[data-missing='true'] .p02-item__more {
+  padding-right: 21px;
+}
+
+.p02-item__more:active,
+.p02-full:active {
+  opacity: 0.6;
+}
+
+.p02-chevron {
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
+}
+
+/* [개인정보 수집·이용 전문 보기 >] — 보이는 글자는 작지만 누르는 자리는 높이 88px (PAGE_SPEC §2-2) */
+.p02-full {
+  position: absolute;
+  left: 382px;
+  top: 511px;
+  width: 700px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  font-family: var(--d-font-display);
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--d-navy);
+  cursor: pointer;
+}
+
+/* ── 안내하는 캐릭터 · 발밑 구름 ── */
+.p02-char {
+  position: absolute;
+  left: -21px;
+  top: 652px;
+  width: 436px;
+}
+
+.p02-cloud {
+  position: absolute;
+  left: -10px;
+  top: 928px;
+  width: 520px;
+}
+
+/* ── [시작] — 흰 알약 ([시작하기] · [선택하기]와 같은 꼴) ── */
+.p02-start {
+  position: absolute;
+  left: 637px;
+  top: 919px;
+  width: 643px;
+  /* 시안의 알약은 높이 135px — 아래 6px은 두께(그늘)라서 글자 · 동그라미는 위쪽 129px의 가운데에 놓는다 */
+  height: 135px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 0 0 6px;
+  border: 0;
+  border-radius: 68px;
+  background: linear-gradient(#fff 18%, #f4f8fe 55%, #ecf4fd 90%);
+  box-shadow:
+    inset 0 -7px 7px rgb(var(--d-glow) / 0.2),
+    0 0 0 1.5px rgb(var(--d-glow) / 0.12),
+    0 4px 5px rgb(var(--d-glow) / 0.35),
+    0 12px 19px -2px rgb(var(--d-glow) / 1);
+  color: var(--d-navy);
+  cursor: pointer;
+  transition: transform 0.08s ease-out;
+}
+
+.p02-start:active {
+  transform: scale(0.97);
+}
+
+.p02-start__label {
+  position: relative;
+  top: 1px;
+  font-family: var(--d-font-button);
+  font-size: 88px;
+  font-weight: 700;
+  line-height: 1;
+  /* [시작하기]와 같은 방법 — 같은 색 외곽선으로 획을 굵게, 가로로 5% 넓게 */
+  -webkit-text-stroke: 1.7px currentColor;
+  paint-order: stroke fill;
+  transform: scaleX(1.05);
+  letter-spacing: 0.01em;
+  margin: 0 0.04em 0 0.05em;
+}
+
+.p02-start__arrow {
+  flex: 0 0 auto;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: var(--d-coral);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.p02-start__arrow svg {
+  width: 81%;
+  height: 81%;
+}
+
+.p02-start:focus-visible,
+.p02-item__check:focus-visible,
+.p02-item__more:focus-visible,
+.p02-full:focus-visible,
+.p02-doc__close:focus-visible {
+  outline: 5px solid var(--d-navy);
+  outline-offset: 3px;
+}
+
+/* ── [자세히] · [전문 보기] 창 (시안에 없는 모습 — 흰 카드와 같은 꼴로) ──
+   도화지(1920×1080) 안에 그려서 화면과 같이 줄어든다. 바깥 어두운 막은 창 밖 남는 띠까지 덮는다 */
+.p02-doc {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgb(14 39 85 / 0.5);
+  box-shadow: 0 0 0 4000px rgb(14 39 85 / 0.5);
+}
+
+.p02-doc__panel {
+  width: 1180px;
+  /* 아래 [시작] 알약과 붙어 보이지 않게 — 창 아랫변(y=900)과 알약 윗변(y=919) 사이를 띄운다 */
+  height: 720px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  padding: 58px 70px 52px;
+  border-radius: 70px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(8 30 70 / 0.35);
+  color: var(--d-navy);
+  text-align: center;
+}
+
+.p02-doc__title {
+  /* 줄의 문구를 그대로 다시 보여 주는 자리라 같은 글꼴로 — 학교안심 둥근미소는 가운뎃점(·)이 넓게 찍혀 문구가 달라 보인다 */
+  font-family: var(--d-font-display);
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.p02-doc__desc {
+  margin: 0;
+  font-family: var(--d-font-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.p02-doc__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+}
+
+.p02-doc__close {
+  flex: 0 0 auto;
+  width: 360px;
+  height: 104px;
+  border: 0;
+  border-radius: 52px;
+  background: var(--d-navy);
+  font-family: var(--d-font-button);
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+}
+
+.p02-doc__close:active {
+  transform: scale(0.97);
+}
+
+@keyframes p02-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  20% {
+    translate: -10px 0;
+  }
+  40% {
+    translate: 9px 0;
+  }
+  60% {
+    translate: -6px 0;
+  }
+  80% {
+    translate: 4px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p02-star,
+  .p02-item[data-missing='true'] {
+    animation: none;
+  }
+
+  .p02-start {
+    transition: none;
+  }
+}

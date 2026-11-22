@@ -1,7 +1,7 @@
 /*
- * select.css — P-02[동의] · P-03[연령 선택] · P-04[직업 선택] (디자인 전 화면)
+ * select.css — P-03[연령 선택] · P-04[직업 선택] (디자인 전 화면)
  *
- * P-00 · P-01은 디자인을 입혀 p00.css · p01.css로 옮겼다.
+ * P-00 · P-01 · P-02는 디자인을 입혀 p00.css · p01.css · p02.css로 옮겼다.
  *
  * ⚠️ 색 · 글꼴 · 크기 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다. 지금은 구조만.
  *    값은 tokens.css의 변수만 쓴다.
@@ -14,12 +14,12 @@
  *   → 공통 클래스(.btn · .ph)를 덮어쓸 때는 클래스 두 개로 적어, 실리는 순서와 무관하게 이기게 한다
  *     (예: .btn.p04-card).
  *
- * 클래스 이름: 화면별은 .p02- ~ .p04-, 세 화면이 같이 쓰는 틀은 .pick
+ * 클래스 이름: 화면별은 .p03- · .p04-, 두 화면이 같이 쓰는 틀은 .pick
  *   (.sel 은 hardware.css 가 D-01에서 이미 쓰고 있어 피했다).
  */
 
 /* ────────────────────────────────────────────────
-   공통 틀 (P-02 ~ P-04) — 머리(제목) · 가운데(늘어남) · 아래(주 액션)
+   공통 틀 (P-03 · P-04) — 머리(제목) · 가운데(늘어남) · 아래(주 액션)
    ──────────────────────────────────────────────── */
 
 .pick {
@@ -80,137 +80,6 @@
   border-color: var(--c-accent);
   background: color-mix(in srgb, var(--c-accent) 22%, var(--c-surface-2));
   box-shadow: 0 0 0 4px var(--c-accent);
-}
-
-/* ────────────────────────────────────────────────
-   P-02 [동의] — 체크 3줄 · 안내 · [전문 보기] · [시작]
-   ──────────────────────────────────────────────── */
-
-.p02-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  width: min(100%, 1200px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--gap-sm);
-}
-
-/* 한 줄 = [체크 영역(줄 전체)] + [자세히 ›]. 자리가 모자라면 터치 최소 높이까지 줄어든다 */
-.p02-item {
-  flex: 0 1 120px;
-  min-height: var(--touch-min);
-  display: flex;
-  align-items: stretch;
-  overflow: hidden;
-  background: var(--c-surface);
-  border: 3px solid var(--c-line);
-  border-radius: var(--radius);
-}
-
-.p02-item[data-checked='true'] {
-  border-color: var(--c-accent);
-}
-
-/* 덜 체크하고 [시작]을 눌렀을 때 — 빠진 항목 강조 */
-.p02-item[data-missing='true'] {
-  border-color: var(--c-danger);
-  background: color-mix(in srgb, var(--c-danger) 16%, var(--c-surface));
-}
-
-.p02-item__check {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--gap-md);
-  padding: 0 var(--gap-md);
-  background: transparent;
-  border: 0;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.p02-item__box {
-  flex: 0 0 auto;
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  background: var(--c-bg);
-  border: 3px solid var(--c-text-dim);
-  border-radius: 10px;
-  font-size: var(--fs-heading);
-  font-weight: 800;
-  line-height: 1;
-}
-
-.p02-item[data-checked='true'] .p02-item__box {
-  background: var(--c-accent);
-  border-color: var(--c-accent);
-}
-
-.p02-item[data-missing='true'] .p02-item__box {
-  border-color: var(--c-danger);
-}
-
-.p02-item__text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.p02-item__label {
-  font-size: calc(var(--fs-body) * 1.25);
-  font-weight: 700;
-}
-
-.p02-item__desc {
-  font-size: var(--fs-caption);
-  color: var(--c-text-dim);
-}
-
-/* [자세히 ›] — 줄 안에 붙여 둔다 */
-.btn.p02-item__more {
-  flex: 0 0 auto;
-  border: 0;
-  border-left: 1px solid var(--c-line);
-  border-radius: 0;
-  font-size: calc(var(--fs-caption) * 1.25);
-  font-weight: 400;
-  color: var(--c-text-dim);
-}
-
-/* 안내 자리 — 높이를 미리 잡아 두어, 안내가 떠도 줄들이 밀리지 않는다 */
-.p02-warn {
-  flex: 0 0 auto;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.p02-warn__msg {
-  padding: var(--gap-xs) var(--gap-md);
-  border-radius: 999px;
-  background: var(--c-danger);
-  font-weight: 700;
-}
-
-/* [자세히] · [전문 보기] 창 */
-.p02-doc__title {
-  font-size: var(--fs-heading);
-}
-
-.p02-doc__body {
-  height: min(36vh, 320px);
-  display: flex;
 }
 
 /* ────────────────────────────────────────────────
