@@ -82,6 +82,10 @@ import kakaoUrl from '../assets/icons/kakao.webp'
 import mailAtUrl from '../assets/icons/mail-at.webp'
 import '../styles/p02a.css'
 
+/** 연결 실패 때의 시무룩한 우주인을 앱이 뜰 때 미리 불러 둔다 — 처음 실패할 때 그림을 불러오는 동안 캐릭터가 비지 않게 */
+const preloadedSad = new Image()
+preloadedSad.src = astronautSadUrl
+
 type Phase =
   | 'opening'
   | 'link'

@@ -1,7 +1,7 @@
 /*
- * select.css — P-03[연령 선택] · P-04[직업 선택] (디자인 전 화면)
+ * select.css — P-04[직업 선택] (디자인 전 화면)
  *
- * P-00 · P-01 · P-02는 디자인을 입혀 p00.css · p01.css · p02.css로 옮겼다.
+ * P-00 · P-01 · P-02 · P-02a · P-03은 디자인을 입혀 p00.css · p01.css · p02.css · p02a.css · p03.css로 옮겼다.
  *
  * ⚠️ 색 · 글꼴 · 크기 · 배치는 전부 임시다 — 피그마 디자인(1920×1080)이 오면 입힌다. 지금은 구조만.
  *    값은 tokens.css의 변수만 쓴다.
@@ -14,12 +14,12 @@
  *   → 공통 클래스(.btn · .ph)를 덮어쓸 때는 클래스 두 개로 적어, 실리는 순서와 무관하게 이기게 한다
  *     (예: .btn.p04-card).
  *
- * 클래스 이름: 화면별은 .p03- · .p04-, 두 화면이 같이 쓰는 틀은 .pick
+ * 클래스 이름: 화면별은 .p04-, 틀은 .pick (P-03과 같이 쓰던 이름 그대로)
  *   (.sel 은 hardware.css 가 D-01에서 이미 쓰고 있어 피했다).
  */
 
 /* ────────────────────────────────────────────────
-   공통 틀 (P-03 · P-04) — 머리(제목) · 가운데(늘어남) · 아래(주 액션)
+   틀 — 머리(제목) · 가운데(늘어남) · 아래(주 액션)
    ──────────────────────────────────────────────── */
 
 .pick {
@@ -61,7 +61,7 @@
   gap: var(--gap-md);
 }
 
-/* [다음] — 구성 스케치(p03-age · p04-job)대로 오른쪽 아래 */
+/* [다음] — 구성 스케치(p04-job)대로 오른쪽 아래 */
 .pick__foot--end {
   justify-content: flex-end;
 }
@@ -71,7 +71,7 @@
   min-width: 240px;
 }
 
-/* 고르는 카드 — 고른 것 강조 (P-03 · P-04) */
+/* 고르는 카드 — 고른 것 강조 */
 .btn.pick-choice {
   border-width: 3px;
 }
@@ -80,38 +80,6 @@
   border-color: var(--c-accent);
   background: color-mix(in srgb, var(--c-accent) 22%, var(--c-surface-2));
   box-shadow: 0 0 0 4px var(--c-accent);
-}
-
-/* ────────────────────────────────────────────────
-   P-03 [연령 선택] — 버튼 3개 (그림 + 큰 글자)
-   ──────────────────────────────────────────────── */
-
-.btn.p03-age {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 380px;
-  height: 100%;
-  max-height: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--gap-sm);
-  padding: var(--gap-md);
-}
-
-/* 그림 자리 — 남는 높이에 맞춰 줄어든다 */
-.p03-age__art {
-  flex: 1 1 auto;
-  min-height: 0;
-  align-self: stretch;
-  display: flex;
-}
-
-.p03-age__label {
-  flex: 0 0 auto;
-  font-size: var(--fs-heading);
-  font-weight: 800;
-  white-space: nowrap;
 }
 
 /* ────────────────────────────────────────────────
