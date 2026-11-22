@@ -76,15 +76,23 @@ import skyUrl from '../assets/bg/sky.webp'
 import logoEnUrl from '../assets/brand/logo-en.png'
 import astronautPhoneUrl from '../assets/characters/astronaut-phone.webp'
 import astronautSadUrl from '../assets/characters/astronaut-sad.webp'
+import astronautThumbsUpUrl from '../assets/characters/astronaut-thumbsup.webp'
 import cloudFrontUrl from '../assets/deco/cloud-front.webp'
 import starYellowUrl from '../assets/deco/star-yellow.png'
 import kakaoUrl from '../assets/icons/kakao.webp'
 import mailAtUrl from '../assets/icons/mail-at.webp'
 import '../styles/p02a.css'
 
-/** 연결 실패 때의 시무룩한 우주인을 앱이 뜰 때 미리 불러 둔다 — 처음 실패할 때 그림을 불러오는 동안 캐릭터가 비지 않게 */
-const preloadedSad = new Image()
-preloadedSad.src = astronautSadUrl
+/**
+ * 연결 실패 때의 시무룩한 우주인 · 연결됐을 때의 엄지 척 우주인을 앱이 뜰 때 미리 불러 둔다 —
+ * 처음 바뀔 때 그림을 불러오는 동안 캐릭터가 비지 않게. 참조를 잡아 두어 캐시에서 빠지지 않게 한다
+ */
+const preloadedCharacters: HTMLImageElement[] = [astronautSadUrl, astronautThumbsUpUrl].map((url) => {
+  const img = new Image()
+  img.src = url
+  return img
+})
+void preloadedCharacters
 
 type Phase =
   | 'opening'
@@ -886,13 +894,21 @@ export function P02aGuardianLink(): ReactNode {
           {view}
 
           {/* 왼쪽 아래 캐릭터 — 발밑은 구름이 가린다 (이메일 입력 화면에는 없다).
-              평소는 폰을 든 우주인(왼쪽 카드의 왼쪽 아래 모서리 앞), 연결 실패 때는 시무룩한 우주인 (2026-11-23 지정) */}
+              평소는 폰을 든 우주인(왼쪽 카드의 왼쪽 아래 모서리 앞) · 연결 실패 때는 시무룩한 우주인 ·
+              연결됐을 때는 엄지 척 우주인 (2026-11-23 지정) */}
           {!showEmail && (
             <>
               {phase === 'error' ? (
                 <img
                   className="p02a-char p02a-char--sad"
                   src={astronautSadUrl}
+                  alt=""
+                  draggable={false}
+                />
+              ) : phase === 'linked' ? (
+                <img
+                  className="p02a-char p02a-char--happy"
+                  src={astronautThumbsUpUrl}
                   alt=""
                   draggable={false}
                 />

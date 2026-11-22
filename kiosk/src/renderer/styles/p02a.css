@@ -382,13 +382,24 @@
 }
 
 /* 연결 실패 때 — 시무룩한 우주인 (2026-11-23 지정). 헬멧 크기를 폰을 든 우주인과 맞추고(폭 364px),
-   모은 두 손이 구름 위로 보이게 놓는다. 헬멧이 화면 왼쪽 끝에 닿지 않게 조금 띄운다 */
+   모은 두 손이 발밑 구름(폭 900px) 위로 보이게 조금 올려 놓는다. 헬멧이 화면 왼쪽 끝에 닿지 않게 조금 띄운다 */
 .p02a-char--sad {
   left: 8px;
-  top: 532px;
+  top: 470px;
   width: 364px;
-  /* 그림 높이 554.8px — 도화지 아래(1080)로 나가는 6.8px을 자른다 (위와 같은 까닭) */
-  clip-path: inset(0 0 6.8px 0);
+  /* 그림 높이 554.8px — 아래 끝(1024.8)이 도화지 안이라 자를 것이 없다 */
+}
+
+/* 연결됐을 때 — 엄지 척 우주인 (2026-11-23 지정). 시무룩한 우주인과 같은 배율 · 머리가 같은 자리에 오게 놓는다.
+   엄지가 구름 위로 보인다. 나타날 때 한 번 통 튄다 */
+.p02a-char--happy {
+  left: 10px;
+  top: 536px;
+  width: 358px;
+  /* 그림 높이 554.4px — 도화지 아래(1080)로 나가는 10.4px을 자른다 */
+  clip-path: inset(0 0 10.4px 0);
+  transform-origin: 50% 85%;
+  animation: p02a-pop 0.45s ease-out;
 }
 
 .p02a-cloud {
@@ -922,7 +933,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .p02a-star,
-  .p02a-status__mark--ok {
+  .p02a-status__mark--ok,
+  .p02a-char--happy {
     animation: none;
   }
 
