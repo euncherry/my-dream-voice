@@ -7,8 +7,8 @@
  * 인쇄되는 네컷(photo/composeFourCut.ts)을 화면에 작게 옮긴 것이다 — 캔버스가 아니라 DOM/CSS 로 그린다.
  * 칸 · 띠 위치는 FOURCUT 좌표를 % 로 바꿔 놓으므로 좌표를 다시 적지 않는다.
  *
- * 프레임 아트(public/frames/ — 직업마다 어느 파일인지는 composeFourCut.ts 의 FRAME_FILE · 2026-11-23부터 6개 직업 공통
- * common.png)가 있으면 사진 위에 얹고,
+ * 프레임 아트(public/frames/<jobId>.png — 직업마다 어느 파일인지는 composeFourCut.ts 의 FRAME_FILE · 2026-11-23 직업별 6장)가
+ * 있으면 사진 위에 얹고,
  * 없으면 composeFourCut 의 PLACEHOLDER 프레임과 같은 모양(직업 색 + 띠 글자)으로 그린다.
  *
  * ⚠️ 색 · 글꼴은 임시다 — 프레임 아트가 오면 placeholder 쪽은 쓰이지 않는다.

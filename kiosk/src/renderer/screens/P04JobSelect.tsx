@@ -11,7 +11,7 @@
  *
  * 그림은 assets/ 에 있다 — 배경(bg/sky) · 로고(brand/logo-en) · 프레임을 든 우주인(characters/astronaut-frame) ·
  *   발밑 구름(deco/cloud-front) · 별(deco/star-yellow). 카드 그림은 그 직업의 네컷 프레임이다 (photo/FramePreview —
- *   인쇄되는 것과 같은 그림. 2026-11-23부터 6개 직업이 같은 프레임 하나 — photo/composeFourCut.ts FRAME_FILE).
+ *   인쇄되는 것과 같은 그림 · public/frames/<jobId>.png — 2026-11-23 받은 직업별 6장).
  * 배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/p04.css. [← 뒤로]는 공통 부품이다.
  *
  * 시안에는 "우주비행사를 고른 모습" 한 장뿐이다. 나머지는 같은 모양으로 만들었다 (확인 필요 — 체크리스트 7-6):

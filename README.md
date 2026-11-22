@@ -106,7 +106,7 @@ flowchart LR
 | P-02 동의 (B) | 보호자 동반 · 목소리 · 사진·영상 — 모두 체크해야 시작 | `P02Consent.tsx` |
 | P-02a 보호자 연결 (B) | 카카오 QR 또는 이메일 직접 입력 → 세션 열기. 연결 실패는 이 화면 안에서 처리 | `P02aGuardianLink.tsx` · `components/EmailKeyboard.tsx` |
 | P-03 연령 (B) | 만 4 · 5 · 6+ | `P03AgeSelect.tsx` |
-| P-04 직업 | 6종 중 1개 (카드 = 네컷 프레임 — 지금은 6개 직업 공통 프레임 1종) | `P04JobSelect.tsx` · `photo/FramePreview.tsx` |
+| P-04 직업 | 6종 중 1개 (카드 = 그 직업의 네컷 프레임) | `P04JobSelect.tsx` · `photo/FramePreview.tsx` |
 | P-05 발화 (B) | 시나리오 + 타깃 문장 2개 — 들려주고 따라 말하기 · 다시 말하기 | `P05Speak.tsx` · `audio/clips.ts` · `audio/useAudioCapture.ts` |
 | P-06 촬영 | 라이브뷰 · 7초 간격 4컷 · 장면 녹화 · 네컷 합성 | `P06Capture.tsx` · `photo/recordLiveView.ts` · `photo/composeFourCut.ts` |
 | P-07 분석 및 프린트 | 진행도 · 영상 · 긍정 문구(A) / 리포트 미리보기(B) · 분석 · 전송 · 인쇄 | `P07AnalyzePrint.tsx` · `report/ReportPreview.tsx` · `report/copy.ts` |

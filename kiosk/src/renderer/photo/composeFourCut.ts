@@ -11,7 +11,7 @@
  * 여기에 좌표를 다시 적지 않는다 — 디자이너 값이 오면 constants.ts 만 바꾼다.
  * QR 없음 · 추천 직업 없음 · A/B 같은 프레임 · 네 칸 모두 고른 직업 하나.
  *
- * 프레임 아트 — public/frames/ (public/frames/README.md). 2026-11-23부터 6개 직업이 같은 프레임 하나(common.png)를 쓴다 (FRAME_FILE)
+ * 프레임 아트 — public/frames/<jobId>.png (public/frames/README.md · 2026-11-23 직업별 6장 · 직업 ↔ 파일은 FRAME_FILE)
  *   있으면 사진 위 **맨 위에** 얹고, 없으면 코드로 그린 PLACEHOLDER 프레임을 쓴다.
  *
  * ※ 캔버스 합성은 렌더러에서 한다 — 결과는 dataURL 하나뿐이다.
@@ -30,17 +30,17 @@ export const CELL_ASPECT: number = FOURCUT.cells[0]!.width / FOURCUT.cells[0]!.h
 // ────────────────────────────────────────────────────────────
 
 /**
- * 직업마다 얹을 프레임 파일 (public/frames/ 안).
- * 2026-11-23: 6개 직업 모두 같은 프레임 하나로 통일 (지정 — "프레임은 두 번째 그림으로 통일").
- * 직업마다 다른 프레임이 오면 여기만 바꾼다 — 예: police: 'police.png'
+ * 직업마다 얹을 프레임 파일 (public/frames/ 안) — 2026-11-23 받은 직업별 프레임 6장.
+ * (그날 잠시 6개 직업이 한 장을 같이 썼다 — 그 한 장은 우주 그림이라 우주비행사 프레임이 됐다)
+ * 프레임을 바꾸거나 여러 직업이 한 장을 같이 쓰게 하려면 여기만 바꾼다
  */
 const FRAME_FILE: Record<JobId, string> = {
-  police: 'common.png',
-  astronaut: 'common.png',
-  singer: 'common.png',
-  creator: 'common.png',
-  doctor: 'common.png',
-  roboticist: 'common.png',
+  police: 'police.png',
+  astronaut: 'astronaut.png',
+  singer: 'singer.png',
+  creator: 'creator.png',
+  doctor: 'doctor.png',
+  roboticist: 'roboticist.png',
 }
 
 /** file:// 로 뜨는 설치판 때문에 상대 경로로 적는다 (`/frames/...` 절대 경로 금지) */
