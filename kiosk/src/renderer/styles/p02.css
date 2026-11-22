@@ -118,12 +118,15 @@
   border-radius: 37px;
   background: var(--d-row);
   overflow: hidden;
-  transition: background-color 0.12s ease-out;
+  transition:
+    background-color 0.12s ease-out,
+    scale 0.08s ease-out;
 }
 
-/* 체크한 줄 (시안에 없는 모습) — 테두리가 남색으로 */
+/* 체크한 줄 (시안에 없는 모습) — 테두리가 남색으로, 바탕은 짙어진 채로 남는다 (2026-11-22 지정 — 고른 줄이 한눈에 보이게) */
 .p02-item[data-checked='true'] {
   border-color: var(--d-check);
+  background: color-mix(in srgb, rgb(var(--d-glow)) 10%, var(--d-row));
 }
 
 /* 덜 체크하고 [시작]을 눌렀을 때 빠진 줄 (시안에 없는 모습) — 붉은(--d-warn) 테두리 · 옅은 바탕 · 한 번 흔들 */
@@ -152,17 +155,19 @@
   padding-left: 48px;
 }
 
-/* 누르는 동안 — 줄 전체가 살짝 짙어진다. 체크 영역을 누르든 [자세히]를 누르든 [자세히] 자리까지 똑같이 (2026-11-22 지정).
-   버튼 하나만 짙어지면 줄이 두 조각으로 보여서, 버튼이 아니라 줄(li)의 바탕을 바꾼다 */
+/* 누르는 동안 — 버튼을 누르듯 줄 전체가 더 짙어지고 아주 조금 들어간다. 체크 영역을 누르든 [자세히]를 누르든 [자세히] 자리까지 똑같이 (2026-11-22 지정).
+   버튼 하나만 짙어지면 줄이 두 조각으로 보여서, 버튼이 아니라 줄(li)의 바탕을 바꾼다.
+   짙기: 평소 0 → 체크한 줄 10% → 누르는 동안 20% (체크한 줄을 눌러도 더 짙어지게 체크한 줄보다 진하다) */
 .p02-item:has(.p02-item__check:active),
 .p02-item:has(.p02-item__more:active) {
-  background: color-mix(in srgb, rgb(var(--d-glow)) 9%, var(--d-row));
+  background: color-mix(in srgb, rgb(var(--d-glow)) 20%, var(--d-row));
+  scale: 0.992;
 }
 
 .p02-item[data-missing='true']:has(.p02-item__check:active),
 .p02-item[data-missing='true']:has(.p02-item__more:active) {
-  /* 붉은 바탕 위에서는 파란 기운 대신 붉은 기운을 조금 더한다 (파랑을 섞으면 회색이 된다) */
-  background: color-mix(in srgb, var(--d-warn) 9%, #fff3f0);
+  /* 붉은 바탕 위에서는 파란 기운 대신 붉은 기운을 더한다 (파랑을 섞으면 회색이 된다) */
+  background: color-mix(in srgb, var(--d-warn) 16%, #fff3f0);
 }
 
 .p02-item__box {
@@ -500,6 +505,7 @@
     animation: none;
   }
 
+  .p02-item,
   .p02-start,
   .p02-start__arrow {
     transition: none;
