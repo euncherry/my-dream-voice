@@ -21,7 +21,7 @@
  * 타이머를 지우고 늦게 온 응답을 버린다.
  *
  * 🎨 그림은 assets/ 에 있다 — 배경(bg/sky) · 로고(brand/logo-en) · 폰을 든 우주인(characters/astronaut-phone) ·
- *    발밑 구름(deco/cloud-front) · 별(deco/star-yellow) · 카카오 표시(icons/kakao) · 편지 봉투(icons/mail-at).
+ *    연결 실패 때의 시무룩한 우주인(characters/astronaut-sad) · 발밑 구름(deco/cloud-front) · 별(deco/star-yellow) · 카카오 표시(icons/kakao) · 편지 봉투(icons/mail-at).
  *    배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/p02a.css. [← 뒤로]는 공통 부품이다.
  *
  *    시안은 두 장이다 — **연결 선택(link)** · **이메일 입력**(2026-11-23 — 자주 쓰는 주소 · 키보드 모양만 입혔다, 나머지는 체크리스트
@@ -75,6 +75,7 @@ import type { GuardianLink, MockServerState, ServerFailReason } from '@shared/ty
 import skyUrl from '../assets/bg/sky.webp'
 import logoEnUrl from '../assets/brand/logo-en.png'
 import astronautPhoneUrl from '../assets/characters/astronaut-phone.webp'
+import astronautSadUrl from '../assets/characters/astronaut-sad.webp'
 import cloudFrontUrl from '../assets/deco/cloud-front.webp'
 import starYellowUrl from '../assets/deco/star-yellow.png'
 import kakaoUrl from '../assets/icons/kakao.webp'
@@ -880,10 +881,20 @@ export function P02aGuardianLink(): ReactNode {
 
           {view}
 
-          {/* 폰을 든 캐릭터 — 왼쪽 카드의 왼쪽 아래 모서리 앞에 서 있고, 발밑은 구름이 가린다 (이메일 입력 화면에는 없다) */}
+          {/* 왼쪽 아래 캐릭터 — 발밑은 구름이 가린다 (이메일 입력 화면에는 없다).
+              평소는 폰을 든 우주인(왼쪽 카드의 왼쪽 아래 모서리 앞), 연결 실패 때는 시무룩한 우주인 (2026-11-23 지정) */}
           {!showEmail && (
             <>
-              <img className="p02a-char" src={astronautPhoneUrl} alt="" draggable={false} />
+              {phase === 'error' ? (
+                <img
+                  className="p02a-char p02a-char--sad"
+                  src={astronautSadUrl}
+                  alt=""
+                  draggable={false}
+                />
+              ) : (
+                <img className="p02a-char" src={astronautPhoneUrl} alt="" draggable={false} />
+              )}
               <img className="p02a-cloud" src={cloudFrontUrl} alt="" draggable={false} />
             </>
           )}
