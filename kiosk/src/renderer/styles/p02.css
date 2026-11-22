@@ -299,14 +299,19 @@
 
 .p02-cloud {
   position: absolute;
-  left: -10px;
-  top: 928px;
-  width: 520px;
+  left: 0;
+  top: 817px;
+  z-index: 1;
+  width: 900px;
+  /* 받은 크기(폭 900px · 2026-11-23 지정) — 구름의 아랫변(그림 안 263px)이 화면 바닥(1080)에 딱 붙는다.
+     그 아래는 투명이라 자르지 않아도 된다 */
 }
 
 /* ── [시작] — 흰 알약 ([시작하기] · [선택하기]와 같은 꼴) ── */
 .p02-start {
   position: absolute;
+  /* 발밑 구름(폭 900px)이 알약 왼쪽 아래에 걸친다 — 알약이 구름 앞에 오게 */
+  z-index: 2;
   left: 637px;
   top: 919px;
   width: 643px;
