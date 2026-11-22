@@ -60,11 +60,14 @@
   --d-blob-pink: #fdbed4; /* 캐릭터 뒤 색 덩어리 — 분홍 */
   --d-blob-purple: #cdb3fc; /* 캐릭터 뒤 색 덩어리 — 보라 */
   /* 문구 · 안내 글자용 글꼴 — 티머니 둥근바람 (fonts.css · 굵기 400 / 800)
-     P-00 컨셉 문구 · 터치 안내 / P-01 "원하는 체험을 골라 주세요" · 카드 설명 */
+     P-00 터치 안내 / P-01 "원하는 체험을 골라 주세요" · 카드 설명 (P-00 컨셉 문구는 2026-11-22부터 --d-font-slogan) */
   --d-font-display: 'TMoneyDungunbaram', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
   /* 제목 · 카드 이름 · 버튼 글자용 글꼴 — 학교안심 둥근미소 (fonts.css · 굵기 400 / 700)
      [시작하기] 글씨체 — P-01부터 제목 · 카드 이름 · [선택하기] · [← 뒤로]도 이 글꼴이다 (2026-11-22 요청) */
   --d-font-button: 'SchoolSafetyRoundedSmile', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
+  /* 컨셉 문구용 글꼴 — 배달의민족 주아 (fonts.css · 굵기 400 하나뿐 — 굵게 지정하지 않는다)
+     P-00 "꿈을 찍고, 목소리를 담아요" (2026-11-22 지정) */
+  --d-font-slogan: 'BMJua', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
 }
 
 :root[data-orientation='portrait'] {
