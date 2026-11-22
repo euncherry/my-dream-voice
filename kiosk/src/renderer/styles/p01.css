@@ -62,8 +62,11 @@
   color: var(--d-navy);
 }
 
-/* ── 배경의 별 ── */
-.p01-star {
+/* ── 별 (배경 2개 + 카드 안 2개) ──
+   시안의 별은 하나씩 조금 기울어 있다 — 기울기는 따로 주고(rotate), 움직임(translate · transform · scale)은 그 위에 얹힌다.
+   움직임 값(박자 · 폭)은 맨 아래 "움직임"에 모아 뒀다 */
+.p01-star,
+.p01-art__star {
   position: absolute;
 }
 
@@ -71,9 +74,7 @@
   left: 43px;
   top: 620px;
   width: 83px;
-  /* 시안의 별은 하나씩 조금 기울어 있다 — 기울기는 따로 주고(rotate), 반짝이는 움직임(transform)은 그 위에 얹힌다 */
   rotate: -16deg;
-  animation: p01-twinkle 5s ease-in-out -1.8s infinite;
 }
 
 .p01-star--coral {
@@ -81,7 +82,6 @@
   top: 262px;
   width: 82px;
   rotate: -24deg;
-  animation: p01-twinkle 4.4s ease-in-out infinite;
 }
 
 /* ── 카드 (한 장이 통째로 버튼) ── */
@@ -155,11 +155,6 @@
   fill: var(--d-blob-purple);
 }
 
-.p01-art__star {
-  position: absolute;
-  animation: p01-twinkle 4.8s ease-in-out infinite;
-}
-
 .p01-card--a .p01-art__star {
   left: 558px;
   top: 250px;
@@ -172,7 +167,6 @@
   top: 119px;
   width: 111px;
   rotate: -10deg;
-  animation-delay: -2.2s;
 }
 
 /* 캐릭터가 보이는 창 — 아래는 색 덩어리의 아랫줄(카드 위에서 364px)에서 자르고, 위는 카드 밖 80px까지 연다 */
@@ -187,7 +181,6 @@
 
 .p01-art__char {
   position: absolute;
-  animation: p01-bob 5.2s ease-in-out infinite;
 }
 
 .p01-card--a .p01-art__char {
@@ -200,7 +193,6 @@
   left: 119px;
   top: 37px;
   width: 494px;
-  animation-delay: -2.4s;
 }
 
 /* ── 카드 글자 ── */
@@ -303,31 +295,79 @@
   height: 81%;
 }
 
-/* ── 움직임 — 멈춘 화면은 고장으로 보인다 (PAGE_SPEC §2-5). 시안에는 없는 연출이라 아주 약하게만 ── */
-@keyframes p01-bob {
+/* ── 움직임 — 별만, 잔잔하게 (2026-11-22 지정) ──
+   멈춘 화면은 고장으로 보인다 (PAGE_SPEC §2-5) — 그래서 별 네 개만 조금씩 떠다닌다. 캐릭터 · 카드 · 버튼은 멈춰 있다.
+   처음 골랐던 미리보기 ① "별이 주인공" 값 그대로다 — 그 뒤 "더 화려하게"(폭을 키우고 빛 조각이 튀는 것)를 넣었다가
+   너무 둥실거려서 되돌렸다. 폭을 키우거나 빛 조각을 다시 넣지 않는다.
+   별 하나에 세 가지가 겹친다 (서로 다른 속성이라 함께 돈다):
+     ① 위아래 (translate — 위로 11px · 아래로 5px)   ② 좌우 흔들림 + 기울기 (transform — ±8px · ±5도)
+     ③ 살짝 커졌다 돌아오기 (scale — 1.16배 · 9초에 한 번, 별 넷이 2초쯤씩 어긋나 돌아가며)
+   ①②는 별마다 주기가 달라서 같은 길을 되풀이하지 않는다.
+   위쪽 폭이 더 넓다 — A 카드의 별 아래에는 색 덩어리가 14px쯤만 남아 있다 */
+.p01-star--yellow {
+  animation:
+    p01-star-bob 7.4s ease-in-out -1.5s infinite,
+    p01-star-sway 8.8s ease-in-out -6s infinite,
+    p01-star-pop 9s ease-in-out -5.8s infinite;
+}
+
+.p01-star--coral {
+  animation:
+    p01-star-bob 6.2s ease-in-out -4s infinite,
+    p01-star-sway 7.6s ease-in-out -2s infinite,
+    p01-star-pop 9s ease-in-out -8s infinite;
+}
+
+/* A 카드의 별은 색 덩어리의 오른쪽 아래 모서리에 가깝다 — '맨 아래'와 '맨 오른쪽'이 겹치지 않게 좌우 박자(-7.3s)를 잡았다 */
+.p01-card--a .p01-art__star {
+  animation:
+    p01-star-bob 6.8s ease-in-out -3.2s infinite,
+    p01-star-sway 8.2s ease-in-out -7.3s infinite,
+    p01-star-pop 9s ease-in-out -1.5s infinite;
+}
+
+.p01-card--b .p01-art__star {
+  animation:
+    p01-star-bob 8s ease-in-out -0.6s infinite,
+    p01-star-sway 6.6s ease-in-out -4.4s infinite,
+    p01-star-pop 9s ease-in-out -3.7s infinite;
+}
+
+@keyframes p01-star-bob {
   0%,
   100% {
-    transform: translateY(0);
+    translate: 0 5px;
   }
   50% {
-    transform: translateY(-7px);
+    translate: 0 -11px;
   }
 }
 
-@keyframes p01-twinkle {
+@keyframes p01-star-sway {
   0%,
   100% {
-    transform: scale(1) rotate(0deg);
+    transform: translateX(-8px) rotate(-5deg);
   }
   50% {
-    transform: scale(1.08) rotate(6deg);
+    transform: translateX(8px) rotate(5deg);
+  }
+}
+
+/* 9초에 한 번 — 0.54초 동안 커지고 0.81초 동안 돌아온 뒤 쉰다 (지연값으로 별 넷의 차례를 나눈다) */
+@keyframes p01-star-pop {
+  0%,
+  15%,
+  100% {
+    scale: 1;
+  }
+  6% {
+    scale: 1.16;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .p01-art__char,
-  .p01-art__star,
-  .p01-star {
+  .p01-star,
+  .p01-art__star {
     animation: none;
   }
 
