@@ -55,9 +55,15 @@
   --d-coral: #fe6a4e; /* 강조 (화살표 동그라미 · 밑줄) */
   --d-white: #ffffff;
   --d-glow: 37 160 255; /* 버튼의 파란 그림자 — rgb(var(--d-glow) / 알파)로 쓴다 (#25a0ff) */
-  /* 큰 글자용 글꼴 — 티머니 둥근바람 (fonts.css · 굵기 400 / 800) */
+  /* 모드 선택 화면 시안(2026-11-22)에서 보탠 값 */
+  --d-ink: #0d0d0d; /* 흰 카드 안의 글자 (검정에 가까운 색) */
+  --d-blob-pink: #fdbed4; /* 캐릭터 뒤 색 덩어리 — 분홍 */
+  --d-blob-purple: #cdb3fc; /* 캐릭터 뒤 색 덩어리 — 보라 */
+  /* 문구 · 안내 글자용 글꼴 — 티머니 둥근바람 (fonts.css · 굵기 400 / 800)
+     P-00 컨셉 문구 · 터치 안내 / P-01 "원하는 체험을 골라 주세요" · 카드 설명 */
   --d-font-display: 'TMoneyDungunbaram', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
-  /* 버튼 글자용 글꼴 — 학교안심 둥근미소 (fonts.css · 굵기 400 / 700) */
+  /* 제목 · 카드 이름 · 버튼 글자용 글꼴 — 학교안심 둥근미소 (fonts.css · 굵기 400 / 700)
+     [시작하기] 글씨체 — P-01부터 제목 · 카드 이름 · [선택하기] · [← 뒤로]도 이 글꼴이다 (2026-11-22 요청) */
   --d-font-button: 'SchoolSafetyRoundedSmile', 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
 }
 

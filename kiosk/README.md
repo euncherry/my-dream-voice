@@ -4,7 +4,7 @@ Electron(메인=Node) + Vite + React + TypeScript(렌더러).
 전체 개요·현재 상태는 [`../README.md`](../README.md), 규칙은 `../CLAUDE.md`, 화면 정의는 `../PAGE_SPEC.md`, 진행 순서는 `../V2_BUILD_CHECKLIST.md`.
 
 > **v2 화면 흐름** (기획 2026-11-16 · 18 · 19 · 20) — `src/`를 v2대로 새로 썼다. v1 화면 흐름 코드는 `../legacy/kiosk-v1/src`에 빼 두었다(참고용).
-> 지금은 **구조와 동작만** 있다 — 화면 디자인은 입히기 전이고, 받아쓰기 · 정밀 분석 · 백엔드 서버는 `src/main/mock/`의 가짜가 대신한다.
+> 지금은 **구조와 동작만** 있다 — 화면 디자인은 P-00 · P-01까지 입혔고(나머지는 입히기 전), 받아쓰기 · 정밀 분석 · 백엔드 서버는 `src/main/mock/`의 가짜가 대신한다.
 
 ## 실행
 
@@ -72,13 +72,13 @@ src/
 ├── renderer/            Vite + React (Next.js 금지)
 │   ├── index.html       키오스크 UI 엔트리 (하나뿐 — 리포트 PDF는 서버가 만든다)
 │   ├── screens/         D-01 · P-00 ~ P-07 · P-02a · M-02 · M-03 (PAGE_SPEC v0.3 번호)
-│   ├── components/      화면 틀(Screen) · DevBar · 이메일 화면 키보드 · 카메라/인쇄/받아쓰기 점검 패널
+│   ├── components/      화면 틀(Screen) · 디자인 화면 틀(Stage) · [← 뒤로](BackButton) · 색 덩어리(Blob) · DevBar · 이메일 화면 키보드 · 카메라/인쇄/받아쓰기 점검 패널
 │   ├── audio/           마이크 장치 · PCM 수집 (DSP off) · 재생 · P-05 음성 클립
 │   ├── report/          리포트 문구 완성본(copy.ts) · P-07 미리보기
 │   ├── photo/           가로 네컷 합성 1844×1240 · 프레임 미리보기 · 촬영 장면 녹화 · 인쇄 점검표
 │   ├── public/          audio/(음성 · 효과음) · frames/(직업 프레임 PNG — 아직 없음) · worklets/
 │   ├── store/session.ts 세션 스토어 = 화면 전환의 단일 소스 (순서는 nextScreen() · prevScreen())
-│   └── styles/          tokens.css(임시 톤 — 디자인 확정 시 교체) · app.css(공통) · 화면별 CSS
+│   └── styles/          tokens.css(임시 톤 + 디자인 토큰 --d-*) · app.css(공통) · design.css(디자인 화면 공통 부품) · 화면별 CSS
 └── shared/              메인·렌더러 공용
     ├── types.ts         IPC 계약 · 세션 모델 · 서버로 보내는 데이터
     ├── jobs.ts          직업 6종 · 연령 구간(만 4 · 5 · 6+) · 시나리오 데이터(타깃 문장 2개 · 어절) · 녹음 멘트
