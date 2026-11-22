@@ -424,7 +424,6 @@ export function P06Capture(): ReactNode {
 
           <div className="p06-tags">
             {backend === 'fake' && <PlaceholderTag label="가짜 카메라 — 실제 촬영이 아닙니다" />}
-            <PlaceholderTag label="직업 프레임 아트 미제작" />
             <PlaceholderTag label="문구 미확정" />
           </div>
 

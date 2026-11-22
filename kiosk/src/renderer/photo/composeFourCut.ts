@@ -11,7 +11,7 @@
  * 여기에 좌표를 다시 적지 않는다 — 디자이너 값이 오면 constants.ts 만 바꾼다.
  * QR 없음 · 추천 직업 없음 · A/B 같은 프레임 · 네 칸 모두 고른 직업 하나.
  *
- * 프레임 아트 — public/frames/<jobId>.png (디자이너 제작 · 아직 없다 → public/frames/README.md)
+ * 프레임 아트 — public/frames/ (public/frames/README.md). 2026-11-23부터 6개 직업이 같은 프레임 하나(common.png)를 쓴다 (FRAME_FILE)
  *   있으면 사진 위 **맨 위에** 얹고, 없으면 코드로 그린 PLACEHOLDER 프레임을 쓴다.
  *
  * ※ 캔버스 합성은 렌더러에서 한다 — 결과는 dataURL 하나뿐이다.
@@ -29,8 +29,22 @@ export const CELL_ASPECT: number = FOURCUT.cells[0]!.width / FOURCUT.cells[0]!.h
 // 프레임 아트 (있으면 쓰고, 없으면 placeholder)
 // ────────────────────────────────────────────────────────────
 
+/**
+ * 직업마다 얹을 프레임 파일 (public/frames/ 안).
+ * 2026-11-23: 6개 직업 모두 같은 프레임 하나로 통일 (지정 — "프레임은 두 번째 그림으로 통일").
+ * 직업마다 다른 프레임이 오면 여기만 바꾼다 — 예: police: 'police.png'
+ */
+const FRAME_FILE: Record<JobId, string> = {
+  police: 'common.png',
+  astronaut: 'common.png',
+  singer: 'common.png',
+  creator: 'common.png',
+  doctor: 'common.png',
+  roboticist: 'common.png',
+}
+
 /** file:// 로 뜨는 설치판 때문에 상대 경로로 적는다 (`/frames/...` 절대 경로 금지) */
-const frameArtSrc = (job: JobId): string => `./frames/${job}.png`
+const frameArtSrc = (job: JobId): string => `./frames/${FRAME_FILE[job]}`
 
 const artLoads = new Map<JobId, Promise<HTMLImageElement | null>>()
 const artKnown = new Map<JobId, HTMLImageElement | null>()
