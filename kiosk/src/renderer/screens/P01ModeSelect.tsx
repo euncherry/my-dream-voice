@@ -13,12 +13,14 @@
  * 캐릭터 뒤의 색 덩어리는 그림 파일이 아니라 코드로 그린다 (components/Blob.tsx).
  * 배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/p01.css.
  *
- * B 카드의 받는 방법은 기획 문구 "(카카오 로그인 또는 이메일 입력)"이다 — 시안에는 "(카카오 로그인)"만 적혀 있지만,
- *   이메일 직접 입력으로도 리포트를 받으므로(P-02a · 2026-11-20 확정) 줄이지 않았다. 시안대로 줄일지는 확인 필요.
- *
- * A는 동의 화면을 거치지 않으므로 안내 한 줄을 이 화면에 둔다 (2026-11-19).
- * ⚠️ 시안에는 이 안내가 없다 — 기획(PAGE_SPEC P-01 · SPEC §10-3)에 있는 줄이라 빼지 않고 A 카드 안 빈자리에 작게 뒀다.
- *    문구 · 위치 · 둘지 말지는 미확정이다 (법무 확인 — SPEC T-7). 문구는 PAGE_SPEC의 임시 문구 그대로다.
+ * 카드 글자는 이름과 한 줄 설명뿐이다 (2026-11-22 지정 — 카드를 가볍게).
+ *   이름은 A "네컷 사진 찍기" · B "목소리도 분석받기" — 앞 낱말("네컷 사진" · "목소리도 분석")은 강조색(산호색)으로 쓴다.
+ *   한 줄 설명은 A "직업을 고르고 네컷 사진을 찍어요." · B "사진도 찍고, 목소리 리포트도 받아요." (2026-11-22 지정).
+ *   전에 있던 두 가지를 화면에서 뺐다 —
+ *     · A 안내("사진과 촬영 영상은 이 기기에서만 쓰고 체험이 끝나면 지워요 · 보호자와 함께 이용해 주세요")
+ *     · B의 받는 방법("보호자 메일로 목소리 리포트 (카카오 로그인 또는 이메일 입력)")
+ * ⚠️ A는 동의 화면을 거치지 않는다 — A 안내를 뺀 지금은 A모드에 고지가 어디에도 없다.
+ *    고지가 필요한지 · 필요하면 어디에 둘지는 법무 확인 (SPEC §10-3 · T-7). B는 P-02[동의] · P-02a[보호자 연결]에서 안내한다.
  */
 
 import type { ReactNode } from 'react'
@@ -38,9 +40,9 @@ import '../styles/p01.css'
 
 interface ModeCard {
   mode: KioskMode
-  /** 카드 이름 (PAGE_SPEC P-01) */
-  name: string
-  /** 한 줄 설명 (시안 문구) */
+  /** 카드 이름 (PAGE_SPEC P-01) — 강조할 앞 낱말(em) + 나머지(rest). 이어 붙이면 이름 전체다 */
+  name: { em: string; rest: string }
+  /** 한 줄 설명 */
   desc: string
   /** 카드 그림 — 캐릭터 */
   art: string
@@ -49,45 +51,17 @@ interface ModeCard {
 const MODE_CARDS: ModeCard[] = [
   {
     mode: 'A',
-    name: '사진만 찍기',
+    name: { em: '네컷 사진', rest: ' 찍기' },
     desc: '직업을 고르고 네컷 사진을 찍어요.',
     art: pilotCameraUrl,
   },
   {
     mode: 'B',
-    name: '목소리도 분석받기',
-    desc: '사진도 찍고, 직업 대사도 말해요.',
+    name: { em: '목소리도 분석', rest: '받기' },
+    desc: '사진도 찍고, 목소리 리포트도 받아요.',
     art: astronautMicUrl,
   },
 ]
-
-/** A 안내 — PAGE_SPEC P-01의 임시 문구 그대로, 두 줄로 나눠 적는다 (법무 확인 전 · SPEC T-7) */
-const A_NOTICE = ['사진과 촬영 영상은 이 기기에서만 쓰고 체험이 끝나면 지워요', '보호자와 함께 이용해 주세요']
-
-function MailIcon(): ReactNode {
-  return (
-    <svg className="p01-card__mail-icon" viewBox="0 0 56 44" aria-hidden="true" focusable="false">
-      <rect
-        x="2.5"
-        y="2.5"
-        width="51"
-        height="39"
-        rx="9"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4.2"
-      />
-      <path
-        d="M6 8.5 28 26 50 8.5M34.5 26.5l11 10.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
 
 export function P01ModeSelect(): ReactNode {
   const setMode = useSession((s) => s.setMode)
@@ -131,27 +105,11 @@ export function P01ModeSelect(): ReactNode {
                 </span>
               </span>
 
-              <span className="p01-card__name">{card.name}</span>
+              <span className="p01-card__name">
+                <em>{card.name.em}</em>
+                {card.name.rest}
+              </span>
               <span className="p01-card__desc">{card.desc}</span>
-
-              {card.mode === 'B' && (
-                <span className="p01-card__mail">
-                  <MailIcon />
-                  <span className="p01-card__mail-text">
-                    보호자 메일로 목소리 리포트
-                    <br />
-                    (카카오 로그인 또는 이메일 입력)
-                  </span>
-                </span>
-              )}
-
-              {card.mode === 'A' && (
-                <span className="p01-card__notice">
-                  {A_NOTICE[0]}
-                  <br />
-                  {A_NOTICE[1]}
-                </span>
-              )}
 
               <span className="p01-go">
                 <span className="p01-go__label">선택하기</span>

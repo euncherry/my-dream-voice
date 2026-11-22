@@ -216,80 +216,35 @@
   paint-order: stroke fill;
 }
 
+/* 이름의 앞 낱말("네컷 사진" · "목소리도 분석")은 강조색으로 (2026-11-22 지정) — 외곽선도 같은 색을 따라간다 */
+.p01-card__name em {
+  font-style: normal;
+  color: var(--d-coral);
+}
+
 .p01-card--a .p01-card__name {
   top: 392px;
   font-size: 85px;
 }
 
+/* B는 이름이 길어 글자가 조금 작다(시안 그대로) — 글자 아랫변을 A와 같은 높이에 맞춘다 */
 .p01-card--b .p01-card__name {
-  top: 387px;
+  top: 400px;
   font-size: 76px;
 }
 
+/* 한 줄 설명 — 두 카드가 같은 자리 · 같은 크기 (2026-11-22: 카드 글자를 이름 + 한 줄로 줄였다) */
 .p01-card__desc {
   left: 0;
+  top: 500px;
   width: 750px;
   text-align: center;
   font-family: var(--d-font-display);
+  font-size: 37px;
   font-weight: 800;
   line-height: 1;
-  white-space: nowrap;
-}
-
-.p01-card--a .p01-card__desc {
-  top: 500px;
-  font-size: 37px;
-  letter-spacing: -0.04em;
-}
-
-.p01-card--b .p01-card__desc {
-  top: 471px;
-  font-size: 36px;
-  letter-spacing: -0.05em;
-}
-
-/* B — 리포트를 받는 방법 (편지 봉투 + 두 줄) */
-.p01-card__mail {
-  left: 128px;
-  top: 521px;
-  width: 560px;
-  height: 76px;
-}
-
-.p01-card__mail-icon {
-  position: absolute;
-  left: 0;
-  top: 13px;
-  width: 56px;
-  height: 44px;
-}
-
-.p01-card__mail-text {
-  position: absolute;
-  left: 82px;
-  top: 0;
-  text-align: left;
-  font-family: var(--d-font-display);
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 38px;
   letter-spacing: -0.04em;
   white-space: nowrap;
-}
-
-/* A — 안내 (시안에 없는 줄 · 기획에 있어 작게 둔다 — P01ModeSelect.tsx 머리말 · SPEC T-7) */
-.p01-card__notice {
-  left: 0;
-  top: 549px;
-  width: 750px;
-  text-align: center;
-  font-family: var(--d-font-display);
-  font-size: 21px;
-  font-weight: 400;
-  line-height: 29px;
-  white-space: nowrap;
-  color: var(--d-navy);
-  opacity: 0.8;
 }
 
 /* ── [선택하기] — 누르는 곳임을 보여 주는 알약 ([시작하기]와 같은 꼴 · 작은 크기) ── */

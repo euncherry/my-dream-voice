@@ -143,7 +143,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
   <header>
     <div class="eyebrow">USER FLOW · 기획 v2</div>
     <h1>마이 드림 보이스 화면 흐름도</h1>
-    <p class="lead">어느 화면에서 무엇을 하면 어느 화면으로 가는지 정리한 문서입니다. 2026년 11월 16일 · 18일 · 19일 · 20일에 바뀐 기획을 반영했습니다. 바뀌지 않은 화면은 지금 앱을 1920×1080으로 캡처한 그림이고, 새로 생기거나 크게 바뀐 화면은 구성 스케치입니다. 둘 다 디자인 전 임시 모습이라, 배치와 색은 디자인에서 새로 정합니다.</p>
+    <p class="lead">어느 화면에서 무엇을 하면 어느 화면으로 가는지 정리한 문서입니다. 2026년 11월 16일 · 18일 · 19일 · 20일 · 22일에 바뀐 기획을 반영했습니다. 바뀌지 않은 화면은 지금 앱을 1920×1080으로 캡처한 그림이고, 새로 생기거나 크게 바뀐 화면은 구성 스케치입니다. 둘 다 디자인 전 임시 모습이라, 배치와 색은 디자인에서 새로 정합니다.</p>
     <dl class="facts">
       <div><dt>두 가지 체험 경로</dt><dd><b style="color:var(--a)">A모드</b>는 네컷 사진만 찍습니다. <b style="color:var(--b)">B모드</b>는 고른 직업의 시나리오를 따라 문장 2개를 말하고, 보호자가 목소리 리포트를 메일로 받습니다. 경로는 모드 선택에서 갈리고, 동의는 B모드만 받습니다. B모드는 동의 바로 다음에 <b>보호자를 먼저 연결</b>합니다 (카카오 로그인 또는 이메일 입력).</dd></div>
       <div><dt>그림 보는 법</dt><dd><b>앱 캡처</b>는 지금 앱 화면 그대로입니다. 위쪽 상태 바(화면 번호는 v1 기준)와 오른쪽 아래 버튼 3개는 개발용입니다. <b>구성 스케치</b>는 들어갈 요소와 위치만 잡은 그림입니다.</dd></div>
@@ -226,7 +226,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
   <text class="note" x="676" y="396" text-anchor="middle">연결이 안 되면 [사진만 찍기] → A로 P-04</text>
   <path d="M868 357 V416 H332 V478" class="l b" marker-end="url(#a-b)"/>
   <path d="M292 357 V478" class="l a" marker-end="url(#a-a)"/>
-  <text class="lbl lbl-a" x="280" y="416" text-anchor="end">A · 사진만 찍기</text>
+  <text class="lbl lbl-a" x="280" y="416" text-anchor="end">A · 네컷 사진 찍기</text>
   <text class="note" x="280" y="435" text-anchor="end">동의 · 보호자 연결 없이 바로 직업 선택</text>
   <path d="M375 551 H399" class="l b" marker-end="url(#a-b)"/>
   <path d="M567 551 H591" class="l b" marker-end="url(#a-b)"/>
@@ -321,15 +321,15 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
     <span class="mono code">P-01</span><h3>모드 선택</h3>
     <span class="chip chip-common">A·B 공통</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">사진만 찍을지, 목소리 리포트까지 받을지 고릅니다. <b>여기서 경로가 갈립니다</b> — A는 동의 화면 없이 바로 직업 선택으로, B는 동의 화면으로 갑니다. A는 사진과 촬영 영상을 이 기기 안에서만 쓰고 체험이 끝나면 지우기 때문에, 동의를 받는 대신 이 화면에 안내 한 줄을 둡니다.</p>
+  <p class="desc">사진만 찍을지, 목소리 리포트까지 받을지 고릅니다. <b>여기서 경로가 갈립니다</b> — A는 동의 화면 없이 바로 직업 선택으로, B는 동의 화면으로 갑니다. A는 사진과 촬영 영상을 이 기기 안에서만 쓰고 체험이 끝나면 지우기 때문에, 동의를 받는 대신 이 화면에 안내 한 줄을 두기로 했습니다. (2026-11-22: 화면 디자인에서 이 안내 한 줄을 뺐습니다 — 필요한지는 법무 확인)</p>
   <div class="figs figs-1"><figure class="fig">
     <button class="shot" type="button" data-src="shots/p01.jpg" aria-label="모드 선택 앱 캡처 크게 보기"><img src="shots/p01.jpg" alt="모드 선택 앱 캡처" loading="lazy" width="1920" height="1080"></button>
-    <figcaption><span class="kind">앱 캡처.</span> B 카드의 받는 것 안내가 "보호자 메일로 목소리 리포트 (카카오 로그인 또는 이메일 입력)"로 바뀝니다. A 안내 한 줄이 들어갑니다 — "사진과 촬영 영상은 이 기기에서만 쓰고 체험이 끝나면 지워요 · 보호자와 함께 이용해 주세요" (임시 문구, 법무 확인)</figcaption>
+    <figcaption><span class="kind">앱 캡처 (디자인 전 화면).</span> 2026-11-22에 디자인을 입히면서 카드에는 이름과 한 줄 설명만 남겼습니다 — B 카드의 "보호자 메일로 목소리 리포트 (…)" 안내와 A 안내 한 줄("사진과 촬영 영상은 이 기기에서만 쓰고 체험이 끝나면 지워요 · 보호자와 함께 이용해 주세요")은 화면에서 뺐습니다 (A 안내가 필요한지는 법무 확인). A 카드 이름은 "사진만 찍기"에서 "네컷 사진 찍기"로 바뀌었습니다.</figcaption>
   </figure></div>
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
     <tbody>
-      <tr><td>[A · 사진만 찍기] 누름</td><td>A모드로 기록합니다. 동의 화면을 거치지 않습니다</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 직업 선택</a></td></tr>
+      <tr><td>[A · 네컷 사진 찍기] 누름</td><td>A모드로 기록합니다. 동의 화면을 거치지 않습니다</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 직업 선택</a></td></tr>
       <tr><td>[B · 목소리도 분석받기] 누름</td><td>B모드로 기록합니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 동의</a></td></tr>
       <tr><td>[뒤로] 누름</td><td>처음으로 돌아갑니다</td><td><a class="go" href="#p-00"><span class="mono">P-00</span> 대기</a></td></tr>
     </tbody>
@@ -653,7 +653,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
       <li><b>촬영 장면 영상</b>의 길이와 구간 (P-06에서 녹화, P-07에서 재생)</li>
       <li><b>진행도 표현</b> (P-07). B모드는 분석 중 → 프린트 중, A모드는 프린트 중</li>
       <li><b>완료 창 문구</b> (M-03)</li>
-      <li><b>A 안내 한 줄의 위치</b> (P-01) — A 카드 안 또는 화면 아래</li>
+      <li><b>A 안내 한 줄</b> (P-01) — 2026-11-22 화면에서 뺌. 필요한지 · 필요하면 어디에 둘지 (법무 확인)</li>
       <li>동의 전문은 법무 검토 뒤 들어갑니다 (P-02). A모드를 동의 없이 안내로 운영해도 되는지와 안내 문구도 법무 확인 (P-01). 이메일 직접 입력 화면의 고지 문구도 법무 확인 (P-02a)</li>
       <li>보호자가 폰으로 가입하는 동안 기다리는 시간 · 무조작 타임아웃 (P-02a) — 전체 타임아웃을 정할 때 같이 정합니다</li>
     </ul>
