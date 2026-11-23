@@ -164,14 +164,23 @@
 }
 
 /* ── 장면 그림 칸 (가로로 긴 3.1 : 1) — 그림은 칸을 꽉 채우고 비율이 다르면 위아래가 조금 잘린다 ── */
+/*
+ * 그림 칸 높이 — 따라 말할 말(큰 글씨)이 없을 때는 카드 아래까지 꽉 차고(512px · 양옆과 같은 42px 여백),
+ * 따라 말할 말이 나오면 시안 높이(430px)로 줄어 그 아래에 큰 글씨가 들어간다 (2026-11-23 지정)
+ */
 .p05-frame {
   position: absolute;
   left: 42px;
   top: 88px;
   width: 1338px;
-  height: 430px;
+  height: 512px;
   z-index: 1;
   isolation: isolate;
+  transition: height 0.45s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.p05-card[data-big='true'] .p05-frame {
+  height: 430px;
 }
 
 /*
@@ -594,5 +603,21 @@ img.p05-scene__art--pop {
   .p05-mic__dots i,
   .p05-wave i {
     animation: none !important;
+  }
+}
+
+/* 큰 글씨는 그림 칸이 줄어든 뒤에 나타난다 — 줄어드는 동안 그림과 겹치지 않게 */
+.p05-line__text {
+  animation: p05-line-in 0.3s ease-out 0.3s both;
+}
+
+@keyframes p05-line-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
   }
 }

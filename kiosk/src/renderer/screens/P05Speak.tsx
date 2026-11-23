@@ -665,7 +665,7 @@ function SpeakFlow({
           </h1>
           <p className="p05-sub">먼저 듣고, 따라 말해 봐요</p>
 
-          <section className="p05-card">
+          <section className="p05-card" data-big={view.big ? 'true' : 'false'}>
             <span className="p05-chip">{jobLabel(job)}</span>
             <ProgressDots progress={view.progress} />
 
