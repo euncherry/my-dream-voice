@@ -138,6 +138,9 @@ interface At {
 /** 화면을 떠나 흐름을 멈출 때 던진다 */
 class Stopped extends Error {}
 
+/** 자막이 이 글자 수(띄어쓰기 빼고)보다 길면 글자를 조금 줄여 두 줄 안에 넣는다 (styles/p05.css data-long) */
+const SUBTITLE_LONG_CHARS = 36
+
 /** 장면 그림 칸의 폭 (styles/p05.css .p05-frame) */
 const FRAME_W = 1338
 
@@ -729,7 +732,11 @@ function SpeakFlow({
               <SceneFrame job={job} scene={view.scene} />
               <StepBar bar={view.bar} />
               {view.subtitle && (
-                <p className="p05-subtitle" key={view.step}>
+                <p
+                  className="p05-subtitle"
+                  key={view.step}
+                  data-long={view.subtitle.replace(/\s/g, '').length > SUBTITLE_LONG_CHARS}
+                >
                   {view.subtitle}
                 </p>
               )}

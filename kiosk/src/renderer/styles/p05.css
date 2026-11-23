@@ -314,26 +314,36 @@ img.p05-scene__art--pop {
   position: absolute;
   left: 50%;
   /* 아래 진행 바 위에 */
-  bottom: 44px;
+  bottom: 42px;
   z-index: 2;
   translate: -50% 0;
   width: max-content;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0;
-  padding: 7px 36px 8px;
+  /* 2026-11-24 시안처럼 크게 — 글자 31 → 48px (긴 대사는 두 줄) */
+  padding: 13px 56px 15px;
   box-sizing: border-box;
-  border-radius: 30px;
+  border-radius: 48px;
   background: #fff;
-  box-shadow: 0 4px 14px rgb(30 20 80 / 0.22);
+  box-shadow: 0 6px 18px rgb(30 20 80 / 0.25);
   text-align: center;
   font-family: var(--d-font-button);
-  font-size: 31px;
+  font-size: 48px;
   font-weight: 700;
-  line-height: 40px;
+  line-height: 62px;
   color: var(--d-navy);
   text-wrap: balance;
   word-break: keep-all;
   animation: p05-subtitle-in 0.25s ease-out both;
+}
+
+/* 긴 대사 — 글자를 줄이고 폭을 넓혀 두 줄 안에 (그림을 덜 가리게) */
+.p05-subtitle[data-long='true'] {
+  max-width: 1290px;
+  padding: 10px 40px 12px;
+  border-radius: 40px;
+  font-size: 38px;
+  line-height: 50px;
 }
 
 @keyframes p05-subtitle-in {
