@@ -169,7 +169,7 @@ export function DevBar(): ReactNode {
           DEV · {screen} · 분석 {scenario?.short} · 받아쓰기 {stt?.short} · 서버 {networkLabel} · 인쇄{' '}
           {printLabel}
         </span>
-        <button onClick={() => void jump('D-01')}>D-01</button>
+        <button onClick={() => void jump('D-01')}>← 점검 화면 (D-01)</button>
         <button onClick={() => setOpen(true)}>펼치기 ▲</button>
       </div>
     )
@@ -195,7 +195,7 @@ export function DevBar(): ReactNode {
             </option>
           ))}
         </select>
-        <button onClick={() => void jump('D-01')}>D-01</button>
+        <button onClick={() => void jump('D-01')}>← 점검 화면 (D-01)</button>
       </div>
 
       <div className="devbar__row">
