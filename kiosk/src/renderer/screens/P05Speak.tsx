@@ -84,6 +84,19 @@ interface Big {
   current: number | null
 }
 
+/**
+ * 그림 칸 아래 진행 바 — 칸으로 나뉜다. 튜토리얼(인사 ~ "준비 완료!" 연습 반응)과 문장 2개를 따로 센다:
+ * 연습이 끝나면 바가 비워지고 문장 바가 새로 시작한다 (2026-11-23 지정).
+ * 다시 하기(09 · 11 · 문장 다시 듣기)와 만 4세 어절은 칸을 넘기지 않는다.
+ */
+const BAR_STEPS = { tutorial: 7, story: 6 } as const
+
+interface Bar {
+  part: keyof typeof BAR_STEPS
+  /** 채워진 칸 수 (지금 보이는 단계까지) */
+  done: number
+}
+
 interface View {
   /** 장면 번호 뒤 두 자리 ('01' ~ '14' · '10b' · '13b') */
   scene: string
@@ -92,6 +105,7 @@ interface View {
   big: Big | null
   mic: MicState
   progress: Progress
+  bar: Bar
   /** 개발용 — 흐름 확인 스크립트가 읽는다 (data-step) */
   step: string
 }
@@ -222,6 +236,7 @@ function SpeakFlow({
     big: null,
     mic: 'wait',
     progress: 'practice',
+    bar: { part: 'tutorial', done: 0 },
     step: 'start',
   })
   /** MOCK: 개발용 받아쓰기 결과 버튼이 떠 있는가 */
@@ -519,19 +534,24 @@ function SpeakFlow({
     }
 
     // ── A · B · C — 인사 · 역할 · 임무 · 신호 설명 + 시범 ──
+    set({ bar: { part: 'tutorial', done: 1 } })
     await say('01', L.hello, 'hello')
+    set({ bar: { part: 'tutorial', done: 2 } })
     await say('02', L.role, 'role')
+    set({ bar: { part: 'tutorial', done: 3 } })
     await say('03', L.mission, 'mission')
+    set({ bar: { part: 'tutorial', done: 4 } })
     await say('04', COMMON.signal, 'signal')
     // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다
     set({ mic: 'demo', step: 'signal:ding' })
     await playClip(DING_URL, 600).done
     check()
     await sleep(600)
+    set({ bar: { part: 'tutorial', done: 5 } })
     await say('05', COMMON.demo, 'demo')
 
     // ── D · E — "준비 완료!" 연습 ──
-    set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null } })
+    set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null }, bar: { part: 'tutorial', done: 6 } })
     await say('06', COMMON.practice, 'practice')
     let voice = await practice()
     if (voice === 'silent') {
@@ -539,6 +559,7 @@ function SpeakFlow({
       await say('09', L.silent, 'silent')
       voice = await practice()
     }
+    if (voice !== 'silent') set({ bar: { part: 'tutorial', done: 7 } })
     if (voice === 'loud') await say('07', L.loud, 'loud')
     else if (voice === 'quiet') await say('08', L.quiet, 'quiet')
     set({ big: null })
@@ -546,12 +567,16 @@ function SpeakFlow({
     // ── F1 · G · F2 — 문장 2개 ──
     let cheer = 0
     for (const turn of [0, 1] as const) {
-      if (turn === 1) await say('12', L.bridge, 'bridge')
+      if (turn === 1) {
+        set({ bar: { part: 'story', done: 3 } })
+        await say('12', L.bridge, 'bridge')
+      }
 
       const line = scenario.turns[turn].line
       const byWord = byWordAge && line.parts.length > 1
       const words = byWord ? line.parts.map((p) => p.text) : [line.text]
-      set({ progress: turn, big: { words, current: null } })
+      // 문장 바 — 연습이 끝나면 비워지고 새로 시작한다 (문장 ① = 1칸 · 문장 ② = 4칸)
+      set({ progress: turn, big: { words, current: null }, bar: { part: 'story', done: turn === 0 ? 1 : 4 } })
       await say(turn === 0 ? '10' : '13', COMMON.intro[turn][byWord ? 1 : 0], `intro${turn + 1}${byWord ? '-4' : ''}`)
 
       const demoScene = lineScene(job, turn, older)
@@ -580,11 +605,13 @@ function SpeakFlow({
 
       if (byWord) set({ big: { words, current: null } })
       const n = cheer++ % COMMON.cheers.length
+      set({ bar: { part: 'story', done: turn === 0 ? 2 : 5 } })
       await say('07', COMMON.cheers[n]!, `cheer${n + 1}`)
       set({ big: null })
     }
 
     // ── I — 마무리 → P-06 ──
+    set({ bar: { part: 'story', done: 6 } })
     await say('14', L.outro, 'outro')
     set({ step: 'leaving' })
     next()
@@ -671,6 +698,7 @@ function SpeakFlow({
 
             <div className="p05-frame">
               <SceneFrame job={job} scene={view.scene} />
+              <StepBar bar={view.bar} />
               {view.subtitle && (
                 <p className="p05-subtitle" key={view.step}>
                   {view.subtitle}
@@ -738,6 +766,18 @@ function TitleMark(): ReactNode {
     <svg className="p05-title__mark" viewBox="0 0 290 56" aria-hidden="true" focusable="false">
       <path d="M7 31C8 18 17 9 32 8L262 2c14-.5 23 6 23 17 0 13-9 24-22 25L150 45 44 52C20 53 6 45 7 31Z" />
     </svg>
+  )
+}
+
+/** 그림 칸 아래 진행 바 — 칸 수 = 그 부분의 단계 수. 튜토리얼에서 문장으로 넘어가면 key가 바뀌어 비워진 채 새로 그려진다 */
+function StepBar({ bar }: { bar: Bar }): ReactNode {
+  const total = BAR_STEPS[bar.part]
+  return (
+    <div className="p05-bar" key={bar.part} data-part={bar.part} aria-hidden="true">
+      {Array.from({ length: total }, (_, i) => (
+        <i key={i} data-on={i < bar.done} />
+      ))}
+    </div>
   )
 }
 
