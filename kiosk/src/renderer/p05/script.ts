@@ -19,6 +19,17 @@ import type { JobId } from '@shared/types'
 export type Kid = 'boy' | 'girl'
 export type Who = Kid | 'both'
 
+/**
+ * 레이어 장면 (2026-11-24) — 배경 판 하나 + 여자아이 · 남자아이 포즈 그림 (assets/p05/layers/<직업>/<이름>.webp).
+ * 배경이 같은 장면끼리는 인물 포즈만 스르르 바뀌고, 배경이 바뀌면 장면째 옆으로 넘어간다.
+ * 장면 '00' = 대사 없이 먼저 보이는 장면 (둘이 이야기하다가 → 아이를 돌아보며 인사로)
+ */
+export interface LayeredScene {
+  bg: string
+  girl: string
+  boy: string
+}
+
 export interface JobScript {
   /** 장면 번호 앞 글자 */
   prefix: string
@@ -49,6 +60,8 @@ export interface JobScript {
   }
   /** 장면 설명 — 그림이 오기 전 임시 판에 적는다 (시나리오 §2 표의 "장면" 칸) */
   scenes: Record<string, string>
+  /** 레이어로 그리는 장면 — 있으면 장면 그림 파일 · 임시 판보다 먼저 쓴다 */
+  layered?: Record<string, LayeredScene>
 }
 
 /** 모든 직업이 같은 대사 (시나리오 §1 "공통 대사") */
@@ -141,6 +154,12 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '13': '우주선 창밖으로 반짝이는 별들과 저 앞의 무지갯빛 새 별. 여자아이가 가리키며 외치고, 남자아이는 창에 붙어 신기해한다',
       '13b': '여자아이가 망원경에서 눈을 떼고 놀란 얼굴로 화면을 본다. 창밖 가까이에 무지갯빛 새 별',
       '14': '알록달록한 새 별 위에 깃발을 꽂고 두 아이가 만세. 뒤로 착륙한 로켓',
+    },
+    layered: {
+      // 대사 없이 0.5초 — 달 위에서 둘이 마주 보고 이야기하는 중 (여자아이는 듣고, 남자아이는 손짓하며 말한다)
+      '00': { bg: 'bg-moon', girl: 'girl-idle', boy: 'boy-explain' },
+      // "안녕! 나는 우주 비행사야!" — 아이를 돌아보며 (엄지 척 · 허리에 손)
+      '01': { bg: 'bg-moon', girl: 'girl-thumbsup', boy: 'boy-hips' },
     },
   },
 

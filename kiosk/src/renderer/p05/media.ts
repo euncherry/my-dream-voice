@@ -34,6 +34,19 @@ function index(files: Record<string, string>): Map<string, string> {
 }
 
 const SCENES = index(sceneFiles)
+
+/**
+ * 그림을 불러온다 — decode()는 창이 가려져 있으면 끝나지 않을 수 있어(크로미움이 미룬다) onload를 기다린다.
+ * 캔버스에 그려 재는 데는 불러오기만 끝나면 된다.
+ */
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`그림을 불러오지 못했습니다: ${url}`))
+    img.src = url
+  })
+}
 const VOICES = index(voiceFiles)
 
 /** 장면 그림 — 없으면 undefined (임시 판) */
@@ -84,9 +97,7 @@ export function panelOf(url: string): ScenePanel | null | undefined {
 /** 판의 자리를 잰다 — 작게 줄여 투명도만 본다 (그림마다 한 번) */
 export async function measurePanel(url: string): Promise<ScenePanel | null> {
   if (panels.has(url)) return panels.get(url) ?? null
-  const img = new Image()
-  img.src = url
-  await img.decode()
+  const img = await loadImage(url)
   const W = img.naturalWidth
   const H = img.naturalHeight
   const sw = 480
@@ -131,4 +142,99 @@ export async function measurePanel(url: string): Promise<ScenePanel | null> {
   }
   panels.set(url, panel)
   return panel
+}
+
+// ────────────────────────────────────────────────
+// 레이어 장면 (2026-11-24) — 배경 판 + 남녀 인물 포즈 그림을 따로 받아 겹친다 (아웃싸운드 탈출기처럼)
+//   assets/p05/layers/<직업>/<이름>.webp   예) layers/astronaut/bg-moon.webp · girl-idle.webp · boy-hips.webp
+// 배경은 튀어나오는 그림과 같은 규격(투명 바탕 위 판) — measurePanel로 판을 잰다.
+// 인물은 바탕이 투명하면 캔버스 크기가 제각각이어도 된다 — measureSprite로 몸의 테두리 · 헬멧 가운데를 잰다.
+// ────────────────────────────────────────────────
+
+const layerFiles = import.meta.glob<string>('../assets/p05/layers/*/*.{webp,png}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+
+const LAYERS = index(layerFiles)
+
+export function layerUrl(job: JobId, name: string): string | undefined {
+  return LAYERS.get(`${job}/${name}`)
+}
+
+/** 인물 그림 안 몸의 자리 (그림 원래 크기 px) */
+export interface SpriteBox {
+  width: number
+  height: number
+  /** 몸 테두리 — 헬멧 꼭대기 ~ 발끝 */
+  top: number
+  bottom: number
+  /** 머리(헬멧) 가운데 x — 포즈마다 팔이 달라도 머리를 기준으로 세우면 인물이 옆으로 흔들리지 않는다 */
+  headCx: number
+}
+
+const sprites = new Map<string, SpriteBox>()
+
+export function spriteOf(url: string): SpriteBox | undefined {
+  return sprites.get(url)
+}
+
+export async function measureSprite(url: string): Promise<SpriteBox> {
+  const known = sprites.get(url)
+  if (known) return known
+  const img = await loadImage(url)
+  const W = img.naturalWidth
+  const H = img.naturalHeight
+  const sw = 300
+  const sh = Math.max(1, Math.round((H * sw) / W))
+  const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+  let box: SpriteBox = { width: W, height: H, top: 0, bottom: H, headCx: W / 2 }
+  if (ctx) {
+    ctx.canvas.width = sw
+    ctx.canvas.height = sh
+    ctx.drawImage(img, 0, 0, sw, sh)
+    const data = ctx.getImageData(0, 0, sw, sh).data
+    const solid = (x: number, y: number): boolean => (data[(y * sw + x) * 4 + 3] ?? 0) > 128
+    const rowHas = (y: number): boolean => {
+      for (let x = 0; x < sw; x++) if (solid(x, y)) return true
+      return false
+    }
+    let t = 0
+    let b = sh - 1
+    while (t < sh - 1 && !rowHas(t)) t++
+    while (b > t && !rowHas(b)) b--
+    // 머리 = 몸 위쪽 30% — 그 안에서 불투명한 곳의 가운데
+    const headEnd = t + Math.round((b - t) * 0.3)
+    let minX = sw
+    let maxX = 0
+    for (let y = t; y <= headEnd; y++) {
+      for (let x = 0; x < sw; x++) {
+        if (!solid(x, y)) continue
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+      }
+    }
+    const k = W / sw
+    box = {
+      width: W,
+      height: H,
+      top: t * k,
+      bottom: (b + 1) * k,
+      headCx: minX <= maxX ? ((minX + maxX + 1) / 2) * k : W / 2,
+    }
+  }
+  sprites.set(url, box)
+  return box
+}
+
+/** 그 직업의 레이어 그림을 미리 풀어 두고 재 둔다 — 다 재면 풀린다 (실패한 그림은 건너뛴다) */
+export async function preloadLayers(job: JobId): Promise<void> {
+  const work: Promise<unknown>[] = []
+  for (const [key, url] of LAYERS) {
+    if (!key.startsWith(`${job}/`)) continue
+    const name = key.slice(job.length + 1)
+    work.push((name.startsWith('bg') ? measurePanel(url) : measureSprite(url)).catch(() => undefined))
+  }
+  await Promise.all(work)
 }

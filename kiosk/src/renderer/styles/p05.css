@@ -669,3 +669,45 @@ img.p05-scene__art--pop {
     opacity: 1;
   }
 }
+
+/* ── 레이어 장면 (2026-11-24) — 배경 판 + 두 아이. 자리 · 크기는 P05Speak.tsx가 그림을 재서 준다 ── */
+.p05-scene__art--layered {
+  border-radius: 0;
+  overflow: visible;
+}
+
+.p05-layer-bg,
+.p05-sprite {
+  position: absolute;
+  max-width: none;
+  height: auto;
+}
+
+/* 포즈 바뀜 — 새 포즈가 살짝 떠오르며 나타나고, 앞 포즈는 함께 사라진다 (0.32초 · POSE_FADE_MS) */
+.p05-sprite.is-in {
+  animation: p05-sprite-in 0.32s ease-out both;
+}
+
+.p05-sprite.is-out {
+  animation: p05-sprite-out 0.32s ease-in both;
+}
+
+@keyframes p05-sprite-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes p05-sprite-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

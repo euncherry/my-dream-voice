@@ -50,15 +50,20 @@ import {
 } from '@shared/constants'
 import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
-import { COMMON, SCRIPTS, lineScene, sceneId } from '../p05/script'
+import { COMMON, SCRIPTS, lineScene, sceneId, type LayeredScene } from '../p05/script'
 import {
   DING_URL,
+  layerUrl,
   measurePanel,
+  measureSprite,
   panelOf,
+  preloadLayers,
   preloadScenes,
   sceneUrl,
+  spriteOf,
   voiceUrl,
   type ScenePanel,
+  type SpriteBox,
 } from '../p05/media'
 import { FLOOR_DB, VoiceRecorder, type RecordResult } from '../p05/voiceRecorder'
 import skyUrl from '../assets/bg/sky.webp'
@@ -135,6 +140,21 @@ class Stopped extends Error {}
 
 /** 장면 그림 칸의 폭 (styles/p05.css .p05-frame) */
 const FRAME_W = 1338
+
+/** 대사 없는 첫 장면 '00'을 보여 주는 시간 (2026-11-24 지정 — "0.5초 뒤 원래 장면으로") */
+const OPENING_MS = 500
+
+/**
+ * 레이어 장면의 인물 자리 — 판 기준 비율 (A-01 완성 그림에서 잰 값).
+ *   CAST_CX: 헬멧 가운데의 가로 자리 · BODY_H: 헬멧 꼭대기 ~ 발끝 키 (판 높이 대비 — 1보다 커서 헬멧이 판 위로 튀어나온다)
+ *   FEET: 발끝의 세로 자리 (판 높이 대비)
+ */
+const CAST_CX = { girl: 0.36, boy: 0.595 } as const
+const BODY_H = 1.085
+const FEET = 0.965
+
+/** 인물 포즈가 바뀔 때 겹쳐 바뀌는 시간 (styles/p05.css p05-sprite-in · out 과 맞춘다) */
+const POSE_FADE_MS = 320
 
 /** 녹음 중 파형 — 막대 수 · 한 막대의 시간 · 높이로 바꾸는 소리 크기 범위(dBFS) · 조용할 때 높이 */
 const WAVE_BARS = 21
@@ -231,7 +251,7 @@ function SpeakFlow({
   const scenario = useMemo(() => scenarioFor(job, ageGroup), [job, ageGroup])
 
   const [view, setView] = useState<View>({
-    scene: '01',
+    scene: SCRIPTS[job].layered?.['00'] ? '00' : '01',
     subtitle: null,
     big: null,
     mic: 'wait',
@@ -533,6 +553,15 @@ function SpeakFlow({
       patch({ speech: lines })
     }
 
+    // 레이어 그림(배경 · 인물)을 미리 재 둔다 — 처음 장면이 비지 않게 (오래 걸려도 2초까지만 기다린다)
+    await Promise.race([preloadLayers(job), sleep(2_000)])
+    check()
+    // ── 대사 없는 첫 장면 '00' (있으면) — 둘이 이야기하다가 0.5초 뒤 아이를 돌아보며 인사 ──
+    if (script.layered?.['00']) {
+      set({ scene: '00', subtitle: null, step: 'opening' })
+      await sleep(OPENING_MS)
+    }
+
     // ── A · B · C — 인사 · 역할 · 임무 · 신호 설명 + 시범 ──
     set({ bar: { part: 'tutorial', done: 1 } })
     await say('01', L.hello, 'hello')
@@ -801,15 +830,25 @@ function ProgressDots({ progress }: { progress: Progress }): ReactNode {
  * 장면 그림 — 바뀔 때 옆으로 넘어간다 (새 그림이 오른쪽에서 들어오고, 앞 그림은 왼쪽으로 나간다).
  * 그림 파일이 없으면 장면 번호 + 장면 설명을 적은 임시 판.
  */
+/** 넘기기 단위 — 레이어 장면은 배경, 그 밖은 장면 번호. 같으면 넘기지 않고 그 자리에서 바꾼다 */
+function slideKey(job: JobId, scene: string): string {
+  const bg = SCRIPTS[job].layered?.[scene]?.bg
+  return bg ? `bg:${bg}` : `scene:${scene}`
+}
+
 function SceneFrame({ job, scene }: { job: JobId; scene: string }): ReactNode {
-  const [layers, setLayers] = useState([{ scene, n: 0 }])
+  const [layers, setLayers] = useState([{ scene, key: slideKey(job, scene), n: 0 }])
 
   useEffect(() => {
     setLayers((ls) => {
       const last = ls[ls.length - 1]!
-      return last.scene === scene ? ls : [last, { scene, n: last.n + 1 }]
+      if (last.scene === scene) return ls
+      const key = slideKey(job, scene)
+      // 같은 배경 — 넘기지 않고 인물 포즈만 바꾼다
+      if (last.key === key) return [...ls.slice(0, -1), { ...last, scene }]
+      return [last, { scene, key, n: last.n + 1 }]
     })
-  }, [scene])
+  }, [job, scene])
 
   useEffect(() => {
     if (layers.length < 2) return
@@ -841,6 +880,23 @@ function SceneArt({
   motion?: 'enter' | 'leave'
 }): ReactNode {
   const id = sceneId(job, scene)
+  const layered = SCRIPTS[job].layered?.[scene]
+  if (layered) return <LayeredArt job={job} id={id} def={layered} motion={motion} />
+  return <FlatArt job={job} scene={scene} id={id} motion={motion} />
+}
+
+/** 장면 그림 한 장(꽉 찬 그림 · 튀어나오는 그림) 또는 임시 판 */
+function FlatArt({
+  job,
+  scene,
+  id,
+  motion,
+}: {
+  job: JobId
+  scene: string
+  id: string
+  motion?: 'enter' | 'leave'
+}): ReactNode {
   const url = sceneUrl(job, id)
   const className = `p05-scene__art${motion ? ` is-${motion}` : ''}`
   // 그림 안 판의 자리 — undefined = 재는 중 · null = 꽉 찬 그림
@@ -889,6 +945,153 @@ function SceneArt({
       <span className="p05-scene__desc">{SCRIPTS[job].scenes[scene] ?? ''}</span>
       <span className="p05-scene__tag">임시 판 · 그림이 오면 바뀝니다</span>
     </div>
+  )
+}
+
+/**
+ * 레이어 장면 — 배경 판을 그림 칸에 맞추고(튀어나오는 그림과 같은 방식), 그 판 위에 두 아이를 세운다.
+ * 인물은 헬멧 가운데 · 발끝을 기준으로 놓아, 포즈마다 그림 캔버스가 달라도 같은 자리 · 같은 키로 선다.
+ */
+function LayeredArt({
+  job,
+  id,
+  def,
+  motion,
+}: {
+  job: JobId
+  id: string
+  def: LayeredScene
+  motion?: 'enter' | 'leave'
+}): ReactNode {
+  const bgUrl = layerUrl(job, def.bg)
+  const [panel, setPanel] = useState<ScenePanel | null | undefined>(() =>
+    bgUrl ? panelOf(bgUrl) : null,
+  )
+
+  useEffect(() => {
+    if (!bgUrl || panel !== undefined) return
+    let alive = true
+    measurePanel(bgUrl)
+      .then((p) => {
+        if (alive) setPanel(p)
+      })
+      .catch(() => {
+        if (alive) setPanel(null)
+      })
+    return () => {
+      alive = false
+    }
+  }, [bgUrl, panel])
+
+  const className = `p05-scene__art p05-scene__art--layered${motion ? ` is-${motion}` : ''}`
+  if (!bgUrl || !panel) return <span className={className} data-scene={id} />
+
+  const k = FRAME_W / (panel.right - panel.left)
+  const panelH = (panel.bottom - panel.top) * k
+  return (
+    <div className={className} data-scene={id}>
+      <img
+        className="p05-layer-bg"
+        src={bgUrl}
+        alt=""
+        draggable={false}
+        style={{ left: -panel.left * k, top: -panel.top * k, width: panel.width * k }}
+      />
+      <Sprite url={layerUrl(job, def.girl)} cx={CAST_CX.girl} panelH={panelH} who="girl" />
+      <Sprite url={layerUrl(job, def.boy)} cx={CAST_CX.boy} panelH={panelH} who="boy" />
+    </div>
+  )
+}
+
+/** 인물 한 명 — 포즈 그림이 바뀌면 새 포즈가 스르르 나타나고 앞 포즈는 사라진다 (아웃싸운드 탈출기의 포즈 전환처럼) */
+function Sprite({
+  url,
+  cx,
+  panelH,
+  who,
+}: {
+  url: string | undefined
+  cx: number
+  panelH: number
+  who: 'girl' | 'boy'
+}): ReactNode {
+  const [poses, setPoses] = useState(() => (url ? [{ url, n: 0 }] : []))
+
+  useEffect(() => {
+    if (!url) return
+    setPoses((ps) => {
+      const last = ps[ps.length - 1]
+      if (last?.url === url) return ps
+      return last ? [last, { url, n: last.n + 1 }] : [{ url, n: 0 }]
+    })
+  }, [url])
+
+  useEffect(() => {
+    if (poses.length < 2) return
+    const id = window.setTimeout(() => setPoses((ps) => ps.slice(-1)), POSE_FADE_MS + 40)
+    return () => window.clearTimeout(id)
+  }, [poses])
+
+  return (
+    <>
+      {poses.map((pose, i) => (
+        <SpritePose
+          key={pose.n}
+          url={pose.url}
+          cx={cx}
+          panelH={panelH}
+          who={who}
+          fade={poses.length > 1 ? (i === 0 ? 'out' : 'in') : undefined}
+        />
+      ))}
+    </>
+  )
+}
+
+function SpritePose({
+  url,
+  cx,
+  panelH,
+  who,
+  fade,
+}: {
+  url: string
+  cx: number
+  panelH: number
+  who: 'girl' | 'boy'
+  fade?: 'in' | 'out'
+}): ReactNode {
+  const [box, setBox] = useState<SpriteBox | undefined>(() => spriteOf(url))
+
+  useEffect(() => {
+    if (box) return
+    let alive = true
+    measureSprite(url)
+      .then((b) => {
+        if (alive) setBox(b)
+      })
+      .catch(() => undefined)
+    return () => {
+      alive = false
+    }
+  }, [url, box])
+
+  if (!box) return null
+  // 키를 판 높이에 맞추고, 헬멧 가운데 · 발끝을 정한 자리에 놓는다
+  const s = (BODY_H * panelH) / (box.bottom - box.top)
+  return (
+    <img
+      className={`p05-sprite${fade ? ` is-${fade}` : ''}`}
+      data-who={who}
+      src={url}
+      alt=""
+      draggable={false}
+      style={{
+        left: cx * FRAME_W - box.headCx * s,
+        top: FEET * panelH - box.bottom * s,
+        width: box.width * s,
+      }}
+    />
   )
 }
 
