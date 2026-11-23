@@ -571,7 +571,11 @@ function SpeakFlow({
     set({ bar: { part: 'tutorial', done: 2 } })
     await say('02', L.role, 'role')
     set({ bar: { part: 'tutorial', done: 3 } })
-    await say('03', L.mission, 'mission')
+    // 임무 — 길면 자막 여러 개로 나뉜다 (진행 바는 한 칸 그대로)
+    const mission = typeof L.mission === 'string' ? [{ text: L.mission }] : L.mission
+    for (const [i, part] of mission.entries()) {
+      await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission')
+    }
     set({ bar: { part: 'tutorial', done: 4 } })
     await say('04', COMMON.signal, 'signal')
     // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다
