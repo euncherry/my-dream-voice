@@ -205,23 +205,29 @@ function newCanvas(): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D
 /**
  * 칸을 꽉 채우도록 가운데를 잘라 그린다 (CSS object-fit: cover 와 같은 결과).
  * 카메라 원본은 3:2 — 칸 비율(CELL_ASPECT)과 다른 만큼 위아래나 좌우가 잘린다.
- * 인쇄물은 좌우 반전하지 않는다 (거울 반전은 P-06 라이브뷰에서만).
+ * **거울처럼 좌우 반전해서 그린다** (2026-11-23 지정) — P-06 라이브뷰에서 본 모습 그대로 인쇄되게
+ * (오른손을 들면 사진에서도 오른쪽 · 옷의 글씨는 거꾸로). 사진만 뒤집고 프레임 그림은 뒤집지 않는다.
  */
 function drawCover(ctx: CanvasRenderingContext2D, shot: ImageBitmap, cell: Rect): void {
   const scale = Math.max(cell.width / shot.width, cell.height / shot.height)
   const sw = cell.width / scale
   const sh = cell.height / scale
+  ctx.save()
+  // 칸의 오른쪽 끝을 원점으로 옮겨 가로를 뒤집는다 — 가운데 잘라내기라 뒤집어도 같은 부분이 담긴다
+  ctx.translate(cell.x + cell.width, cell.y)
+  ctx.scale(-1, 1)
   ctx.drawImage(
     shot,
     (shot.width - sw) / 2,
     (shot.height - sh) / 2,
     sw,
     sh,
-    cell.x,
-    cell.y,
+    0,
+    0,
     cell.width,
     cell.height,
   )
+  ctx.restore()
 }
 
 function fillCell(ctx: CanvasRenderingContext2D, cell: Rect): void {
