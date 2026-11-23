@@ -1,6 +1,6 @@
 {
   "name": "mdv-kiosk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "마이 드림 보이스 — 키오스크 앱 (스파이크)",
   "main": "./out/main/index.js",
