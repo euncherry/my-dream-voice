@@ -651,7 +651,7 @@ img.p05-scene__art--pop {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, #f6575a, #ff8a72);
+  background: #f6575a;
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.3, 1);
