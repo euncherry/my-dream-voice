@@ -187,3 +187,20 @@
   align-items: center;
   gap: var(--gap-xs);
 }
+
+/* 지금 찍는 칸 둘레의 프레임 — 프레임 그림(1844×1240)을 그 칸이 라이브뷰를 꽉 채우도록 키워서 얹는다.
+   칸의 자리 · 크기는 P06Capture.tsx가 --fx · --fy · --fw(칸 폭 기준 배율)로 넘긴다. 칸 밖은 라이브뷰 틀이 자른다 */
+.p06-stage {
+  container-type: inline-size;
+}
+
+.p06-frame-over {
+  position: absolute;
+  left: calc(var(--fx) * -100cqw);
+  top: calc(var(--fy) * -100cqw);
+  width: calc(var(--fw) * 100cqw);
+  max-width: none;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}

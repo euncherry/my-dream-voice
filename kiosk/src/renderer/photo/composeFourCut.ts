@@ -44,7 +44,7 @@ const FRAME_FILE: Record<JobId, string> = {
 }
 
 /** file:// 로 뜨는 설치판 때문에 상대 경로로 적는다 (`/frames/...` 절대 경로 금지) */
-const frameArtSrc = (job: JobId): string => `./frames/${FRAME_FILE[job]}`
+export const frameArtSrc = (job: JobId): string => `./frames/${FRAME_FILE[job]}`
 
 const artLoads = new Map<JobId, Promise<HTMLImageElement | null>>()
 const artKnown = new Map<JobId, HTMLImageElement | null>()

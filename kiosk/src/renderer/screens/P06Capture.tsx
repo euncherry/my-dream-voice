@@ -10,7 +10,7 @@
  *
  * 카메라는 사이드카(src/main/camera.ts)가 제어한다. 라이브뷰는 <img>(MJPEG)로 받고,
  * 촬영 원본은 파일로 받아 합성한다 — 라이브뷰 프레임을 캡처해 사진으로 쓰지 않는다.
- * 라이브뷰는 합성과 같은 비율(CELL_ASPECT) · 같은 가운데 잘라내기라 보이는 구도가 그대로 인쇄된다.
+ * 라이브뷰는 지금 찍는 칸과 같은 비율 · 같은 가운데 잘라내기이고, 그 칸 둘레의 프레임을 겹쳐 보여 줘서 보이는 구도가 그대로 인쇄된다.
  * 라이브뷰는 거울처럼 뒤집어 보여 주고, 네컷(미리보기 · 인쇄)도 같은 방향으로 뒤집어 합성한다 (2026-11-23 — 본 모습 그대로 인쇄).
  * 저장하는 원본 사진 · 녹화 영상은 뒤집지 않는다 (영상은 P-07이 뒤집어 재생한다).
  *
@@ -28,10 +28,10 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { DevStrip, PlaceholderTag, Screen } from '../components/Screen'
 import { useSession } from '../store/session'
-import { CELL_ASPECT, composeFourCut, composePlaceholderFourCut } from '../photo/composeFourCut'
+import { composeFourCut, composePlaceholderFourCut, frameArtSrc } from '../photo/composeFourCut'
 import { FramePreview } from '../photo/FramePreview'
 import { startLiveViewRecording, type LiveViewRecording } from '../photo/recordLiveView'
-import { CAPTURE_INTERVAL_SEC, CUT_COUNT } from '@shared/constants'
+import { CAPTURE_INTERVAL_SEC, CUT_COUNT, FOURCUT } from '@shared/constants'
 import { jobLabel } from '@shared/jobs'
 import type { CameraBackend, JobId } from '@shared/types'
 import '../styles/capture.css'
@@ -116,6 +116,8 @@ export function P06Capture(): ReactNode {
   const [phase, setPhase] = useState<Phase>('preparing')
   const [count, setCount] = useState(CAPTURE_INTERVAL_SEC)
   const [liveUrl, setLiveUrl] = useState<string | null>(null)
+  /** 직업 프레임 그림을 불러왔는가 — 없으면 라이브뷰에 겹치지 않는다 */
+  const [frameArtOk, setFrameArtOk] = useState(true)
   /** 라이브뷰를 crossOrigin으로 받는가 — 녹화하려면 필요하다. 그 때문에 안 뜨면 끈다 */
   const [liveCors, setLiveCors] = useState(true)
   const [backend, setBackend] = useState<CameraBackend | null>(null)
@@ -347,11 +349,21 @@ export function P06Capture(): ReactNode {
   /** 프레임에서 강조할 칸 — 없으면 -1 */
   const activeCell = shooting && done < CUT_COUNT ? done : -1
   const frameShots = Array.from({ length: CUT_COUNT }, (_, i) => shots[i]?.url)
+  /**
+   * 라이브뷰 칸 = 지금 찍는 사진 칸 — 비율도 그 칸에 맞춘다 (칸마다 조금씩 다르다).
+   * 그 칸 둘레의 프레임을 라이브뷰 위에 겹쳐서, 인쇄될 모습 그대로 보이게 한다 (2026-11-23 지정)
+   */
+  const liveCell = FOURCUT.cells[activeCell >= 0 ? activeCell : 0]!
+  const frameOver = {
+    '--fx': liveCell.x / liveCell.width,
+    '--fy': liveCell.y / liveCell.width,
+    '--fw': FOURCUT.width / liveCell.width,
+  } as CSSProperties
 
   return (
     <Screen id="P-06" note="버튼 없이 자동 4컷 · 프레임 · 포즈 가이드 아트는 placeholder">
       {/* 라이브뷰 비율 = 네컷 사진 칸의 비율 (계산값이라 변수로 넘긴다) */}
-      <div className="p06" style={{ '--p06-aspect': CELL_ASPECT } as CSSProperties}>
+      <div className="p06" style={{ '--p06-aspect': liveCell.width / liveCell.height } as CSSProperties}>
         <div className="p06-stagebox">
           <div className="p06-stage">
             {liveUrl && (
@@ -367,6 +379,18 @@ export function P06Capture(): ReactNode {
                   liveFrameSeenRef.current = true
                 }}
                 onError={(e) => onLiveError(e.currentTarget)}
+              />
+            )}
+
+            {/* 지금 찍는 칸 둘레의 프레임 — 라이브뷰는 거울 · 프레임은 뒤집지 않는다 (인쇄와 같다) */}
+            {activeCell >= 0 && frameArtOk && (
+              <img
+                className="p06-frame-over"
+                src={frameArtSrc(job)}
+                alt=""
+                draggable={false}
+                style={frameOver}
+                onError={() => setFrameArtOk(false)}
               />
             )}
 
