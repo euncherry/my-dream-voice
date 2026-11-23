@@ -104,6 +104,9 @@ export function prevScreen(current: ScreenId, mode: KioskMode | undefined): Scre
       return 'P-01'
     case 'P-04':
       return mode === 'B' ? 'P-03' : 'P-01'
+    case 'P-05':
+      // 2026-11-23 발화 시안에 [뒤로]가 있다 — 직업을 다시 고른다 (녹음은 P-05가 지우고 나간다)
+      return 'P-04'
     default:
       return null
   }

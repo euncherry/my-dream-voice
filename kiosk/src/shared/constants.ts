@@ -90,14 +90,7 @@ export const PRINT_REQUEST_TIMEOUT_MS = 30_000
  */
 export const TAP_GUARD_MS = 400
 
-// ── P-05 발화 ──
-
-/**
- * 마이크가 열린 뒤 이 시간 안의 [다 말했어요]는 받지 않는다 — [말하기 시작]과 같은 자리라,
- * 연달아 두드리면 녹음이 바로 끝나 다시 말하기 기회(구간마다 1번)를 써 버린다.
- * ⚠️ 임시값 — 녹음 제한 시간(T-19)과 함께 정한다.
- */
-export const RECORD_MIN_MS = 600
+// ── P-05 발화 (docs/P05_SCENARIO.md §0 — 버튼 없음 · 띵 신호 · 저절로 녹음) ──
 
 /** 다시 말하기 기준 — 인식률(1 − 글자 CER)이 이 값 미만이면 1회 다시 (SPEC §2 · T-10) */
 export const RETRY_MIN_RECOGNITION = 0.5
@@ -109,13 +102,39 @@ export const STT_MIN_SHOW_MS = 1_000
 export const STT_MAX_WAIT_MS = 8_000
 
 /**
- * [다 말했어요]를 안 누를 때 녹음을 끝내는 시간.
- * ⚠️ 미정 (SPEC T-19 — 문장이 정해지면 정한다). 녹음이 끝없이 이어지지 않게 하는 임시 안전값이다.
+ * 띵 소리 파일이 끝난 뒤 녹음을 시작하기까지 — 띵이 녹음에 섞이지 않게 (CLAUDE.md 금지사항 6).
+ * 파일(audio/sfx/ding.wav 0.49초)은 소리가 0.35초에 끝나고 뒤가 조용하다 → 소리가 끝나고 약 0.3초 뒤 녹음 (시나리오 §0)
  */
-export const RECORD_LIMIT_SEC = 15
+export const DING_TO_RECORD_MS = 150
 
-/** 음성 파일이 없을 때 자막을 보여 주는 시간 (placeholder 동작 — 파일이 오면 파일 길이를 따른다) */
-export const SUBTITLE_FALLBACK_MS = 2_000
+/**
+ * 녹음 최대 시간 — 아예 말이 없을 때 여기서 끝난다 (시나리오 §0 · ⚠️ 임시 — SPEC T-19).
+ * 어절 = 만 4세 어절 · "준비 완료!" 연습 / 문장 = 만 5 · 6세 문장
+ */
+export const RECORD_MAX_WORD_MS = 4_000
+export const RECORD_MAX_LINE_MS = 6_000
+
+/** 말을 시작한 뒤 이만큼 조용하면 녹음이 저절로 끝난다 (시나리오 §0 — 약 1초) */
+export const SILENCE_END_MS = 1_000
+
+/**
+ * 목소리 크기 기준 — 마이크에 들어온 소리 크기(dBFS: 마이크가 받을 수 있는 가장 큰 소리 = 0, 작을수록 음수).
+ * 짧은 구간(약 40ms)마다 잰다. ⚠️ 임시값 — 키오스크에서 D-01 [목소리 크기 재기]로 실제 아이 목소리를 재 보고 맞춘다.
+ *   VOICE_START_DB — 이보다 크면 "말소리"로 친다 (주변 소음보다 커야 한다)
+ *   VOICE_LOUD_DB  — 말한 부분 중 가장 큰 소리가 이보다 작으면 "작게 말함" ("○○가 너~무 멀리 있나 봐")
+ */
+export const VOICE_START_DB = -45
+export const VOICE_LOUD_DB = -30
+
+/** 말소리가 이만큼 이어져야 "말을 시작했다"로 본다 — 톡 치는 소리 같은 잡음을 거른다 */
+export const VOICE_MIN_MS = 150
+
+/** 목소리 파일이 없을 때 자막을 보여 주는 시간 — 글자당 · 최소 (목소리 파일이 오면 파일 길이를 따른다) */
+export const SUBTITLE_MS_PER_CHAR = 150
+export const SUBTITLE_MIN_MS = 1_500
+
+/** 대사와 대사 사이 숨 고르기 */
+export const BEAT_GAP_MS = 250
 
 // ── P-02a 보호자 연결 (⚠️ 전부 임시값 — 서버와 합의 후 정한다, SPEC T-14) ──
 

@@ -50,14 +50,14 @@ export type ContentSource =
   | 'spec'
   /** 흐름도 구성 스케치에 적힌 예시 (임시) */
   | 'sketch'
+  /** 시나리오 초안의 후보 문장 (docs/P05_SCENARIO.md — 전문가 확인 전 · T-3) */
+  | 'draft'
   /** ⚠️ 미확정 — 화면에 PLACEHOLDER로 보인다 */
   | 'placeholder'
 
 /** 따라 말하는 한 구간 — 만 5 · 6+는 문장 전체, 만 4세는 어절 */
 export interface LinePart {
   text: string
-  /** 들려주는 음성 파일 (public/ 기준 상대경로). 기획 제공 전에는 없다 (T-3) */
-  audio?: string
 }
 
 export interface TargetLine {
@@ -69,12 +69,11 @@ export interface TargetLine {
   source: ContentSource
 }
 
-/** 아이 차례 하나 — 장면이 흘러가다가 타깃 문장을 말한다 */
+/**
+ * 아이 차례 하나 — 타깃 문장 하나.
+ * 장면 · 캐릭터 대사(대본)는 화면 쪽 renderer/p05/script.ts 에 있다 (docs/P05_SCENARIO.md).
+ */
 export interface ScenarioTurn {
-  /** 아이 차례 앞 장면의 내레이션 자막. 연출(그림 · 애니메이션)은 T-17 */
-  narration: string
-  narrationAudio?: string
-  narrationSource: ContentSource
   line: TargetLine
 }
 

@@ -11,6 +11,7 @@
  *
  * v2에서 덧붙인 것 (PAGE_SPEC D-01 「v2 할 일」)
  *   - 받아쓰기 · 인식률 점검 — components/SttCheckPanel.tsx (⚠️ 받아쓰기는 아직 MOCK)
+ *   - 목소리 크기 재기 — components/VoiceLevelPanel.tsx (P-05 "준비 완료!" 연습의 크게 / 작게 기준 맞추기)
  *   - 분석 소요 시간 · IPC 확인 — window.api.analysis.run (⚠️ 관찰 결과 · 지연은 아직 MOCK · SPEC T-15)
  *
  * 여기서 채집한 WAV가 받아쓰기 · 분석 프로그램(파이썬)을 붙일 때 점검 입력이 된다.
@@ -22,6 +23,7 @@ import { CameraHostPanel } from '../components/CameraHostPanel'
 import { PrintTestPanel } from '../components/PrintTestPanel'
 import { Screen } from '../components/Screen'
 import { SttCheckPanel } from '../components/SttCheckPanel'
+import { VoiceLevelPanel } from '../components/VoiceLevelPanel'
 import { useSession } from '../store/session'
 import { useDevices } from '../audio/useDevices'
 import { DSP_OFF, useAudioCapture } from '../audio/useAudioCapture'
@@ -531,6 +533,9 @@ export function D01HardwareCheck(): ReactNode {
             </dl>
           )}
         </section>
+
+        {/* ── 목소리 크기 재기 — P-05 연습(크게 / 작게 / 무음) 기준 맞추기 ── */}
+        <VoiceLevelPanel disabled={!!busy || capture.recording} />
 
         {/* ── 녹음 결과 ───────────────────────────── */}
         <section className="panel">

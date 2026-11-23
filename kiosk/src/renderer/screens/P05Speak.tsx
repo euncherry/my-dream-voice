@@ -1,112 +1,119 @@
 /**
- * P-05 [발화] — B모드 전용
+ * P-05 [발화] — B모드 전용 · 🎨 디자인 입힘 (2026-11-23 — 새 흐름: 버튼 없음 · 띵 신호 · "준비 완료!" 연습)
  *
- * 근거: PAGE_SPEC "P-05 [발화]" · SPEC §2 「아이 차례 진행」 · 「만 4세는 어절마다」 · 「다시 말하기」 · V2_PLAN §3 P-05
- * 구성 스케치: docs/user-flow/wf/p05-speak · p05-record · p05-think · p05-retry
+ * 근거: docs/P05_SCENARIO.md (흐름 · 대사 · 장면 번호) · PAGE_SPEC P-05 · SPEC §2 · 디자인 시안(발화 화면 — 가운데 카드 안에서 장면이 넘어간다)
+ * 대본: p05/script.ts · 따라 말할 문장: shared/jobs.ts · 그림 · 목소리 파일: p05/media.ts · 녹음: p05/voiceRecorder.ts
  *
- * 흐름 — 아이 차례 1 → 아이 차례 2 → P-06
- *   scene(장면 내레이션) → 구간마다
- *     ① listen(문장 음성 + 자막) → ② cue("이제 말해 보자!") → ③ ready([말하기 시작]) → recording([다 말했어요])
- *     → ④ thinking("잘 듣고 있어요…" — 뒤에서 받아쓰기) → ⑤ 다음 구간 / retry(구간마다 1번만)
- *   구간 = 만 4세는 어절, 그 외는 문장 전체 (shared/jobs.ts의 line.parts)
+ * 흐름 (시나리오 §1) — 버튼 없이 저절로 흘러간다
+ *   A 인사 · 역할 → B 임무 → C 신호 설명(진짜 띵을 한 번 들려준다) + 짝꿍 시범
+ *   → D 연습 "준비 완료!" (반짝 + 띵 → 녹음 — 분석 안 함, 목소리 크기만)
+ *   → E 반응: 크게 = 칭찬 / 작게 = "○○가 너~무 멀리 있나 봐" / 무음 = 한 번만 더 연습 (또 무음이면 그냥 진행)
+ *   → F1 문장 ① (소개 → 이끔이 문장 시범 → 띵 → 녹음 → "잘 듣고 있어요" → 응원, 또는 다시 말하기 1회)
+ *   → G 이어 주기 → F2 문장 ② → I 마무리 → P-06
+ *   만 4세는 F에서 어절마다 [시범 → 띵 → 녹음]을 되풀이한다 (다시 말하기도 어절마다 1회).
+ *
+ * 화면 (시안): 위 제목(직업마다) · 가운데 흰 카드 = [직업 이름 · 진행 점] + 장면 그림(넘어간다) + 그림 안 자막 + 그림 아래 큰 글씨
+ *   큰 글씨 = 아이가 따라 말할 말 ("준비 완료!" · 그 문장 — 만 4세는 지금 어절을 진하게). 안내 대사 동안은 비운다.
+ *   아래 알약 = 누르지 않는 마이크 표시 (시안의 [말하기 시작] 자리 — 버튼은 없앴다): 먼저 들어 봐요 → 지금 말해요!(반짝) → 잘 듣고 있어요
+ *   마이크를 못 켜면 그 자리가 [다시 시도] 버튼이 된다 (직원용 — M-02 안내와 같이).
  *
  * ⚠️ CLAUDE.md 금지사항
- *   2 — WAV 저장 · 받아쓰기는 메인(window.api)에 맡긴다
- *   5 — 마이크 DSP는 전부 false (DSP_OFF)
- *   6 — 녹음 중에는 어떤 소리도 내지 않는다: 녹음 직전에 모든 재생을 멈추고 잠근다(muteClips).
- *       반대로 재생 중에는 녹음을 시작하는 버튼이 꺼져 있다
- *   7 · 8 — 인식률 · 받아쓴 글자 · 다시 말하기 판단은 화면 어디에도 내보내지 않는다 (개발용 띠 포함).
- *           아이에게는 "한 번 더 말해 볼까요?"만 보인다
+ *   2 — WAV 저장 · 받아쓰기는 메인(window.api)
+ *   5 — 마이크 DSP 전부 false (voiceRecorder)
+ *   6 — 녹음 중에는 어떤 소리도 내지 않는다: 띵이 끝난 뒤 녹음을 시작하고, 녹음 동안 muteClips로 잠근다
+ *   7 · 8 — 인식률 · 받아쓴 글자 · 목소리 크기 숫자는 화면 어디에도 내보내지 않는다 (개발용 띠 포함).
+ *           아이에게는 응원 · "한 번 더 듣고 싶대"만 들린다
  *
- * ⚠️ MOCK — 받아쓰기는 아직 src/main/mock/stt.ts 다. 스토어의 mockStt(DevBar)로 결과를 고른다.
- * ⚠️ 색 · 글꼴 · 배치는 임시다 — 피그마 디자인이 오면 입힌다. 지금은 구조와 동작만.
+ * ⚠️ MOCK — 받아쓰기는 아직 src/main/mock/stt.ts 다 (스토어의 mockStt · 개발용 띠의 통과/실패/무음).
+ * ⚠️ 그림 · 목소리 파일이 없으면 임시 판(장면 번호 + 설명)과 자막만 — 파일을 넣으면 바뀐다 (assets/p05/README.md).
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { DevStrip, Placeholder, PlaceholderTag, Screen } from '../components/Screen'
-import { useSession } from '../store/session'
-import { DSP_OFF, useAudioCapture, type CaptureResult } from '../audio/useAudioCapture'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { BackButton } from '../components/BackButton'
+import { DevStrip, Screen } from '../components/Screen'
+import { Stage } from '../components/Stage'
+import { justChangedScreen, useSession } from '../store/session'
 import { stopAll } from '../audio/playback'
 import { muteClips, playClip, stopClips } from '../audio/clips'
+import { DSP_OFF } from '../audio/useAudioCapture'
 import {
-  RECORD_LIMIT_SEC,
-  RECORD_MIN_MS,
+  BEAT_GAP_MS,
+  DING_TO_RECORD_MS,
+  RECORD_MAX_LINE_MS,
+  RECORD_MAX_WORD_MS,
   RETRY_MIN_RECOGNITION,
   STT_MAX_WAIT_MS,
   STT_MIN_SHOW_MS,
-  SUBTITLE_FALLBACK_MS,
+  SUBTITLE_MIN_MS,
+  SUBTITLE_MS_PER_CHAR,
+  VOICE_LOUD_DB,
+  VOICE_START_DB,
 } from '@shared/constants'
-import { CUES, ageGroupLabel, jobLabel, scenarioFor } from '@shared/jobs'
-import type {
-  AgeGroup,
-  JobId,
-  LinePart,
-  MockSttOutcome,
-  Scenario,
-  ScenarioTurn,
-  SpeechLine,
-  SpeechPart,
-  SttRequest,
-} from '@shared/types'
+import { jobLabel, scenarioFor } from '@shared/jobs'
+import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
+import { COMMON, SCRIPTS, lineScene, sceneId } from '../p05/script'
+import { DING_URL, preloadScenes, sceneUrl, voiceUrl } from '../p05/media'
+import { FLOOR_DB, VoiceRecorder, type RecordResult } from '../p05/voiceRecorder'
+import skyUrl from '../assets/bg/sky.webp'
+import logoEnUrl from '../assets/brand/logo-en.png'
+import starYellowUrl from '../assets/deco/star-yellow.png'
 import '../styles/p05.css'
 
-type Phase =
-  | 'scene' // 장면 내레이션
-  | 'listen' // ① 문장 음성 + 자막
-  | 'cue' // ② 녹음 멘트 "이제 말해 보자!"
-  | 'ready' // ③ [말하기 시작]을 기다린다
-  | 'recording' // ③ 녹음 중 ([다 말했어요] 또는 제한 시간)
-  | 'thinking' // ④ "잘 듣고 있어요…" — 저장 + 받아쓰기
-  | 'retry' // 다시 말하기 — [다시 듣기] / [바로 말하기]
-  | 'micError' // 마이크를 못 켰다
-  | 'leaving' // 끝 — P-06으로
+/** 아래 마이크 알약의 모습 */
+type MicState =
+  | 'wait' // 캐릭터가 말하는 중 — "먼저 들어 봐요"
+  | 'demo' // 신호 설명 때 진짜 띵을 들려줌 — 반짝이지만 녹음은 안 한다
+  | 'live' // 띵 → 녹음 중 — "지금 말해요!" (반짝)
+  | 'listening' // 받아쓰기 기다림 — "잘 듣고 있어요"
+  | 'error' // 마이크를 못 켰다 — [다시 시도]
 
-interface Step {
-  /** 아이 차례 순번 (0 · 1) */
-  turn: number
-  /** 그 문장 안의 구간 순번 — 만 4세만 여러 개 */
-  part: number
-  phase: Phase
+/** 진행 점 — 연습 / 문장 ① / 문장 ② */
+type Progress = 'practice' | 0 | 1
+
+/** 그림 아래 큰 글씨 — 따라 말할 말 (만 4세는 어절마다 나뉜다) */
+interface Big {
+  words: string[]
+  /** 지금 따라 할 어절 — 만 4세만 */
+  current: number | null
 }
 
-const FIRST_STEP: Step = { turn: 0, part: 0, phase: 'scene' }
+interface View {
+  /** 장면 번호 뒤 두 자리 ('01' ~ '14' · '10b' · '13b') */
+  scene: string
+  /** 그림 안 자막 — 캐릭터가 지금 하는 말 */
+  subtitle: string | null
+  big: Big | null
+  mic: MicState
+  progress: Progress
+  /** 개발용 — 흐름 확인 스크립트가 읽는다 (data-step) */
+  step: string
+}
+
+/** 개발용 — 다음 녹음의 목소리 크기를 정해 버린다 (마이크 없는 PC · 가짜 마이크로 갈래 확인) */
+type VoiceForce = 'auto' | 'loud' | 'quiet' | 'silent'
 
 /**
  * 녹음 한 번의 결과.
  * ⚠️ 화면에 내보내지 않는다 — state가 아니라 ref에만 둔다 (CLAUDE.md 금지사항 7 · 8).
  */
 interface Attempt {
-  /** 저장한 WAV. 마이크에서 아무것도 못 받았으면 없다 */
+  /** 저장한 WAV. 말소리가 없었으면 없다 */
   wav?: string
   silent: boolean
   transcript?: string
   cer?: number
 }
 
+interface At {
+  turn: 0 | 1
+  part: number
+}
+
+/** 화면을 떠나 흐름을 멈출 때 던진다 */
+class Stopped extends Error {}
+
 /** M-02에 띄우는 문구 — 아이가 읽어도 무섭지 않게 */
 const MIC_MESSAGE = '마이크를 준비하고 있어요. 옆의 직원에게 알려주세요!'
-
-/** 위쪽 개발용 띠(Screen note)에 붙이는 단계 표기 */
-const PHASE_NOTE: Record<Phase, string> = {
-  scene: '장면 내레이션',
-  listen: '① 문장 음성 + 자막',
-  cue: '② 녹음 멘트',
-  ready: '③ [말하기 시작] 기다림',
-  recording: '③ 녹음',
-  thinking: '④ 받아쓰기 확인',
-  retry: '다시 말하기 선택',
-  micError: '마이크를 못 켬',
-  leaving: 'P-06으로',
-}
-
-function turnAt(scenario: Scenario, at: Pick<Step, 'turn'>): ScenarioTurn {
-  return scenario.turns[at.turn] ?? scenario.turns[0]
-}
-
-function partAt(scenario: Scenario, at: Pick<Step, 'turn' | 'part'>): LinePart {
-  const line = turnAt(scenario, at).line
-  return line.parts[at.part] ?? line.parts[0] ?? { text: line.text }
-}
 
 /** 인식률 = 1 − 글자 CER. 무음은 가장 낮고, 받아쓰기가 시간 초과 · 실패(cer 없음)면 통과로 본다 */
 function recognitionOf(attempt: Attempt): number {
@@ -123,10 +130,7 @@ function passes(attempt: Attempt): boolean {
 /**
  * 남길 녹음을 고른다 — 인식률이 높은 쪽 (같으면 나중 녹음).
  * 전부 무음(또는 녹음 없음)이면 아무것도 남기지 않는다 — 그 구간은 판단 보류.
- *
- * 받아쓰기가 시간 초과 · 실패한 녹음(cer 없음)은 "통과로 보고 넘어간다"일 뿐 인식률을 아는 것이 아니다.
- * 한쪽만 받아쓰기가 있으면 **받아쓰기가 있는 쪽**을 남긴다 — P-07 정밀 분석은 남긴 녹음과 그 받아쓰기를 같이 쓴다 (SPEC §3-3).
- * (문서에 없는 경우라 임시로 정한 규칙 — V2_BUILD_CHECKLIST §2)
+ * 한쪽만 받아쓰기가 있으면 받아쓰기가 있는 쪽 (V2_BUILD_CHECKLIST §2 — P-07 정밀 분석이 같이 쓴다).
  */
 function chooseAttempt(attempts: Attempt[]): { keep: Attempt | null; drop: Attempt[] } {
   let keep: Attempt | null = null
@@ -145,6 +149,11 @@ function chooseAttempt(attempts: Attempt[]): { keep: Attempt | null; drop: Attem
     if (recognitionOf(attempt) >= recognitionOf(keep)) keep = attempt
   }
   return { keep, drop: attempts.filter((a) => a !== keep) }
+}
+
+/** 목소리 파일이 없을 때 자막을 보여 주는 시간 */
+function subtitleMs(text: string): number {
+  return Math.max(SUBTITLE_MIN_MS, text.replace(/\s/g, '').length * SUBTITLE_MS_PER_CHAR)
 }
 
 export function P05Speak(): ReactNode {
@@ -183,278 +192,387 @@ function SpeakFlow({
 }): ReactNode {
   const patch = useSession((s) => s.patch)
   const next = useSession((s) => s.next)
+  const back = useSession((s) => s.back)
   const setFallback = useSession((s) => s.setFallback)
   const mockStt = useSession((s) => s.mockStt)
-  const capture = useAudioCapture()
 
+  const script = SCRIPTS[job]
   const scenario = useMemo(() => scenarioFor(job, ageGroup), [job, ageGroup])
 
-  const [step, setStep] = useState<Step>(FIRST_STEP)
-  /** 다시 말하기 멘트가 끝났는가 — 끝난 뒤에야 버튼이 켜진다 */
-  const [cueDone, setCueDone] = useState(false)
-  /** 음성 파일이 없어 자막만 보여 주는 중인가 */
-  const [subtitleOnly, setSubtitleOnly] = useState(false)
+  const [view, setView] = useState<View>({
+    scene: '01',
+    subtitle: null,
+    big: null,
+    mic: 'wait',
+    progress: 'practice',
+    step: 'start',
+  })
   /** MOCK: 개발용 받아쓰기 결과 버튼이 떠 있는가 */
   const [pickOpen, setPickOpen] = useState(false)
+  const [voiceForce, setVoiceForce] = useState<VoiceForce>('auto')
 
-  const stepRef = useRef<Step>(FIRST_STEP)
-  const aliveRef = useRef(true)
-  /** 녹음을 끝내고 판단 · 저장하는 중 — 겹쳐 누르기 방지 */
+  const recorderRef = useRef<VoiceRecorder | null>(null)
+  if (!recorderRef.current) recorderRef.current = new VoiceRecorder()
+  /** 지금 돌고 있는 흐름 — 화면을 떠나면 alive = false */
+  const runRef = useRef<{ alive: boolean } | null>(null)
+  const timersRef = useRef(new Set<number>())
+  /** 녹음 중 · 받아쓰기 중 — [뒤로]를 받지 않는다 */
   const busyRef = useRef(false)
+  /** 구간마다 쌓는 결과 — 세션에 적는다 */
+  const speechRef = useRef<SpeechLine[]>([])
   /** 지금 구간의 녹음들 (최대 2번) — ⚠️ 화면에 내보내지 않는다 */
   const attemptsRef = useRef<Attempt[]>([])
-  const speechRef = useRef<SpeechLine[]>([])
-  const timersRef = useRef(new Set<number>())
+  /** 저장해 둔 WAV — [뒤로]로 나가면 지운다 */
+  const savedRef = useRef(new Set<string>())
   const pickRef = useRef<((outcome: MockSttOutcome) => void) | null>(null)
-  const finishRef = useRef<(byLimit?: boolean) => void>(() => undefined)
-  /** 마이크가 실제로 열린 시각 — 그 직후의 [다 말했어요]를 거르는 데 쓴다 */
-  const micLiveAtRef = useRef(0)
+  const micChoiceRef = useRef<((choice: 'retry' | 'skip') => void) | null>(null)
+  const voiceForceRef = useRef<VoiceForce>('auto')
+  const micRef = useRef<HTMLDivElement>(null)
+  const lineRef = useRef<HTMLParagraphElement>(null)
 
-  const { phase, turn: turnIdx, part: partIdx } = step
-  const turn = turnAt(scenario, step)
-  const parts = turn.line.parts
-  const part = partAt(scenario, step)
+  voiceForceRef.current = voiceForce
 
-  const go = useCallback((change: Partial<Step>): void => {
-    const nextStep = { ...stepRef.current, ...change }
-    stepRef.current = nextStep
-    setStep(nextStep)
-  }, [])
-
-  /** 화면을 떠나면 함께 지워지는 타이머 */
-  function startTimer(ms: number): { done: Promise<void>; cancel: () => void } {
-    let id = 0
-    const done = new Promise<void>((resolve) => {
-      id = window.setTimeout(() => {
-        timersRef.current.delete(id)
-        resolve()
-      }, ms)
-      timersRef.current.add(id)
-    })
-    return {
-      done,
-      cancel: () => {
-        window.clearTimeout(id)
-        timersRef.current.delete(id)
-      },
-    }
+  /** 소리 크기에 맞춰 마이크 반짝이를 움직인다 (다시 그리지 않고 CSS 변수만) */
+  function paintLevel(db: number): void {
+    const lvl = Math.min(1, Math.max(0, (db - VOICE_START_DB) / (0 - VOICE_START_DB - 15)))
+    micRef.current?.style.setProperty('--lvl', lvl.toFixed(2))
   }
 
-  // ── 화면을 떠날 때: 재생 정지 · 타이머 정리 (마이크 스트림은 useAudioCapture가 닫는다) ──
-  useEffect(() => {
-    const timers = timersRef.current
-    aliveRef.current = true
-    return () => {
-      aliveRef.current = false
-      timers.forEach((id) => window.clearTimeout(id))
-      timers.clear()
-      pickRef.current = null
-      stopClips()
-      muteClips(false)
-    }
-  }, [])
-
-  // ── 재생 단계: 장면 내레이션 · ① 문장 음성 · ② 녹음 멘트 · 다시 말하기 멘트 ──
-  // 음성 파일이 없으면(SPEC T-3) 자막만 SUBTITLE_FALLBACK_MS 동안 보여 주고 넘어간다.
-  useEffect(() => {
-    const at = { turn: turnIdx, part: partIdx }
-    let src: string | undefined
-    let onEnd: () => void
-    switch (phase) {
-      case 'scene':
-        src = turnAt(scenario, at).narrationAudio
-        onEnd = () => go({ phase: 'listen' })
-        break
-      case 'listen':
-        src = partAt(scenario, at).audio
-        onEnd = () => go({ phase: 'cue' })
-        break
-      case 'cue':
-        src = CUES.speakNow.audio
-        onEnd = () => go({ phase: 'ready' })
-        break
-      case 'retry':
-        src = CUES.oneMore.audio
-        // 멘트가 끝난 뒤에 [다시 듣기] · [바로 말하기]가 켜진다
-        onEnd = () => setCueDone(true)
-        break
-      default:
-        // ⚠️ ready · recording · thinking 에서는 아무것도 재생하지 않는다 (금지사항 6)
-        return
-    }
-
-    let cancelled = false
-    const clip = playClip(src, SUBTITLE_FALLBACK_MS, {
-      onPlaying: () => {
-        if (!cancelled) setSubtitleOnly(false)
-      },
-      onMissing: () => {
-        if (!cancelled) setSubtitleOnly(true)
-      },
-    })
-    void clip.done.then((end) => {
-      if (cancelled || end === 'stopped') return
-      onEnd()
-    })
-    return () => {
-      cancelled = true
-      clip.stop()
-    }
-  }, [phase, turnIdx, partIdx, scenario, go])
-
-  // ── 마이크를 못 켰다 → M-02 안내 + 화면에 [다시 시도] ──
-  useEffect(() => {
-    if (phase !== 'recording' || !capture.error) return
-    muteClips(false)
-    setFallback({ kind: 'device', message: MIC_MESSAGE, detail: capture.error })
-    go({ phase: 'micError' })
-  }, [phase, capture.error, setFallback, go])
-
-  // ── [다 말했어요]를 안 누르면 제한 시간에서 저절로 끝낸다 (⏸ SPEC T-19 — 임시값) ──
-  // useAudioCapture의 stop은 렌더마다 새로 만들어지므로 최신 핸들러를 ref로 부른다.
-  const micLive = phase === 'recording' && capture.recording
-  useEffect(() => {
-    if (!micLive) return
-    micLiveAtRef.current = performance.now()
-    const id = window.setTimeout(() => finishRef.current(true), RECORD_LIMIT_SEC * 1000)
-    return () => window.clearTimeout(id)
-  }, [micLive])
-
-  useEffect(() => {
-    finishRef.current = (byLimit) => void finishRecording(byLimit)
-  })
-
-  // ────────────────────────────────────────────────
-  // ③ 녹음
-  // ────────────────────────────────────────────────
-
-  /** [말하기 시작] · [바로 말하기] · [다시 시도] */
-  function beginRecording(): void {
-    const now = stepRef.current.phase
-    if (busyRef.current) return
-    if (now !== 'ready' && now !== 'micError' && !(now === 'retry' && cueDone)) return
-
-    // ⚠️ 금지사항 6 — 녹음을 시작하기 전에 모든 소리를 멈추고, 끝날 때까지 잠근다
-    stopAll()
+  /** 흐름을 멈추고 소리 · 마이크 · 타이머를 정리한다 (화면을 떠날 때 · [뒤로]) */
+  function stopFlow(): void {
+    if (runRef.current) runRef.current.alive = false
+    timersRef.current.forEach((id) => window.clearTimeout(id))
+    timersRef.current.clear()
+    pickRef.current = null
+    micChoiceRef.current = null
     stopClips()
-    muteClips(true)
-
-    go({ phase: 'recording' })
-    // ⚠️ 금지사항 5 — DSP 3종 전부 false
-    void capture.start(undefined, DSP_OFF)
-  }
-
-  /** [다 말했어요] 또는 제한 시간(byLimit) */
-  async function finishRecording(byLimit = false): Promise<void> {
-    const at = stepRef.current
-    if (at.phase !== 'recording' || busyRef.current) return
-    // 연타 방지 — [말하기 시작]과 같은 자리의 버튼이라, 마이크가 열린 직후의 터치는 받지 않는다
-    if (!byLimit && performance.now() - micLiveAtRef.current < RECORD_MIN_MS) return
-    busyRef.current = true
-
-    const shownAt = performance.now()
-    go({ phase: 'thinking' })
-
-    const result = await capture.stop()
-    // 마이크를 닫은 뒤에 재생 잠금을 푼다
     muteClips(false)
-    if (!aliveRef.current) return
-
-    const attempt = await listenTo(result, at)
-    if (!aliveRef.current) return
-
-    // "잘 듣고 있어요"는 최소 STT_MIN_SHOW_MS 는 보여 준다
-    const rest = STT_MIN_SHOW_MS - (performance.now() - shownAt)
-    if (rest > 0) await startTimer(rest).done
-    if (!aliveRef.current) return
-
-    attemptsRef.current = [...attemptsRef.current, attempt]
-
-    // ⑤ 첫 녹음이 통과하지 못했으면 다시 말하기 — 구간마다 1번만. 무음도 통과 못 함이다
-    if (attemptsRef.current.length === 1 && !passes(attempt)) {
-      busyRef.current = false
-      setCueDone(false)
-      go({ phase: 'retry' })
-      return
-    }
-
-    // 통과했거나, 두 번째 녹음이면 결과와 상관없이 다음으로
-    await finishPart(at)
+    recorderRef.current?.close()
     busyRef.current = false
   }
 
   // ────────────────────────────────────────────────
-  // ④ 판단 — ⚠️ 결과는 화면에 절대 내보내지 않는다
+  // 흐름 — 버튼 없이 저절로 (시나리오 §1)
   // ────────────────────────────────────────────────
 
-  /** 녹음 저장 → 받아쓰기. 시간 초과 · 실패는 통과로 본다 (cer 없음) */
-  async function listenTo(result: CaptureResult | null, at: Step): Promise<Attempt> {
-    // 마이크에서 아무것도 못 받았다 — 무음 (WAV 없음)
-    if (!result || result.pcm.length === 0) return { silent: true }
+  async function flow(run: { alive: boolean }): Promise<void> {
+    const recorder = recorderRef.current!
+    const L = script.lines
+    const byWordAge = ageGroup === '4'
+    const older = ageGroup === '6+'
 
-    const lineParts = turnAt(scenario, at).line.parts
-    let wav: string
-    try {
-      const saved = await window.api.recording.saveWav({
-        sessionId,
-        lineIndex: at.turn,
-        // 어절 순번은 만 4세처럼 구간이 여러 개일 때만 붙인다
-        partIndex: lineParts.length > 1 ? at.part : undefined,
-        retry: attemptsRef.current.length > 0,
-        jobId: job,
-        pcm: result.pcm.buffer as ArrayBuffer,
-        sampleRate: result.sampleRate,
-        dsp: DSP_OFF,
-      })
-      wav = saved.path
-    } catch (e) {
-      // 저장하지 못했으면 남길 녹음이 없다 — 무음과 같이 다룬다 (한 번 더 말할 기회를 준다)
-      console.error('[P-05] 녹음 저장 실패', e)
-      return { silent: true }
+    const check = (): void => {
+      if (!run.alive) throw new Stopped()
     }
-    if (!aliveRef.current) return { wav, silent: false }
+    const set = (change: Partial<View>): void => {
+      check()
+      setView((v) => ({ ...v, ...change }))
+    }
+    const sleep = (ms: number): Promise<void> =>
+      new Promise<void>((resolve) => {
+        const id = window.setTimeout(() => {
+          timersRef.current.delete(id)
+          resolve()
+        }, ms)
+        timersRef.current.add(id)
+      }).then(check)
 
-    const deadline = startTimer(STT_MAX_WAIT_MS)
-    const timeout = deadline.done.then(() => 'timeout' as const)
-    try {
-      // MOCK: 받아쓰기 프로그램(faster-whisper)이 붙기 전까지 결과를 스토어의 mockStt로 정한다.
-      //       실제 프로그램은 mock 필드를 무시한다 — 붙으면 이 갈래(manual 버튼 포함)를 걷어 낸다.
-      const mode = useSession.getState().mockStt
-      let mock: NonNullable<SttRequest['mock']>
-      if (mode === 'manual') {
-        // 개발용 버튼(통과 / 실패 / 무음)을 누를 때까지 기다린다
-        const picked = await Promise.race([waitForPick(), timeout])
-        if (picked === 'timeout') return { wav, silent: false }
-        mock = { outcome: picked, skipSilenceCheck: true }
-      } else {
-        // 무음 검사는 메인이 실제로 한다
-        mock = { outcome: mode }
+    /** 캐릭터 대사 하나 — 장면 + 자막 + 목소리(없으면 자막 시간만) */
+    async function say(scene: string, text: string, key: string): Promise<void> {
+      set({ scene, subtitle: text, mic: 'wait', step: key })
+      await playClip(voiceUrl(job, key), subtitleMs(text)).done
+      check()
+      await sleep(BEAT_GAP_MS)
+    }
+
+    /** 마이크를 연다 — 못 열면 M-02 + [다시 시도]. 개발용 [녹음 없이 넘기기]면 false */
+    async function ensureMic(): Promise<boolean> {
+      while (!recorder.isOpen) {
+        try {
+          await recorder.open()
+          check()
+        } catch (e) {
+          check()
+          setFallback({ kind: 'device', message: MIC_MESSAGE, detail: (e as Error).message })
+          set({ mic: 'error', subtitle: null, step: 'micError' })
+          const choice = await new Promise<'retry' | 'skip'>((resolve) => {
+            micChoiceRef.current = resolve
+          })
+          micChoiceRef.current = null
+          check()
+          setFallback(null)
+          if (choice === 'skip') return false
+        }
       }
+      return true
+    }
 
-      const answer = await Promise.race([
-        window.api.stt
-          .transcribe({ wavPath: wav, targetText: partAt(scenario, at).text, mock })
-          .catch((e: unknown) => {
+    /** 아이 차례 — 반짝 + 띵 → 녹음 (조용해지면 저절로 끝). 마이크 없이 넘겼으면 null */
+    async function childTurn(maxMs: number, step: string): Promise<RecordResult | null> {
+      if (!(await ensureMic())) return null
+      set({ scene: '06', subtitle: null, mic: 'live', step: `${step}:ding` })
+      await playClip(DING_URL, 600).done
+      check()
+      await sleep(DING_TO_RECORD_MS)
+
+      // ⚠️ 금지사항 6 — 녹음 전에 모든 소리를 멈추고, 끝날 때까지 잠근다
+      stopAll()
+      stopClips()
+      muteClips(true)
+      busyRef.current = true
+      set({ step: `${step}:rec` })
+      let result: RecordResult
+      try {
+        result = await recorder.record({ maxMs, onLevel: paintLevel })
+      } finally {
+        muteClips(false)
+        paintLevel(FLOOR_DB)
+      }
+      check()
+      if (result.end === 'cancel') throw new Stopped()
+
+      // 개발용 — 목소리 크기를 정해 버린다 (가짜 마이크는 늘 같은 소리라 갈래를 못 본다)
+      switch (voiceForceRef.current) {
+        case 'loud':
+          return { ...result, voiced: true, peakDb: 0 }
+        case 'quiet':
+          return { ...result, voiced: true, peakDb: VOICE_LOUD_DB - 10 }
+        case 'silent':
+          return { ...result, voiced: false, peakDb: FLOOR_DB }
+        default:
+          return result
+      }
+    }
+
+    /** "준비 완료!" 연습 — 목소리 크기로만 (받아쓰기 · 저장 안 함) */
+    async function practice(): Promise<'loud' | 'quiet' | 'silent'> {
+      const r = await childTurn(RECORD_MAX_WORD_MS, 'practice')
+      busyRef.current = false
+      if (!r) return 'loud' // 마이크 없이 넘김 (개발용)
+      if (!r.voiced) return 'silent'
+      return r.peakDb >= VOICE_LOUD_DB ? 'loud' : 'quiet'
+    }
+
+    /** 녹음 저장 → 받아쓰기. 시간 초과 · 실패는 통과로 본다 (cer 없음) */
+    async function listenTo(result: RecordResult, at: At): Promise<Attempt> {
+      // 말소리가 없었다 — 무음 (저장하지 않는다)
+      if (!result.voiced || result.pcm.length === 0) return { silent: true }
+
+      const lineParts = scenario.turns[at.turn].line.parts
+      let wav: string
+      try {
+        const saved = await window.api.recording.saveWav({
+          sessionId,
+          lineIndex: at.turn,
+          // 어절 순번은 만 4세처럼 구간이 여러 개일 때만 붙인다
+          partIndex: lineParts.length > 1 ? at.part : undefined,
+          retry: attemptsRef.current.length > 0,
+          jobId: job,
+          pcm: result.pcm.buffer as ArrayBuffer,
+          sampleRate: result.sampleRate,
+          dsp: DSP_OFF,
+        })
+        wav = saved.path
+        savedRef.current.add(wav)
+      } catch (e) {
+        // 저장하지 못했으면 남길 녹음이 없다 — 무음과 같이 다룬다 (한 번 더 말할 기회를 준다)
+        console.error('[P-05] 녹음 저장 실패', e)
+        return { silent: true }
+      }
+      check()
+
+      let deadlineId = 0
+      const timeout = new Promise<'timeout'>((resolve) => {
+        deadlineId = window.setTimeout(() => resolve('timeout'), STT_MAX_WAIT_MS)
+        timersRef.current.add(deadlineId)
+      })
+      try {
+        // MOCK: 받아쓰기 프로그램(faster-whisper)이 붙기 전까지 결과를 스토어의 mockStt로 정한다.
+        //       실제 프로그램은 mock 필드를 무시한다 — 붙으면 이 갈래(manual 버튼 포함)를 걷어 낸다.
+        const mode = useSession.getState().mockStt
+        let mock: NonNullable<SttRequest['mock']>
+        if (mode === 'manual') {
+          // 개발용 버튼(통과 / 실패 / 무음)을 누를 때까지 기다린다
+          const picked = await Promise.race([
+            new Promise<MockSttOutcome>((resolve) => {
+              pickRef.current = resolve
+              setPickOpen(true)
+            }),
+            timeout,
+          ])
+          if (picked === 'timeout') return { wav, silent: false }
+          mock = { outcome: picked, skipSilenceCheck: true }
+        } else {
+          // 무음 검사는 메인이 실제로 한다
+          mock = { outcome: mode }
+        }
+
+        const text = scenario.turns[at.turn].line.parts[at.part]?.text ?? ''
+        const answer = await Promise.race([
+          window.api.stt.transcribe({ wavPath: wav, targetText: text, mock }).catch((e: unknown) => {
             console.error('[P-05] 받아쓰기 실패', e)
             return 'failed' as const
           }),
-        timeout,
-      ])
-      if (answer === 'timeout' || answer === 'failed') return { wav, silent: false }
-      return { wav, silent: answer.silent, transcript: answer.transcript, cer: answer.cer }
-    } finally {
-      deadline.cancel()
-      pickRef.current = null
-      setPickOpen(false)
+          timeout,
+        ])
+        if (answer === 'timeout' || answer === 'failed') return { wav, silent: false }
+        return { wav, silent: answer.silent, transcript: answer.transcript, cer: answer.cer }
+      } finally {
+        window.clearTimeout(deadlineId)
+        timersRef.current.delete(deadlineId)
+        pickRef.current = null
+        if (run.alive) setPickOpen(false)
+      }
     }
+
+    /** 문장(또는 어절) 녹음 한 번 — 띵 → 녹음 → "잘 듣고 있어요". 마이크 없이 넘겼으면 null */
+    async function attempt(at: At, maxMs: number): Promise<Attempt | null> {
+      const r = await childTurn(maxMs, `line${at.turn + 1}-${at.part + 1}`)
+      if (!r) {
+        busyRef.current = false
+        return null
+      }
+      set({ mic: 'listening', step: `line${at.turn + 1}-${at.part + 1}:listening` })
+      const shownAt = performance.now()
+      try {
+        const a = await listenTo(r, at)
+        check()
+        // "잘 듣고 있어요"는 최소 STT_MIN_SHOW_MS 는 보여 준다
+        const rest = STT_MIN_SHOW_MS - (performance.now() - shownAt)
+        if (rest > 0) await sleep(rest)
+        return a
+      } finally {
+        busyRef.current = false
+      }
+    }
+
+    /** 구간 마무리 — 더 나은 녹음만 남기고 세션에 적는다 */
+    async function finishPart(at: At): Promise<void> {
+      const attempts = attemptsRef.current
+      attemptsRef.current = []
+      const { keep, drop } = chooseAttempt(attempts)
+      // 안 쓰는 녹음은 바로 지운다 (둘 다 무음이면 저장된 것이 없다)
+      await Promise.all(
+        drop.map(async (a) => {
+          if (!a.wav) return
+          savedRef.current.delete(a.wav)
+          try {
+            await window.api.recording.deleteWav(a.wav)
+          } catch (e) {
+            console.error('[P-05] 안 쓰는 녹음 삭제 실패', e)
+          }
+        }),
+      )
+      check()
+
+      const line = scenario.turns[at.turn].line
+      const text = line.parts[at.part]?.text ?? line.text
+      const retried = attempts.length > 1
+      const part: SpeechPart = keep
+        ? { text, wav: keep.wav, transcript: keep.transcript, cer: keep.cer, retried }
+        : { text, retried }
+      const lines = speechRef.current.slice()
+      lines[at.turn] = { line: line.text, parts: [...(lines[at.turn]?.parts ?? []), part] }
+      speechRef.current = lines
+      patch({ speech: lines })
+    }
+
+    // ── A · B · C — 인사 · 역할 · 임무 · 신호 설명 + 시범 ──
+    await say('01', L.hello, 'hello')
+    await say('02', L.role, 'role')
+    await say('03', L.mission, 'mission')
+    await say('04', COMMON.signal, 'signal')
+    // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다
+    set({ mic: 'demo', step: 'signal:ding' })
+    await playClip(DING_URL, 600).done
+    check()
+    await sleep(600)
+    await say('05', COMMON.demo, 'demo')
+
+    // ── D · E — "준비 완료!" 연습 ──
+    set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null } })
+    await say('06', COMMON.practice, 'practice')
+    let voice = await practice()
+    if (voice === 'silent') {
+      // 한 번만 다시 — 또 무음이면 그냥 진행
+      await say('09', L.silent, 'silent')
+      voice = await practice()
+    }
+    if (voice === 'loud') await say('07', L.loud, 'loud')
+    else if (voice === 'quiet') await say('08', L.quiet, 'quiet')
+    set({ big: null })
+
+    // ── F1 · G · F2 — 문장 2개 ──
+    let cheer = 0
+    for (const turn of [0, 1] as const) {
+      if (turn === 1) await say('12', L.bridge, 'bridge')
+
+      const line = scenario.turns[turn].line
+      const byWord = byWordAge && line.parts.length > 1
+      const words = byWord ? line.parts.map((p) => p.text) : [line.text]
+      set({ progress: turn, big: { words, current: null } })
+      await say(turn === 0 ? '10' : '13', COMMON.intro[turn][byWord ? 1 : 0], `intro${turn + 1}${byWord ? '-4' : ''}`)
+
+      const demoScene = lineScene(job, turn, older)
+      const maxMs = byWord ? RECORD_MAX_WORD_MS : RECORD_MAX_LINE_MS
+      for (let p = 0; p < line.parts.length; p++) {
+        const at: At = { turn, part: p }
+        const text = line.parts[p]!.text
+        const key = byWord ? `line${turn + 1}-w${p + 1}` : `line${turn + 1}${older ? '-6' : ''}`
+        if (byWord) set({ big: { words, current: p } })
+
+        attemptsRef.current = []
+        await say(demoScene, text, key)
+        const first = await attempt(at, maxMs)
+        if (first) attemptsRef.current.push(first)
+
+        // 첫 녹음이 통과하지 못했으면 다시 말하기 — 구간마다 1번만. 무음도 통과 못 함이다
+        if (first && !passes(first)) {
+          await say('11', L.retry, 'retry')
+          await say('11', COMMON.retryLead, 'retry-lead')
+          await say(demoScene, text, key)
+          const second = await attempt(at, maxMs)
+          if (second) attemptsRef.current.push(second)
+        }
+        await finishPart(at)
+      }
+
+      if (byWord) set({ big: { words, current: null } })
+      const n = cheer++ % COMMON.cheers.length
+      await say('07', COMMON.cheers[n]!, `cheer${n + 1}`)
+      set({ big: null })
+    }
+
+    // ── I — 마무리 → P-06 ──
+    await say('14', L.outro, 'outro')
+    set({ step: 'leaving' })
+    next()
   }
 
-  /** MOCK: 개발용 버튼으로 받아쓰기 결과를 고른다 */
-  function waitForPick(): Promise<MockSttOutcome> {
-    return new Promise((resolve) => {
-      pickRef.current = resolve
-      setPickOpen(true)
+  useEffect(() => {
+    const run = { alive: true }
+    runRef.current = run
+    preloadScenes(job)
+    flow(run).catch((e: unknown) => {
+      if (!(e instanceof Stopped)) console.error('[P-05] 흐름 오류', e)
     })
+    return stopFlow
+    // 직업 · 연령은 이 화면에 있는 동안 바뀌지 않는다 — 한 번만 돈다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** [← 뒤로] → P-04 [직업 선택]. 그때까지의 녹음은 지운다. 녹음 · 받아쓰기 중에는 받지 않는다 */
+  function leave(): void {
+    if (justChangedScreen() || busyRef.current) return
+    stopFlow()
+    setFallback(null)
+    for (const path of savedRef.current) {
+      void window.api.recording.deleteWav(path).catch(() => undefined)
+    }
+    savedRef.current.clear()
+    speechRef.current = []
+    patch({ speech: undefined })
+    back()
   }
 
   function pick(outcome: MockSttOutcome): void {
@@ -464,292 +582,286 @@ function SpeakFlow({
     resolve?.(outcome)
   }
 
-  // ────────────────────────────────────────────────
-  // ⑤ 구간 마무리 → 다음 구간 / 다음 아이 차례 / P-06
-  // ────────────────────────────────────────────────
+  function micChoice(choice: 'retry' | 'skip'): void {
+    micChoiceRef.current?.(choice)
+  }
 
-  async function finishPart(at: Step): Promise<void> {
-    const attempts = attemptsRef.current
-    attemptsRef.current = []
-
-    // 인식률이 높은 쪽을 남기고, 안 쓰는 쪽 WAV는 바로 지운다 (둘 다 무음이면 둘 다)
-    const { keep, drop } = chooseAttempt(attempts)
-    await Promise.all(
-      drop.map(async (attempt) => {
-        if (!attempt.wav) return
-        try {
-          await window.api.recording.deleteWav(attempt.wav)
-        } catch (e) {
-          console.error('[P-05] 안 쓰는 녹음 삭제 실패', e)
-        }
-      }),
-    )
-    if (!aliveRef.current) return
-
-    const text = partAt(scenario, at).text
-    const retried = attempts.length > 1
-    const speechPart: SpeechPart = keep
-      ? { text, wav: keep.wav, transcript: keep.transcript, cer: keep.cer, retried }
-      : { text, retried }
-
-    // 구간이 끝날 때마다 세션에 적는다
-    const lines = speechRef.current.slice()
-    lines[at.turn] = {
-      line: turnAt(scenario, at).line.text,
-      parts: [...(lines[at.turn]?.parts ?? []), speechPart],
+  // ── 그림 아래 큰 글씨 — 한 줄에 들어가게 글자 크기를 줄인다 ──
+  const bigKey = view.big ? view.big.words.join(' ') : ''
+  useLayoutEffect(() => {
+    const el = lineRef.current
+    if (!el) return
+    el.style.fontSize = ''
+    if (!bigKey) return
+    const room = el.clientWidth
+    const need = el.scrollWidth
+    if (need > room) {
+      const base = parseFloat(getComputedStyle(el).fontSize)
+      el.style.fontSize = `${Math.floor(base * (room / need) * 0.98)}px`
     }
-    speechRef.current = lines
-    patch({ speech: lines })
+  }, [bigKey])
 
-    if (at.part + 1 < turnAt(scenario, at).line.parts.length) {
-      go({ part: at.part + 1, phase: 'listen' })
-    } else if (at.turn + 1 < scenario.turns.length) {
-      go({ turn: at.turn + 1, part: 0, phase: 'scene' })
-    } else {
-      go({ phase: 'leaving' })
-      next()
-    }
-  }
-
-  /** [다시 듣기] — ① 문장 음성부터 다시 (→ ② → ③) */
-  function listenAgain(): void {
-    if (stepRef.current.phase !== 'retry' || !cueDone || busyRef.current) return
-    go({ phase: 'listen' })
-  }
-
-  /** 개발용 — 마이크 없는 PC에서 흐름을 확인할 때: 녹음 없이 이 구간을 넘긴다 */
-  async function skipWithoutRecording(): Promise<void> {
-    const at = stepRef.current
-    if (at.phase !== 'micError' || busyRef.current) return
-    busyRef.current = true
-    setFallback(null)
-    await finishPart(at)
-    busyRef.current = false
-  }
-
-  // ────────────────────────────────────────────────
-  // 화면
-  // ────────────────────────────────────────────────
-
-  const speaking =
-    phase === 'listen' || phase === 'cue' || phase === 'ready' || phase === 'recording'
-  /** 음성(또는 자막 시간)이 흐르는 중 — 이 동안은 녹음 버튼이 꺼져 있다 */
-  const playing =
-    phase === 'scene' || phase === 'listen' || phase === 'cue' || (phase === 'retry' && !cueDone)
-  const contentPending =
-    turn.narrationSource === 'placeholder' || turn.line.source === 'placeholder'
+  const { title } = script
+  const busy = view.mic === 'live' || view.mic === 'listening'
 
   return (
-    <Screen
-      id="P-05"
-      note={`${jobLabel(job)} · ${ageGroupLabel(ageGroup)} · ${PHASE_NOTE[phase]}`}
-    >
-      <div className="p05">
-        {/* 위: 직업 이름 · 문장 진행 표시 (만 4세는 어절을 점으로) */}
-        <header className="p05-top">
-          <span className="p05-job">{jobLabel(job)}</span>
-          <span className="p05-progress">
-            문장 {turnIdx + 1} / {scenario.turns.length}
-          </span>
-          {parts.length > 1 && (
-            <span className="p05-dots">
-              {parts.map((p, i) => (
-                <span
-                  key={`${i}-${p.text}`}
-                  className={`p05-dot${
-                    i < partIdx ? ' p05-dot--done' : i === partIdx ? ' p05-dot--now' : ''
-                  }`}
-                />
-              ))}
-            </span>
-          )}
-        </header>
+    <Screen id="P-05" designed>
+      <div className="p05" data-step={view.step} data-mic={view.mic}>
+        <Stage background={skyUrl}>
+          <img className="p05-logo" src={logoEnUrl} alt="MY DREAM VOICE" draggable={false} />
 
-        <div className="p05-main">
-          {/* 시나리오 장면 — 연출은 미정 (SPEC T-17) */}
-          <section className="p05-scene">
-            <div className="p05-scene__art">
-              <Placeholder label="시나리오 장면 — 그림 · 애니메이션 · 내레이션 (SPEC T-17)" />
-            </div>
-            <p className="p05-narration">{turn.narration}</p>
-            <div className="p05-tags">
-              {contentPending ? (
-                <PlaceholderTag label="시나리오 · 문장 미확정 (SPEC T-3)" />
-              ) : (
-                <PlaceholderTag label="예시 문구 — 확정 전 (SPEC T-3)" />
+          <BackButton onClick={leave} disabled={busy} />
+
+          <img className="p05-star" src={starYellowUrl} alt="" draggable={false} />
+
+          <h1 className="p05-title">
+            {title.before}
+            <span className="p05-title__em">
+              <TitleMark />
+              <span className="p05-title__text">{title.em}</span>
+            </span>
+            {title.after}
+          </h1>
+          <p className="p05-sub">먼저 듣고, 따라 말해 봐요</p>
+
+          <section className="p05-card">
+            <span className="p05-chip">{jobLabel(job)}</span>
+            <ProgressDots progress={view.progress} />
+
+            <div className="p05-frame">
+              <SceneFrame job={job} scene={view.scene} />
+              {view.subtitle && (
+                <p className="p05-subtitle" key={view.step}>
+                  {view.subtitle}
+                </p>
               )}
-              {playing && subtitleOnly && (
-                <PlaceholderTag label="음성 파일 미제공 — 자막만 (SPEC T-3)" />
-              )}
             </div>
+
+            <p className="p05-line" ref={lineRef} aria-live="polite">
+              {view.big && <BigLine big={view.big} />}
+            </p>
           </section>
 
-          {/* 아이 차례 */}
-          {phase !== 'scene' && phase !== 'leaving' && (
-            <section className="panel p05-turn">
-              <div className="p05-turn__head">
-                <strong className="p05-turn__label">내 차례!</strong>
-                <PlaceholderTag label="안내 문구 임시 — 구성 스케치 기준" />
-              </div>
+          <MicPill state={view.mic} micRef={micRef} onRetry={() => micChoice('retry')} />
+        </Stage>
 
-              <div className="p05-turn__row">
-                {/* ① ② ③ — 듣기 → 멘트 → 말하기 */}
-                {speaking && (
-                  <>
-                    <div className="p05-turn__body">
-                      {/* "따라 말해 보세요"는 마이크가 실제로 열린 뒤에 보인다 — 그 전에 말하면 앞소리가 녹음에서 빠진다 */}
-                      <p
-                        className={`p05-status${
-                          phase === 'ready' || (phase === 'recording' && !capture.recording)
-                            ? ' p05-off'
-                            : ''
-                        }`}
-                      >
-                        {phase === 'recording' ? '따라 말해 보세요' : '먼저 들어 봐요'}
-                      </p>
-                      {phase === 'recording' && (
-                        // 마이크가 실제로 열린 뒤에만 "녹음 중"을 보인다
-                        <div className={`p05-rec${capture.recording ? '' : ' p05-off'}`}>
-                          <PlaceholderTag label="마이크 아이콘" />
-                          <span className="p05-rec__label">녹음 중</span>
-                          <div className="p05-meter">
-                            <div
-                              className="p05-meter__fill"
-                              style={{ width: `${Math.round(capture.level * 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                      {/* 자막 = 지금 따라 말할 구간 */}
-                      <p className="p05-line">{part.text}</p>
-                      {parts.length > 1 && <p className="p05-whole">{turn.line.text}</p>}
-                      {phase !== 'recording' && (
-                        <p className={`p05-cue${phase === 'listen' ? ' p05-off' : ''}`}>
-                          {CUES.speakNow.text}
-                        </p>
-                      )}
-                    </div>
-                    <div className="p05-turn__side">
-                      {phase === 'recording' ? (
-                        <button
-                          className="btn btn--lg btn--primary p05-btn"
-                          disabled={!capture.recording}
-                          onClick={() => void finishRecording()}
-                        >
-                          <PlaceholderTag label="아이콘" />
-                          <span>다 말했어요</span>
-                        </button>
-                      ) : (
-                        // 음성 · 멘트가 끝난 뒤(ready)에만 켜진다
-                        <button
-                          className="btn btn--lg btn--primary p05-btn"
-                          disabled={phase !== 'ready'}
-                          onClick={beginRecording}
-                        >
-                          <PlaceholderTag label="마이크 아이콘" />
-                          <span>말하기 시작</span>
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {/* ④ 잘 듣고 있어요 — 판단 결과는 내보내지 않는다 */}
-                {phase === 'thinking' && (
-                  <>
-                    <div className="p05-char">
-                      <Placeholder label="SD 캐릭터 — 고민하는 표정" />
-                    </div>
-                    <div className="p05-turn__body">
-                      <p className="p05-say">잘 듣고 있어요…</p>
-                      <span className="p05-wait" aria-hidden="true">
-                        <i />
-                        <i />
-                        <i />
-                      </span>
-                    </div>
-                  </>
-                )}
-
-                {/* 다시 말하기 — 아이에게는 이 멘트만 보인다 */}
-                {phase === 'retry' && (
-                  <>
-                    <div className="p05-char">
-                      <Placeholder label="SD 캐릭터 — 웃는 얼굴" />
-                    </div>
-                    <div className="p05-turn__body">
-                      <p className="p05-say">{CUES.oneMore.text}</p>
-                      <div className="p05-actions">
-                        <button
-                          className="btn btn--lg p05-btn"
-                          disabled={!cueDone}
-                          onClick={listenAgain}
-                        >
-                          <PlaceholderTag label="스피커 아이콘" />
-                          <span>다시 듣기</span>
-                        </button>
-                        <button
-                          className="btn btn--lg p05-btn"
-                          disabled={!cueDone}
-                          onClick={beginRecording}
-                        >
-                          <PlaceholderTag label="마이크 아이콘" />
-                          <span>바로 말하기</span>
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* 마이크를 못 켰다 — 안내는 M-02가 띄우고, 여기서는 다시 시도만 */}
-                {phase === 'micError' && (
-                  <>
-                    <div className="p05-turn__body">
-                      <p className="p05-say">{MIC_MESSAGE}</p>
-                    </div>
-                    <div className="p05-turn__side">
-                      <button className="btn btn--lg btn--primary p05-btn" onClick={beginRecording}>
-                        <PlaceholderTag label="아이콘" />
-                        <span>다시 시도</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* 개발용 — 손님 화면에는 없다. ⚠️ 인식률 · 받아쓴 글자는 여기에도 띄우지 않는다 */}
+        {/* 개발용 — 손님 화면에는 없다. ⚠️ 인식률 · 받아쓴 글자 · 목소리 크기 숫자는 여기에도 띄우지 않는다 */}
         <div className="p05-dev">
-          <DevStrip label="P-05">
-            <span>{phase}</span>
+          <DevStrip label={`P-05 · ${view.step}`}>
+            <span>목소리:</span>
+            {(['auto', 'loud', 'quiet', 'silent'] as const).map((v) => (
+              <button
+                key={v}
+                className={`btn btn--sm${voiceForce === v ? ' btn--primary' : ''}`}
+                onClick={() => setVoiceForce(v)}
+              >
+                {VOICE_FORCE_LABEL[v]}
+              </button>
+            ))}
             <span>· 받아쓰기 mock: {mockStt}</span>
+            {pickOpen && (
+              <>
+                <button className="btn btn--sm" onClick={() => pick('pass')}>
+                  통과
+                </button>
+                <button className="btn btn--sm" onClick={() => pick('fail')}>
+                  실패
+                </button>
+                <button className="btn btn--sm" onClick={() => pick('silent')}>
+                  무음
+                </button>
+              </>
+            )}
+            {view.mic === 'error' && (
+              <button className="btn btn--sm" onClick={() => micChoice('skip')}>
+                녹음 없이 넘기기
+              </button>
+            )}
           </DevStrip>
-
-          {pickOpen && (
-            <DevStrip label="MOCK 받아쓰기">
-              <button className="btn btn--sm" onClick={() => pick('pass')}>
-                통과
-              </button>
-              <button className="btn btn--sm" onClick={() => pick('fail')}>
-                실패
-              </button>
-              <button className="btn btn--sm" onClick={() => pick('silent')}>
-                무음
-              </button>
-            </DevStrip>
-          )}
-
-          {phase === 'micError' && (
-            <DevStrip label="마이크 없음">
-              <button className="btn btn--sm" onClick={() => void skipWithoutRecording()}>
-                녹음 없이 이 구간 넘기기
-              </button>
-            </DevStrip>
-          )}
         </div>
       </div>
     </Screen>
+  )
+}
+
+const VOICE_FORCE_LABEL: Record<VoiceForce, string> = {
+  auto: '실제',
+  loud: '크게',
+  quiet: '작게',
+  silent: '무음',
+}
+
+/** 제목의 강조 낱말 밑에 깔리는 분홍 붓질 — P-03 · P-04 제목과 같은 그림 */
+function TitleMark(): ReactNode {
+  return (
+    <svg className="p05-title__mark" viewBox="0 0 290 56" aria-hidden="true" focusable="false">
+      <path d="M7 31C8 18 17 9 32 8L262 2c14-.5 23 6 23 17 0 13-9 24-22 25L150 45 44 52C20 53 6 45 7 31Z" />
+    </svg>
+  )
+}
+
+/** 오른쪽 위 진행 — 점 2개 + "문장 1 / 2" (연습 동안은 "연습") */
+function ProgressDots({ progress }: { progress: Progress }): ReactNode {
+  const done = progress === 'practice' ? 0 : progress + 1
+  return (
+    <div className="p05-progress">
+      <span className="p05-progress__dots" aria-hidden="true">
+        <i data-on={done >= 1} />
+        <i data-on={done >= 2} />
+      </span>
+      <span className="p05-progress__label">
+        {progress === 'practice' ? '연습' : `문장 ${progress + 1} / 2`}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * 장면 그림 — 바뀔 때 옆으로 넘어간다 (새 그림이 오른쪽에서 들어오고, 앞 그림은 왼쪽으로 나간다).
+ * 그림 파일이 없으면 장면 번호 + 장면 설명을 적은 임시 판.
+ */
+function SceneFrame({ job, scene }: { job: JobId; scene: string }): ReactNode {
+  const [layers, setLayers] = useState([{ scene, n: 0 }])
+
+  useEffect(() => {
+    setLayers((ls) => {
+      const last = ls[ls.length - 1]!
+      return last.scene === scene ? ls : [last, { scene, n: last.n + 1 }]
+    })
+  }, [scene])
+
+  useEffect(() => {
+    if (layers.length < 2) return
+    const id = window.setTimeout(() => setLayers((ls) => ls.slice(-1)), 560)
+    return () => window.clearTimeout(id)
+  }, [layers])
+
+  return (
+    <div className="p05-scene">
+      {layers.map((layer, i) => (
+        <SceneArt
+          key={layer.n}
+          job={job}
+          scene={layer.scene}
+          motion={layers.length > 1 ? (i === 0 ? 'leave' : 'enter') : undefined}
+        />
+      ))}
+    </div>
+  )
+}
+
+function SceneArt({
+  job,
+  scene,
+  motion,
+}: {
+  job: JobId
+  scene: string
+  motion?: 'enter' | 'leave'
+}): ReactNode {
+  const id = sceneId(job, scene)
+  const url = sceneUrl(job, id)
+  const className = `p05-scene__art${motion ? ` is-${motion}` : ''}`
+  if (url) return <img className={className} src={url} alt="" draggable={false} data-scene={id} />
+  return (
+    <div className={`${className} p05-scene__ph`} data-scene={id} data-job={job}>
+      <strong className="p05-scene__id">{id}</strong>
+      <span className="p05-scene__desc">{SCRIPTS[job].scenes[scene] ?? ''}</span>
+      <span className="p05-scene__tag">임시 판 · 그림이 오면 바뀝니다</span>
+    </div>
+  )
+}
+
+/** 그림 아래 큰 글씨 — 따옴표 안에 따라 말할 말. 만 4세는 지금 어절을 진하게 */
+function BigLine({ big }: { big: Big }): ReactNode {
+  // 한 덩어리로 감싼다 — 줄(p)이 flex라, 낱말마다 따로 놓이면 낱말 사이 띄어쓰기가 사라진다
+  return (
+    <span className="p05-line__text">
+      “
+      {big.words.map((word, i) => (
+        <span key={`${i}-${word}`}>
+          {i > 0 && ' '}
+          <span
+            className={
+              big.current === null
+                ? 'p05-word'
+                : i === big.current
+                  ? 'p05-word is-now'
+                  : i < big.current
+                    ? 'p05-word is-done'
+                    : 'p05-word is-later'
+            }
+          >
+            {word}
+          </span>
+        </span>
+      ))}
+      ”
+    </span>
+  )
+}
+
+const MIC_LABEL: Record<Exclude<MicState, 'error'>, string> = {
+  wait: '먼저 들어 봐요',
+  demo: '띵! 하면 말해요',
+  live: '지금 말해요!',
+  listening: '잘 듣고 있어요',
+}
+
+/**
+ * 아래 마이크 알약 — 시안의 [말하기 시작] 자리. 누르는 버튼이 아니다 (버튼 없음 — 2026-11-23).
+ * 마이크를 못 켰을 때만 [다시 시도] 버튼이 된다.
+ */
+function MicPill({
+  state,
+  micRef,
+  onRetry,
+}: {
+  state: MicState
+  micRef: RefObject<HTMLDivElement>
+  onRetry: () => void
+}): ReactNode {
+  if (state === 'error') {
+    return (
+      <button type="button" className="p05-mic p05-mic--retry" onClick={onRetry}>
+        <span className="p05-mic__label">다시 시도</span>
+        <span className="p05-mic__icon" aria-hidden="true">
+          <MicIcon />
+        </span>
+      </button>
+    )
+  }
+  return (
+    <div className="p05-mic" data-state={state} ref={micRef} role="status">
+      <span className="p05-mic__label">
+        {MIC_LABEL[state]}
+        {state === 'listening' && (
+          <span className="p05-mic__dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        )}
+      </span>
+      <span className="p05-mic__icon" aria-hidden="true">
+        <span className="p05-mic__ring" />
+        <MicIcon />
+      </span>
+    </div>
+  )
+}
+
+function MicIcon(): ReactNode {
+  return (
+    <svg viewBox="0 0 48 48" focusable="false">
+      <rect x="17" y="6" width="14" height="24" rx="7" fill="currentColor" />
+      <path
+        d="M11 23a13 13 0 0 0 26 0M24 36v6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+    </svg>
   )
 }
