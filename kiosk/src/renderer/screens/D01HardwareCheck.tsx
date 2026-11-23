@@ -416,7 +416,7 @@ export function D01HardwareCheck(): ReactNode {
           {camError && <p className="err">{camError}</p>}
 
           <div className="cam">
-            <video ref={videoRef} muted playsInline className="cam__video" />
+            <video ref={videoRef} muted playsInline className="cam__video cam__video--mirror" />
             <dl className="kv">
               <dt>요청</dt>
               <dd>
