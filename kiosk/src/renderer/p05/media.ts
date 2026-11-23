@@ -46,15 +46,89 @@ export function voiceUrl(job: JobId, key: string): string | undefined {
   return VOICES.get(`${job}/${key}`)
 }
 
-/** 그 직업의 그림을 미리 풀어 둔다 — 장면이 넘어갈 때 한 박자 비지 않게 */
+/** 그 직업의 그림을 미리 풀어 두고 판의 자리를 재 둔다 — 장면이 넘어갈 때 한 박자 비지 않게 */
 export function preloadScenes(job: JobId): void {
   for (const [key, url] of SCENES) {
     if (!key.startsWith(`${job}/`)) continue
-    const img = new Image()
-    img.src = url
-    void img.decode().catch(() => undefined)
+    void measurePanel(url).catch(() => undefined)
   }
 }
 
 /** 띵 — "마이크가 반짝이고 띵! 하면 말해" 신호에만 쓴다 (public/audio/sfx/ding.wav · 2026-11-23 받은 소리) */
 export const DING_URL = './audio/sfx/ding.wav'
+
+// ────────────────────────────────────────────────
+// 튀어나오는 그림 — 투명 바탕 위에 둥근 "판"이 있고, 캐릭터 머리 · 로켓 끝이 판 위로 튀어나온 그림 (2026-11-23 A-01)
+// 판을 화면의 그림 칸에 맞추고, 튀어나온 부분은 칸 위(흰 카드 안)로 보이게 한다. 판의 자리는 그림을 재서 찾는다.
+// 바탕이 투명하지 않은 그림(꽉 찬 그림)은 지금처럼 칸을 꽉 채운다.
+// ────────────────────────────────────────────────
+
+/** 그림 안 판의 자리 (그림 원래 크기 px) */
+export interface ScenePanel {
+  /** 그림 전체 폭 · 높이 */
+  width: number
+  height: number
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
+/** undefined = 아직 안 잼 · null = 꽉 찬 그림 */
+const panels = new Map<string, ScenePanel | null>()
+
+export function panelOf(url: string): ScenePanel | null | undefined {
+  return panels.get(url)
+}
+
+/** 판의 자리를 잰다 — 작게 줄여 투명도만 본다 (그림마다 한 번) */
+export async function measurePanel(url: string): Promise<ScenePanel | null> {
+  if (panels.has(url)) return panels.get(url) ?? null
+  const img = new Image()
+  img.src = url
+  await img.decode()
+  const W = img.naturalWidth
+  const H = img.naturalHeight
+  const sw = 480
+  const sh = Math.max(1, Math.round((H * sw) / W))
+  const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+  let panel: ScenePanel | null = null
+  if (ctx) {
+    ctx.canvas.width = sw
+    ctx.canvas.height = sh
+    ctx.drawImage(img, 0, 0, sw, sh)
+    const data = ctx.getImageData(0, 0, sw, sh).data
+    const solid = (x: number, y: number): boolean => (data[(y * sw + x) * 4 + 3] ?? 0) > 128
+    const cornersSolid = solid(0, 0) && solid(sw - 1, 0) && solid(0, sh - 1) && solid(sw - 1, sh - 1)
+    if (!cornersSolid) {
+      // 판의 왼쪽 · 오른쪽 — 아래쪽 3/4 높이 줄에서 처음 · 마지막으로 꽉 찬 곳
+      const row = Math.round(sh * 0.75)
+      let left = 0
+      let right = sw - 1
+      while (left < sw - 1 && !solid(left, row)) left++
+      while (right > 0 && !solid(right, row)) right--
+      // 판의 위 · 아래 — 판 안쪽 가장자리(양옆에서 8%) 세로줄. 튀어나온 것이 한쪽에 걸려도 되게 위는 큰 쪽 · 아래는 작은 쪽
+      const inset = Math.round((right - left) * 0.08)
+      const edge = (x: number): [number, number] => {
+        let t = 0
+        let b = sh - 1
+        while (t < sh - 1 && !solid(x, t)) t++
+        while (b > 0 && !solid(x, b)) b--
+        return [t, b]
+      }
+      const [t1, b1] = edge(left + inset)
+      const [t2, b2] = edge(right - inset)
+      const k = W / sw
+      panel = {
+        width: W,
+        height: H,
+        left: left * k,
+        right: (right + 1) * k,
+        top: Math.max(t1, t2) * k,
+        bottom: (Math.min(b1, b2) + 1) * k,
+      }
+    }
+  }
+  panels.set(url, panel)
+  return panel
+}

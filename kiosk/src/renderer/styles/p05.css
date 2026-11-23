@@ -111,6 +111,7 @@
 /* 직업 이름 — 옅은 보라 알약 */
 .p05-chip {
   position: absolute;
+  z-index: 2;
   left: 67px;
   top: 12px;
   height: 64px;
@@ -132,6 +133,7 @@
 /* 진행 — 점 2개 + "문장 1 / 2" */
 .p05-progress {
   position: absolute;
+  z-index: 2;
   right: 69px;
   top: 20px;
   height: 48px;
@@ -168,16 +170,18 @@
   top: 88px;
   width: 1338px;
   height: 430px;
-  border-radius: 30px;
-  overflow: hidden;
-  background: #e9e4fb;
-  /* 넘어가는 그림이 둥근 모서리 밖으로 새지 않게 */
+  z-index: 1;
   isolation: isolate;
 }
 
+/*
+ * 그림이 보이는 자리 = 그림 칸 + 칸 위쪽 120px (튀어나오는 그림의 머리 · 로켓 끝 — 시안처럼 흰 카드 안까지).
+ * 양옆과 아래는 칸에서 자른다 (아래 모서리는 둥글게) — 넘어가는 그림이 칸 밖으로 새지 않게.
+ */
 .p05-scene {
   position: absolute;
   inset: 0;
+  clip-path: inset(-120px 0 0 0 round 0 0 30px 30px);
 }
 
 .p05-scene__art {
@@ -185,11 +189,24 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  border-radius: 30px;
+  overflow: hidden;
 }
 
+/* 꽉 찬 그림 — 칸을 채우고 비율이 다르면 위아래가 조금 잘린다 */
 img.p05-scene__art {
   object-fit: cover;
   object-position: center 42%;
+}
+
+/* 튀어나오는 그림 — 투명 바탕 위의 판을 칸에 맞춘다 (자리 · 크기는 P05Speak.tsx가 그림을 재서 준다) */
+img.p05-scene__art--pop {
+  right: auto;
+  bottom: auto;
+  height: auto;
+  border-radius: 0;
+  overflow: visible;
+  object-fit: fill;
 }
 
 /* 넘기기 — 새 그림은 오른쪽에서 들어오고, 앞 그림은 왼쪽으로 나간다 */
@@ -288,7 +305,7 @@ img.p05-scene__art {
   position: absolute;
   left: 50%;
   bottom: 25px;
-  z-index: 1;
+  z-index: 2;
   translate: -50% 0;
   width: max-content;
   max-width: 1200px;

@@ -51,7 +51,15 @@ import {
 import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
 import { COMMON, SCRIPTS, lineScene, sceneId } from '../p05/script'
-import { DING_URL, preloadScenes, sceneUrl, voiceUrl } from '../p05/media'
+import {
+  DING_URL,
+  measurePanel,
+  panelOf,
+  preloadScenes,
+  sceneUrl,
+  voiceUrl,
+  type ScenePanel,
+} from '../p05/media'
 import { FLOOR_DB, VoiceRecorder, type RecordResult } from '../p05/voiceRecorder'
 import skyUrl from '../assets/bg/sky.webp'
 import logoEnUrl from '../assets/brand/logo-en.png'
@@ -110,6 +118,9 @@ interface At {
 
 /** 화면을 떠나 흐름을 멈출 때 던진다 */
 class Stopped extends Error {}
+
+/** 장면 그림 칸의 폭 (styles/p05.css .p05-frame) */
+const FRAME_W = 1338
 
 /** 녹음 중 파형 — 막대 수 · 한 막대의 시간 · 높이로 바꾸는 소리 크기 범위(dBFS) · 조용할 때 높이 */
 const WAVE_BARS = 21
@@ -792,7 +803,46 @@ function SceneArt({
   const id = sceneId(job, scene)
   const url = sceneUrl(job, id)
   const className = `p05-scene__art${motion ? ` is-${motion}` : ''}`
-  if (url) return <img className={className} src={url} alt="" draggable={false} data-scene={id} />
+  // 그림 안 판의 자리 — undefined = 재는 중 · null = 꽉 찬 그림
+  const [panel, setPanel] = useState<ScenePanel | null | undefined>(() =>
+    url ? panelOf(url) : null,
+  )
+
+  useEffect(() => {
+    if (!url || panel !== undefined) return
+    let alive = true
+    measurePanel(url)
+      .then((p) => {
+        if (alive) setPanel(p)
+      })
+      .catch(() => {
+        if (alive) setPanel(null)
+      })
+    return () => {
+      alive = false
+    }
+  }, [url, panel])
+
+  if (url && panel) {
+    // 튀어나오는 그림 — 판을 그림 칸에 맞춘다. 판 위로 튀어나온 머리 · 로켓 끝은 칸 위(흰 카드 안)로 보이고,
+    // 판이 칸(3.1 : 1)보다 높으면 아래가 잘린다
+    const k = FRAME_W / (panel.right - panel.left)
+    return (
+      <img
+        className={`${className} p05-scene__art--pop`}
+        src={url}
+        alt=""
+        draggable={false}
+        data-scene={id}
+        style={{ left: -panel.left * k, top: -panel.top * k, width: panel.width * k }}
+      />
+    )
+  }
+  if (url && panel === null) {
+    return <img className={className} src={url} alt="" draggable={false} data-scene={id} />
+  }
+  // 판을 재는 동안 (처음 한 번 · 아주 잠깐) — 빈 자리
+  if (url) return <span className={className} data-scene={id} />
   return (
     <div className={`${className} p05-scene__ph`} data-scene={id} data-job={job}>
       <strong className="p05-scene__id">{id}</strong>
