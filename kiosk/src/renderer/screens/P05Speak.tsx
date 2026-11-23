@@ -50,7 +50,7 @@ import {
 } from '@shared/constants'
 import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
-import { COMMON, SCRIPTS, lineScene, sceneId, type LayeredScene } from '../p05/script'
+import { COMMON, SCRIPTS, lineScene, partnerOf, sceneId, type Kid, type LayeredScene, type Who } from '../p05/script'
 import {
   DING_URL,
   layerUrl,
@@ -107,6 +107,8 @@ interface View {
   scene: string
   /** 그림 안 자막 — 캐릭터가 지금 하는 말 */
   subtitle: string | null
+  /** 지금 말하는 아이 — 말풍선 꼬리가 그 아이를 가리킨다 */
+  who: Who | null
   big: Big | null
   mic: MicState
   progress: Progress
@@ -256,6 +258,7 @@ function SpeakFlow({
   const [view, setView] = useState<View>({
     scene: SCRIPTS[job].layered?.['00'] ? '00' : '01',
     subtitle: null,
+    who: null,
     big: null,
     mic: 'wait',
     progress: 'practice',
@@ -337,6 +340,9 @@ function SpeakFlow({
   async function flow(run: { alive: boolean }): Promise<void> {
     const recorder = recorderRef.current!
     const L = script.lines
+    /** 말하는 아이 — 이끔(문장을 들려주는 쪽) · 짝꿍(아이 편) */
+    const LEAD: Who = script.lead
+    const PARTNER: Who = partnerOf(script.lead)
     const byWordAge = ageGroup === '4'
     const older = ageGroup === '6+'
 
@@ -357,8 +363,8 @@ function SpeakFlow({
       }).then(check)
 
     /** 캐릭터 대사 하나 — 장면 + 자막 + 목소리(없으면 자막 시간만) */
-    async function say(scene: string, text: string, key: string): Promise<void> {
-      set({ scene, subtitle: text, mic: 'wait', step: key })
+    async function say(scene: string, text: string, key: string, who: Who): Promise<void> {
+      set({ scene, subtitle: text, who, mic: 'wait', step: key })
       await playClip(voiceUrl(job, key), subtitleMs(text)).done
       check()
       await sleep(BEAT_GAP_MS)
@@ -567,37 +573,37 @@ function SpeakFlow({
 
     // ── A · B · C — 인사 · 역할 · 임무 · 신호 설명 + 시범 ──
     set({ bar: { part: 'tutorial', done: 1 } })
-    await say('01', L.hello, 'hello')
+    await say('01', L.hello, 'hello', LEAD)
     set({ bar: { part: 'tutorial', done: 2 } })
-    await say('02', L.role, 'role')
+    await say('02', L.role, 'role', PARTNER)
     set({ bar: { part: 'tutorial', done: 3 } })
     // 임무 — 길면 자막 여러 개로 나뉜다 (진행 바는 한 칸 그대로)
     const mission = typeof L.mission === 'string' ? [{ text: L.mission }] : L.mission
     for (const [i, part] of mission.entries()) {
-      await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission')
+      await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission', LEAD)
     }
     set({ bar: { part: 'tutorial', done: 4 } })
-    await say('04', COMMON.signal, 'signal')
+    await say('04', COMMON.signal, 'signal', LEAD)
     // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다
     set({ mic: 'demo', step: 'signal:ding' })
     await playClip(DING_URL, 600).done
     check()
     await sleep(600)
     set({ bar: { part: 'tutorial', done: 5 } })
-    await say('05', COMMON.demo, 'demo')
+    await say('05', COMMON.demo, 'demo', PARTNER)
 
     // ── D · E — "준비 완료!" 연습 ──
     set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null }, bar: { part: 'tutorial', done: 6 } })
-    await say('06', COMMON.practice, 'practice')
+    await say('06', COMMON.practice, 'practice', LEAD)
     let voice = await practice()
     if (voice === 'silent') {
       // 한 번만 다시 — 또 무음이면 그냥 진행
-      await say('09', L.silent, 'silent')
+      await say('09', L.silent, 'silent', LEAD)
       voice = await practice()
     }
     if (voice !== 'silent') set({ bar: { part: 'tutorial', done: 7 } })
-    if (voice === 'loud') await say('07', L.loud, 'loud')
-    else if (voice === 'quiet') await say('08', L.quiet, 'quiet')
+    if (voice === 'loud') await say('07', L.loud, 'loud', PARTNER)
+    else if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER)
     set({ big: null })
 
     // ── F1 · G · F2 — 문장 2개 ──
@@ -605,7 +611,7 @@ function SpeakFlow({
     for (const turn of [0, 1] as const) {
       if (turn === 1) {
         set({ bar: { part: 'story', done: 3 } })
-        await say('12', L.bridge, 'bridge')
+        await say('12', L.bridge, 'bridge', PARTNER)
       }
 
       const line = scenario.turns[turn].line
@@ -613,7 +619,7 @@ function SpeakFlow({
       const words = byWord ? line.parts.map((p) => p.text) : [line.text]
       // 문장 바 — 연습이 끝나면 비워지고 새로 시작한다 (문장 ① = 1칸 · 문장 ② = 4칸)
       set({ progress: turn, big: { words, current: null }, bar: { part: 'story', done: turn === 0 ? 1 : 4 } })
-      await say(turn === 0 ? '10' : '13', COMMON.intro[turn][byWord ? 1 : 0], `intro${turn + 1}${byWord ? '-4' : ''}`)
+      await say(turn === 0 ? '10' : '13', COMMON.intro[turn][byWord ? 1 : 0], `intro${turn + 1}${byWord ? '-4' : ''}`, LEAD)
 
       const demoScene = lineScene(job, turn, older)
       const maxMs = byWord ? RECORD_MAX_WORD_MS : RECORD_MAX_LINE_MS
@@ -624,15 +630,15 @@ function SpeakFlow({
         if (byWord) set({ big: { words, current: p } })
 
         attemptsRef.current = []
-        await say(demoScene, text, key)
+        await say(demoScene, text, key, LEAD)
         const first = await attempt(at, maxMs)
         if (first) attemptsRef.current.push(first)
 
         // 첫 녹음이 통과하지 못했으면 다시 말하기 — 구간마다 1번만. 무음도 통과 못 함이다
         if (first && !passes(first)) {
-          await say('11', L.retry, 'retry')
-          await say('11', COMMON.retryLead, 'retry-lead')
-          await say(demoScene, text, key)
+          await say('11', L.retry, 'retry', PARTNER)
+          await say('11', COMMON.retryLead, 'retry-lead', LEAD)
+          await say(demoScene, text, key, LEAD)
           const second = await attempt(at, maxMs)
           if (second) attemptsRef.current.push(second)
         }
@@ -642,13 +648,13 @@ function SpeakFlow({
       if (byWord) set({ big: { words, current: null } })
       const n = cheer++ % COMMON.cheers.length
       set({ bar: { part: 'story', done: turn === 0 ? 2 : 5 } })
-      await say('07', COMMON.cheers[n]!, `cheer${n + 1}`)
+      await say('07', COMMON.cheers[n]!, `cheer${n + 1}`, PARTNER)
       set({ big: null })
     }
 
     // ── I — 마무리 → P-06 ──
     set({ bar: { part: 'story', done: 6 } })
-    await say('14', L.outro, 'outro')
+    await say('14', L.outro, 'outro', 'both')
     set({ step: 'leaving' })
     next()
   }
@@ -736,13 +742,7 @@ function SpeakFlow({
               <SceneFrame job={job} scene={view.scene} />
               <StepBar bar={view.bar} />
               {view.subtitle && (
-                <p
-                  className="p05-subtitle"
-                  key={view.step}
-                  data-long={view.subtitle.replace(/\s/g, '').length > SUBTITLE_LONG_CHARS}
-                >
-                  {view.subtitle}
-                </p>
+                <SpeechBubble key={view.step} text={view.subtitle} who={view.who} />
               )}
             </div>
 
@@ -1103,6 +1103,53 @@ function SpritePose({
         width: box.width * s,
       }}
     />
+  )
+}
+
+/**
+ * 그림 안 자막 = 말풍선 — 꼬리가 말하는 아이를 가리키고 테두리 색으로 한 번 더 구분한다 (2026-11-24).
+ *   여자아이 주황 · 남자아이 파랑 · 둘이 같이 보라(꼬리 두 개). 말풍선은 가운데 그대로 — 꼬리만 그 아이 쪽으로.
+ * 꼬리 자리는 인물이 서는 자리(CAST_CX)에서 계산한다 — 말풍선의 실제 폭을 재서 그 안에서의 자리로 바꾼다.
+ */
+function SpeechBubble({ text, who }: { text: string; who: Who | null }): ReactNode {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const [tails, setTails] = useState<number[]>([])
+  const long = text.replace(/\s/g, '').length > SUBTITLE_LONG_CHARS
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || !who) {
+      setTails([])
+      return
+    }
+    // 말풍선은 left 50% + translate -50% — 실제 왼쪽 끝 = offsetLeft − 폭/2 (그림 칸 기준)
+    const left = el.offsetLeft - el.offsetWidth / 2
+    const kids: Kid[] = who === 'both' ? ['girl', 'boy'] : [who]
+    const margin = 46 // 둥근 모서리에 걸리지 않게
+    setTails(
+      kids.map((k) =>
+        Math.min(el.offsetWidth - margin, Math.max(margin, CAST_CX[k] * FRAME_W - left)),
+      ),
+    )
+  }, [text, who])
+
+  return (
+    <p ref={ref} className="p05-subtitle" data-long={long} data-who={who ?? undefined}>
+      {tails.map((x, i) => (
+        <svg
+          key={i}
+          className="p05-subtitle__tail"
+          style={{ left: x }}
+          viewBox="0 0 36 24"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M3 24 L18 3 L33 24" />
+          <rect x="6" y="20" width="24" height="6" />
+        </svg>
+      ))}
+      {text}
+    </p>
   )
 }
 
