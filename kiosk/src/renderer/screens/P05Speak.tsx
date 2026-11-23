@@ -14,7 +14,7 @@
  *
  * 화면 (시안): 위 제목(직업마다) · 가운데 흰 카드 = [직업 이름 · 진행 점] + 장면 그림(넘어간다) + 그림 안 자막 + 그림 아래 큰 글씨
  *   큰 글씨 = 아이가 따라 말할 말 ("준비 완료!" · 그 문장 — 만 4세는 지금 어절을 진하게). 안내 대사 동안은 비운다.
- *   아래 알약 = 누르지 않는 마이크 표시 (시안의 [말하기 시작] 자리 — 버튼은 없앴다): 먼저 들어 봐요 → 지금 말해요!(반짝) → 잘 듣고 있어요
+ *   아래 알약 = 누르지 않는 마이크 표시 (시안의 [말하기 시작] 자리 — 버튼은 없앴다): 먼저 들어 봐요 → 녹음 중(빨간 마이크 + 실제 목소리 파형) → 잘 듣고 있어요
  *   마이크를 못 켜면 그 자리가 [다시 시도] 버튼이 된다 (직원용 — M-02 안내와 같이).
  *
  * ⚠️ CLAUDE.md 금지사항
@@ -47,7 +47,6 @@ import {
   SUBTITLE_MIN_MS,
   SUBTITLE_MS_PER_CHAR,
   VOICE_LOUD_DB,
-  VOICE_START_DB,
 } from '@shared/constants'
 import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
@@ -111,6 +110,13 @@ interface At {
 
 /** 화면을 떠나 흐름을 멈출 때 던진다 */
 class Stopped extends Error {}
+
+/** 녹음 중 파형 — 막대 수 · 한 막대의 시간 · 높이로 바꾸는 소리 크기 범위(dBFS) · 조용할 때 높이 */
+const WAVE_BARS = 21
+const WAVE_STEP_MS = 50
+const WAVE_MIN_DB = -60
+const WAVE_MAX_DB = -12
+const WAVE_FLOOR = 0.1
 
 /** M-02에 띄우는 문구 — 아이가 읽어도 무섭지 않게 */
 const MIC_MESSAGE = '마이크를 준비하고 있어요. 옆의 직원에게 알려주세요!'
@@ -232,10 +238,34 @@ function SpeakFlow({
 
   voiceForceRef.current = voiceForce
 
-  /** 소리 크기에 맞춰 마이크 반짝이를 움직인다 (다시 그리지 않고 CSS 변수만) */
+  /** 녹음 중 파형 — 막대마다 지나간 소리 크기 (오른쪽이 지금). 다시 그리지 않고 막대 높이만 바꾼다 */
+  const waveRef = useRef({ bars: new Array<number>(WAVE_BARS).fill(0), peak: FLOOR_DB, at: 0 })
+
+  function drawWave(): void {
+    const bars = micRef.current?.querySelectorAll<HTMLElement>('.p05-wave i')
+    bars?.forEach((el, i) => {
+      const h = Math.max(WAVE_FLOOR, waveRef.current.bars[i] ?? 0)
+      el.style.transform = `scaleY(${h.toFixed(3)})`
+    })
+  }
+
+  /** 소리 크기(dBFS · 20ms마다) → 50ms마다 가장 큰 값을 막대 하나로 */
   function paintLevel(db: number): void {
-    const lvl = Math.min(1, Math.max(0, (db - VOICE_START_DB) / (0 - VOICE_START_DB - 15)))
-    micRef.current?.style.setProperty('--lvl', lvl.toFixed(2))
+    const w = waveRef.current
+    w.peak = Math.max(w.peak, db)
+    const now = performance.now()
+    if (now - w.at < WAVE_STEP_MS) return
+    w.at = now
+    const h = Math.min(1, Math.max(0, (w.peak - WAVE_MIN_DB) / (WAVE_MAX_DB - WAVE_MIN_DB)))
+    w.peak = FLOOR_DB
+    w.bars.push(Math.sqrt(h))
+    w.bars.shift()
+    drawWave()
+  }
+
+  function resetWave(): void {
+    waveRef.current = { bars: new Array<number>(WAVE_BARS).fill(0), peak: FLOOR_DB, at: 0 }
+    drawWave()
   }
 
   /** 흐름을 멈추고 소리 · 마이크 · 타이머를 정리한다 (화면을 떠날 때 · [뒤로]) */
@@ -326,7 +356,7 @@ function SpeakFlow({
         result = await recorder.record({ maxMs, onLevel: paintLevel })
       } finally {
         muteClips(false)
-        paintLevel(FLOOR_DB)
+        resetWave()
       }
       check()
       if (result.end === 'cancel') throw new Stopped()
@@ -832,7 +862,13 @@ function MicPill({
     )
   }
   return (
-    <div className="p05-mic" data-state={state} ref={micRef} role="status">
+    <div className="p05-mic" data-state={state} ref={micRef} role="status" aria-label={MIC_LABEL[state]}>
+      {/* 녹음 중에는 글자 대신 실제 목소리 파형 — 소리가 들어가고 있는지 눈으로 본다 */}
+      <span className="p05-wave" aria-hidden="true">
+        {Array.from({ length: WAVE_BARS }, (_, i) => (
+          <i key={i} />
+        ))}
+      </span>
       <span className="p05-mic__label">
         {MIC_LABEL[state]}
         {state === 'listening' && (
@@ -844,7 +880,6 @@ function MicPill({
         )}
       </span>
       <span className="p05-mic__icon" aria-hidden="true">
-        <span className="p05-mic__ring" />
         <MicIcon />
       </span>
     </div>

@@ -362,7 +362,6 @@ img.p05-scene__art {
    ──────────────────────────────────────────────── */
 
 .p05-mic {
-  --lvl: 0;
   position: absolute;
   left: 634px;
   top: 926px;
@@ -413,15 +412,6 @@ img.p05-scene__art {
   height: 54px;
 }
 
-/* 소리 크기에 맞춰 퍼지는 고리 (--lvl 0 ~ 1 · 녹음 중에만) */
-.p05-mic__ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--d-coral);
-  opacity: 0;
-}
-
 /* 캐릭터가 말하는 중 — 조용히 기다린다 */
 .p05-mic[data-state='wait'] {
   opacity: 0.86;
@@ -433,40 +423,71 @@ img.p05-scene__art {
   -webkit-text-stroke-width: 0.6px;
 }
 
-/* 띵 · 녹음 중 — 빨갛게 반짝 */
+/* 띵 · 녹음 중 — 마이크가 빨갛게 켜진다 (깜빡이지 않는다 — 켜질 때 한 번 통 튈 뿐). 소리는 옆의 파형이 보여 준다 */
 .p05-mic[data-state='demo'] .p05-mic__icon,
 .p05-mic[data-state='live'] .p05-mic__icon {
   background: radial-gradient(circle at 35% 30%, #ff8a72, #f2412f 70%);
-  animation: p05-mic-glow 1s ease-in-out infinite;
+  box-shadow: 0 0 0 8px rgb(254 106 78 / 0.18);
+  animation: p05-mic-on 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
 
-.p05-mic[data-state='live'] {
-  box-shadow:
-    0 0 0 3px rgb(255 255 255 / 0.9),
-    0 0 0 calc(6px + var(--lvl) * 10px) rgb(254 106 78 / 0.35),
-    0 8px 22px rgb(var(--d-glow) / 0.35);
-}
-
-.p05-mic[data-state='live'] .p05-mic__ring {
-  opacity: calc(0.15 + var(--lvl) * 0.35);
-  transform: scale(calc(1.12 + var(--lvl) * 0.5));
-  transition:
-    transform 0.08s linear,
-    opacity 0.08s linear;
+@keyframes p05-mic-on {
+  from {
+    transform: scale(0.82);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 .p05-mic[data-state='live'] .p05-mic__label {
   color: #e2412c;
 }
 
-@keyframes p05-mic-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgb(254 106 78 / 0.55);
-  }
-  50% {
-    box-shadow: 0 0 0 18px rgb(254 106 78 / 0);
-  }
+/* ── 녹음 중 파형 — 실제 목소리 크기 (오른쪽이 지금 · 조용하면 가운데 줄만) ── */
+.p05-wave {
+  display: none;
+}
+
+.p05-mic[data-state='live'] {
+  padding-left: 44px;
+}
+
+.p05-mic[data-state='live'] .p05-mic__label {
+  display: none;
+}
+
+.p05-mic[data-state='live'] .p05-wave {
+  position: relative;
+  flex: 1 1 auto;
+  height: 92px;
+  margin-right: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 가운데 줄 */
+.p05-wave::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  background: rgb(242 65 47 / 0.3);
+}
+
+.p05-wave i {
+  position: relative;
+  width: 12px;
+  height: 92px;
+  border-radius: 6px;
+  background: #f2412f;
+  transform: scaleY(0.1);
+  transition: transform 0.09s linear;
 }
 
 /* 잘 듣고 있어요 — 연보라 · 점 세 개가 통통 */
@@ -553,7 +574,8 @@ img.p05-scene__art {
   .p05-scene__art.is-enter,
   .p05-scene__art.is-leave,
   .p05-mic__icon,
-  .p05-mic__dots i {
+  .p05-mic__dots i,
+  .p05-wave i {
     animation: none !important;
   }
 }
