@@ -160,6 +160,8 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '00': { bg: 'bg-moon', girl: 'girl-idle', boy: 'boy-explain' },
       // "안녕! 나는 우주 비행사야!" — 아이를 돌아보며 (엄지 척 · 허리에 손)
       '01': { bg: 'bg-moon', girl: 'girl-thumbsup', boy: 'boy-hips' },
+      // "나도 우주 비행사! 오늘 너는 우리 우주 대원이야!" — 남자아이가 별 배지를 내밀고, 여자아이는 박수
+      '02': { bg: 'bg-moon', girl: 'girl-clap', boy: 'boy-badge' },
     },
   },
 
