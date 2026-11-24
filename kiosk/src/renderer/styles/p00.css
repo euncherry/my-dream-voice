@@ -89,11 +89,35 @@
   font-family: var(--d-font-display);
   color: var(--d-navy);
   cursor: pointer;
+  /* 말랑한 버튼 (2026-11-24 요청 — 마시멜로처럼 띠용) — 아래쪽(85%)을 축으로 눌리고 튀어 오른다.
+     놓을 때의 출렁임은 P00Attract.tsx(bounce)가 Web Animations로 한다 */
+  transform-origin: 50% 85%;
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.p00-start:disabled {
-  opacity: 0.75;
+/* 마우스를 올리면 살짝 떠오른다 — 터치 화면에선 누른 뒤 떠 있는 채로 남지 않게 마우스가 있을 때만 */
+@media (hover: hover) {
+  .p00-start:hover:not(:disabled, .is-pressed) {
+    transform: translateY(-5px) scale(1.03);
+  }
 }
+
+/* 누르는 동안 — 옆으로 퍼지고 위아래로 눌린다. 그림자도 바짝 붙는다 */
+.p00-start.is-pressed {
+  transform: translateY(3px) scale(1.05, 0.9);
+  box-shadow:
+    inset 0 -5px 6px rgb(var(--d-glow) / 0.2),
+    inset 0 12px 18px -4px rgb(var(--d-glow) / 0.16),
+    0 3px 5px -1px rgb(var(--d-glow) / 0.25),
+    0 7px 12px -4px rgb(var(--d-glow) / 0.9);
+  transition-duration: 0.12s;
+}
+
+/* 세션을 여는 동안(눌린 뒤 넘어가기 전) — 흐리게 하지 않는다: 출렁이는 중에 색이 빠지면 어색하다 */
 
 .p00-start__label {
   /* 학교안심 둥근미소는 글자가 줄 상자 가운데보다 조금 위에 놓인다 — 2px 내려 동그라미와 가운데를 맞춘다 */

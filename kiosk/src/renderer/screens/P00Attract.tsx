@@ -25,6 +25,16 @@ import starCoralUrl from '../assets/deco/star-coral.png'
 import starYellowUrl from '../assets/deco/star-yellow.png'
 import '../styles/p00.css'
 
+/** 누를 때 찌그러지는 비율 (가로 · 세로) — styles/p00.css `.p00-start.is-pressed`와 같은 값 */
+const PRESS_X = 1.05
+const PRESS_Y = 0.9
+/** 놓은 뒤 출렁임 전체 길이 */
+const BOUNCE_MS = 650
+/** 다음 화면으로 넘어가기 전 최소한 기다리는 시간 — 크게 한 번 튀어 오르고 돌아오는 데까지 */
+const BOUNCE_WAIT_MS = 420
+
+const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
+
 export function P00Attract(): ReactNode {
   const beginSession = useSession((s) => s.beginSession)
   const next = useSession((s) => s.next)
@@ -32,6 +42,7 @@ export function P00Attract(): ReactNode {
   const [error, setError] = useState<string | null>(null)
   // busy 상태는 다음 렌더에야 바뀐다 — 연달아 들어오는 터치는 ref로 바로 막는다
   const startingRef = useRef(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   async function start(): Promise<void> {
     if (startingRef.current) return
@@ -40,7 +51,8 @@ export function P00Attract(): ReactNode {
     setError(null)
     try {
       // 이전 세션 정리 · 세션 폴더 발급은 메인이 한다 (스토어가 window.api로 요청)
-      await beginSession()
+      // 버튼이 띠용 튀어 오르는 걸 보고 넘어가도록 출렁임 앞부분만큼은 기다린다
+      await Promise.all([beginSession(), wait(BOUNCE_WAIT_MS)])
       // 기다리는 사이 개발용 화면 이동(DevBar)으로 화면이 바뀌었으면 넘기지 않는다
       if (useSession.getState().screen === 'P-00') next()
     } catch (e) {
@@ -52,10 +64,42 @@ export function P00Attract(): ReactNode {
     }
   }
 
+  /** 누르는 동안 버튼이 눌린 모양 — 화면 어디를 눌러도 [시작하기]가 반응한다 (터치 영역이 화면 전체라서) */
+  function press(): void {
+    if (startingRef.current) return
+    buttonRef.current?.classList.add('is-pressed')
+  }
+
+  /** 놓으면 마시멜로처럼 출렁이며 제자리로 — 늘어났다 줄었다를 점점 작게 되풀이한다 */
+  function release(): void {
+    const el = buttonRef.current
+    if (!el?.classList.contains('is-pressed')) return
+    el.classList.remove('is-pressed')
+    const dx = PRESS_X - 1
+    const dy = 1 - PRESS_Y
+    el.animate(
+      [
+        { transform: `translateY(3px) scale(${PRESS_X}, ${PRESS_Y})` },
+        { transform: `translateY(-8px) scale(${1 - dx * 0.7}, ${1 + dy * 0.7})` },
+        { transform: `translateY(0) scale(${1 + dx * 0.35}, ${1 - dy * 0.35})` },
+        { transform: `translateY(-2px) scale(${1 - dx * 0.15}, ${1 + dy * 0.15})` },
+        { transform: 'translateY(0) scale(1, 1)' },
+      ],
+      { duration: BOUNCE_MS, easing: 'ease-out' },
+    )
+  }
+
   return (
     <Screen id="P-00" designed>
       {/* 터치 영역 — 화면 어디를 눌러도 클릭이 여기로 올라와 start()가 한 번 불린다 */}
-      <div className="p00" onClick={() => void start()}>
+      <div
+        className="p00"
+        onClick={() => void start()}
+        onPointerDown={press}
+        onPointerUp={release}
+        onPointerLeave={release}
+        onPointerCancel={release}
+      >
         <Stage background={skyUrl}>
           <img className="p00-logo-en" src={logoEnUrl} alt="MY DREAM VOICE" draggable={false} />
 
@@ -77,7 +121,7 @@ export function P00Attract(): ReactNode {
           <p className="p00-tagline">꿈을 찍고, 목소리를 담아요</p>
 
           {/* 핸들러를 따로 달지 않는다 — 누르면 클릭이 바깥 터치 영역으로 올라간다 (두 번 불리지 않게) */}
-          <button type="button" className="p00-start" disabled={busy}>
+          <button type="button" className="p00-start" disabled={busy} ref={buttonRef}>
             <span className="p00-start__label">시작하기</span>
             <span className="p00-start__arrow" aria-hidden="true">
               <svg viewBox="0 0 48 48" width="100%" height="100%">
