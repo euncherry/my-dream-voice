@@ -81,7 +81,7 @@ src/
 │   └── styles/          tokens.css(임시 톤 + 디자인 토큰 --d-*) · app.css(공통) · design.css(디자인 화면 공통 부품) · 화면별 CSS
 └── shared/              메인·렌더러 공용
     ├── types.ts         IPC 계약 · 세션 모델 · 서버로 보내는 데이터
-    ├── jobs.ts          직업 6종 · 연령 구간(만 4 · 5 · 6+) · 시나리오 데이터(타깃 문장 2개 · 어절) · 녹음 멘트
+    ├── jobs.ts          직업 6종 · 연령 구간(만 4 · 5 · 6+) · 시나리오 데이터(연령마다 다른 타깃 문장 2개 — 2026-11-24 어절 끊기 없앰) · 녹음 멘트
     └── constants.ts     설치처 · 네컷 규격과 칸 좌표(임시) · 시간 값
 ```
 
@@ -92,7 +92,7 @@ src/
 
 ```
 audio/   01_police.wav · 02_police.wav     16kHz 모노 16bit — 타깃 문장 순번
-         01-2_police.wav                   만 4세는 어절 순번을 붙인다
+         (01-2_police.wav                  만 4세 어절 순번 — 2026-11-24 어절 끊기를 없애 지금은 안 생긴다)
          01_police_retry.wav               다시 말한 녹음 (판단 직후 안 쓰는 쪽을 지운다)
 photo/   cut_01.jpg ... cut_04.jpg         카메라 원본
 video/   capture.webm                      촬영 장면 영상 (P-07 재생용 — 서버로 보내지 않는다)

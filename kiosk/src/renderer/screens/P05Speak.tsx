@@ -11,10 +11,10 @@
  *     작게 · 무음은 캐릭터가 "내가 다시 해 볼게! 준비 완료!" 하고 크게 시범을 보인 뒤 넘어간다 (아이에게 다시 시키지 않는다)
  *   → F1 문장 ① (소개 → 이끔이 문장 시범 → 띵 → 녹음 → "잘 듣고 있어요" → 응원, 또는 다시 말하기 1회)
  *   → G 이어 주기 → F2 문장 ② → I 마무리 → P-06
- *   만 4세는 F에서 어절마다 [시범 → 띵 → 녹음]을 되풀이한다 (다시 말하기도 어절마다 1회).
+ *   어느 나이든 문장을 한 번에 말한다 (2026-11-24 만 4세 어절 끊기 없앰 — 대신 만 4 · 5 · 6세 이상 문장이 다 다르다).
  *
  * 화면 (시안): 위 제목(직업마다) · 가운데 흰 카드 = [직업 이름 · 진행 점] + 장면 그림(넘어간다) + 그림 안 자막 + 그림 아래 큰 글씨
- *   큰 글씨 = 아이가 따라 말할 말 ("준비 완료!" · 그 문장 — 만 4세는 지금 어절을 진하게). 안내 대사 동안은 비운다.
+ *   큰 글씨 = 아이가 따라 말할 말 ("준비 완료!" · 그 문장). 안내 대사 동안은 비운다.
  *   아래 알약 = 누르지 않는 마이크 표시 (시안의 [말하기 시작] 자리 — 버튼은 없앴다): 먼저 들어 봐요 → 녹음 중(빨간 마이크 + 실제 목소리 파형) → 잘 듣고 있어요
  *   마이크를 못 켜면 그 자리가 [다시 시도] 버튼이 된다 (직원용 — M-02 안내와 같이).
  *
@@ -344,7 +344,6 @@ function SpeakFlow({
     /** 말하는 아이 — 이끔(문장을 들려주는 쪽) · 짝꿍(아이 편) */
     const LEAD: Who = script.lead
     const PARTNER: Who = partnerOf(script.lead)
-    const byWordAge = ageGroup === '4'
     const older = ageGroup === '6+'
 
     const check = (): void => {
@@ -615,23 +614,21 @@ function SpeakFlow({
       }
 
       const line = scenario.turns[turn].line
-      const byWord = byWordAge && line.parts.length > 1
-      const words = byWord ? line.parts.map((p) => p.text) : [line.text]
       // 문장 바 — 연습이 끝나면 비워지고 새로 시작한다 (문장 ① = 1칸 · 문장 ② = 4칸)
-      set({ progress: turn, big: { words, current: null }, bar: { part: 'story', done: turn === 0 ? 1 : 4 } })
-      await say(turn === 0 ? '10' : '13', COMMON.intro[turn][byWord ? 1 : 0], `intro${turn + 1}${byWord ? '-4' : ''}`, LEAD)
+      set({ progress: turn, big: { words: [line.text], current: null }, bar: { part: 'story', done: turn === 0 ? 1 : 4 } })
+      await say(turn === 0 ? '10' : '13', COMMON.intro[turn], `intro${turn + 1}`, LEAD)
 
       const demoScene = lineScene(job, turn, older)
-      const maxMs = byWord ? RECORD_MAX_WORD_MS : RECORD_MAX_LINE_MS
+      // 구간은 늘 하나(문장 전체)다 — 구간 모양은 녹음 · 리포트 데이터와 맞추려고 그대로 둔다
       for (let p = 0; p < line.parts.length; p++) {
         const at: At = { turn, part: p }
         const text = line.parts[p]!.text
-        const key = byWord ? `line${turn + 1}-w${p + 1}` : `line${turn + 1}${older ? '-6' : ''}`
-        if (byWord) set({ big: { words, current: p } })
+        // 문장 목소리 파일 — 나이마다 문장이 다르다: line1-4 · line1-5 · line1-6
+        const key = `line${turn + 1}-${ageGroup === '6+' ? '6' : ageGroup}`
 
         attemptsRef.current = []
         await say(demoScene, text, key, LEAD)
-        const first = await attempt(at, maxMs)
+        const first = await attempt(at, RECORD_MAX_LINE_MS)
         if (first) attemptsRef.current.push(first)
 
         // 첫 녹음이 통과하지 못했으면 다시 말하기 — 구간마다 1번만. 무음도 통과 못 함이다
@@ -639,13 +636,12 @@ function SpeakFlow({
           await say('11', L.retry, 'retry', PARTNER)
           await say('11', COMMON.retryLead, 'retry-lead', LEAD)
           await say(demoScene, text, key, LEAD)
-          const second = await attempt(at, maxMs)
+          const second = await attempt(at, RECORD_MAX_LINE_MS)
           if (second) attemptsRef.current.push(second)
         }
         await finishPart(at)
       }
 
-      if (byWord) set({ big: { words, current: null } })
       const n = cheer++ % COMMON.cheers.length
       set({ bar: { part: 'story', done: turn === 0 ? 2 : 5 } })
       await say('07', COMMON.cheers[n]!, `cheer${n + 1}`, PARTNER)

@@ -129,7 +129,7 @@ export const DING_TO_RECORD_MS = 150
 
 /**
  * 녹음 최대 시간 — 아예 말이 없을 때 여기서 끝난다 (시나리오 §0 · ⚠️ 임시 — SPEC T-19).
- * 어절 = 만 4세 어절 · "준비 완료!" 연습 / 문장 = 만 5 · 6세 문장
+ * 어절 = "준비 완료!" 연습 / 문장 = 따라 말할 문장 (2026-11-24 만 4세도 문장 — 어절 끊기 없앰)
  */
 export const RECORD_MAX_WORD_MS = 4_000
 export const RECORD_MAX_LINE_MS = 6_000

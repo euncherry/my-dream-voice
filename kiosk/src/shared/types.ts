@@ -48,6 +48,8 @@ export type TargetSound = 'ㅅ' | 'ㅆ' | 'ㄹ'
 export type ContentSource =
   /** SPEC.md에 적힌 예시 문장 (자문 전 — T-3) */
   | 'spec'
+  /** 발화 대사 자문 자료에서 받은 문장 (2026-11-24 — 지금은 우주비행사만) */
+  | 'expert'
   /** 흐름도 구성 스케치에 적힌 예시 (임시) */
   | 'sketch'
   /** 시나리오 초안의 후보 문장 (docs/P05_SCENARIO.md — 전문가 확인 전 · T-3) */
@@ -55,7 +57,7 @@ export type ContentSource =
   /** ⚠️ 미확정 — 화면에 PLACEHOLDER로 보인다 */
   | 'placeholder'
 
-/** 따라 말하는 한 구간 — 만 5 · 6+는 문장 전체, 만 4세는 어절 */
+/** 따라 말하는 한 구간 — 지금은 늘 문장 전체 (2026-11-24 만 4세 어절 끊기 없앰 · 모양은 그대로 둔다) */
 export interface LinePart {
   text: string
 }
@@ -223,7 +225,7 @@ export interface SpeechPart {
 export interface SpeechLine {
   /** 타깃 문장 */
   line: string
-  /** 만 5 · 6+는 1개, 만 4세는 어절마다 */
+  /** 지금은 늘 1개 (문장 전체 — 2026-11-24 만 4세 끊기 없앰) */
   parts: SpeechPart[]
 }
 
