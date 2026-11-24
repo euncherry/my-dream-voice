@@ -394,13 +394,6 @@ export function P06Capture(): ReactNode {
               />
             )}
 
-            {phase === 'countdown' && (
-              <div className="p06-count">
-                <span className="p06-count__num">{count}</span>
-                <span className="p06-count__text">{count}초 뒤에 찍어요</span>
-              </div>
-            )}
-
             {(phase === 'countdown' || phase === 'shutter') && (
               <div className="p06-pose">
                 <PlaceholderTag label="포즈 가이드 아트 미제작" />
@@ -442,6 +435,12 @@ export function P06Capture(): ReactNode {
           <p className="p06-progress">
             {cutNo} / {CUT_COUNT}
           </p>
+
+          {/* 카운트다운 — 라이브뷰를 가리지 않게 오른쪽에 (2026-11-24 지정). 자리는 늘 잡아 둬 미리보기가 들썩이지 않게 */}
+          <div className="p06-count" data-on={phase === 'countdown'} aria-hidden={phase !== 'countdown'}>
+            <span className="p06-count__num">{phase === 'countdown' ? count : ''}</span>
+            <span className="p06-count__text">{count}초 뒤에 찍어요</span>
+          </div>
 
           <div className="p06-frame">
             <FramePreview job={job} shots={frameShots} activeCell={activeCell} />

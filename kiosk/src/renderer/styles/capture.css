@@ -49,16 +49,17 @@
   transform: scaleX(-1);
 }
 
-/* 카운트다운 — 큰 숫자 + "N초 뒤에 찍어요" */
+/* 카운트다운 — 큰 숫자 + "N초 뒤에 찍어요". 오른쪽 영역에 둔다 — 라이브뷰(미리보기)를 가리지 않게 (2026-11-24) */
 .p06-count {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--gap-sm);
+  gap: var(--gap-xs);
   pointer-events: none;
+}
+
+.p06-count[data-on='false'] {
+  visibility: hidden;
 }
 
 .p06-count__num {
@@ -67,8 +68,8 @@
   width: 1.6em;
   height: 1.6em;
   border-radius: 50%;
-  background: rgba(6, 8, 12, 0.6);
-  font-size: 18cqh;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 72px;
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -77,7 +78,7 @@
 .p06-count__text {
   padding: var(--gap-xs) var(--gap-md);
   border-radius: 999px;
-  background: rgba(6, 8, 12, 0.6);
+  background: rgba(255, 255, 255, 0.12);
   font-size: var(--fs-heading);
   font-weight: 700;
 }
