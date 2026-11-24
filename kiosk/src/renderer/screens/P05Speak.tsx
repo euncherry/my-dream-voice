@@ -1140,12 +1140,15 @@ function SpeechBubble({ text, who }: { text: string; who: Who | null }): ReactNo
           key={i}
           className="p05-subtitle__tail"
           style={{ left: x }}
-          viewBox="0 0 36 24"
+          viewBox="0 0 70 50"
           aria-hidden="true"
           focusable="false"
         >
-          <path d="M3 24 L18 3 L33 24" />
-          <rect x="6" y="20" width="24" height="6" />
+          {/* 픽셀 그대로(70×50) — y 42~46이 말풍선 테두리(4px) 자리.
+              ① 흰 면이 꼬리 안쪽과 그 아래 테두리를 지워 말풍선 안과 하나로 잇고
+              ② 선은 테두리 한가운데(y 44)에서 둥글게 끝나 테두리 선에 그대로 녹아든다 */}
+          <path className="p05-subtitle__tail-fill" d="M4 44 L35 4 L66 44 L66 47 L4 47 Z" />
+          <path className="p05-subtitle__tail-line" d="M4 44 L35 4 L66 44" />
         </svg>
       ))}
       {text}

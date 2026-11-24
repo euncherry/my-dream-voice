@@ -358,24 +358,25 @@ img.p05-scene__art--pop {
 /* 꼬리 — 위로 솟아 말하는 아이를 가리킨다. 아래쪽 흰 띠가 말풍선 테두리를 덮어 한 몸처럼 이어진다 */
 .p05-subtitle__tail {
   position: absolute;
-  /* 아이들이 한눈에 보게 크게 — 아래 4px는 말풍선 테두리에 겹쳐 이음새를 덮는다 */
-  top: -41px;
+  /* 아이들이 한눈에 보게 크게. 그림 크기 = viewBox(70×50) 그대로 — 위치는 안쪽(패딩 상자) 위 끝 기준이라
+     맨 아래 4px(y 46~50)는 말풍선 안, 그 위 4px(y 42~46)가 테두리 자리 */
+  top: -46px;
   width: 70px;
-  height: 46px;
+  height: 50px;
   translate: -50% 0;
   overflow: visible;
 }
 
-.p05-subtitle__tail path {
+.p05-subtitle__tail-fill {
   fill: #fff;
-  stroke: var(--who);
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-  stroke-linejoin: round;
 }
 
-.p05-subtitle__tail rect {
-  fill: #fff;
+.p05-subtitle__tail-line {
+  fill: none;
+  stroke: var(--who);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 /* 긴 대사 — 글자를 줄이고 폭을 넓혀 두 줄 안에 (그림을 덜 가리게) */
