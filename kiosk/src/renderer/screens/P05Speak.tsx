@@ -595,19 +595,14 @@ function SpeakFlow({
     // ── D · E — "준비 완료!" 연습 ──
     set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null }, bar: { part: 'tutorial', done: 6 } })
     await say('06', COMMON.practice, 'practice', LEAD)
-    let voice = await practice()
-    // 작거나 무음이면 한 번만 다시 (2026-11-24 — 작을 때도 다시: 크게 외쳐 보고 넘어가게).
-    // 두 번째는 크기와 상관없이 칭찬하고 넘어간다 — 또 무음이면 반응 없이 진행. 진행 바는 다시 하기로 넘기지 않는다
-    if (voice !== 'loud') {
-      if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER)
-      else await say('09', L.silent, 'silent', LEAD)
-      voice = await practice()
-      if (voice === 'quiet') voice = 'loud'
-    }
-    if (voice === 'loud') {
-      set({ bar: { part: 'tutorial', done: 7 } })
-      await say('07', L.loud, 'loud', PARTNER)
-    }
+    // 연습은 한 번만 — 작거나 무음이어도 다시 시키지 않는다 (2026-11-24 사용자 결정).
+    // 반응만 하고 넘어간다: 작게 · 무음이면 캐릭터가 "내가 다시 해 볼게! 준비 완료!" 하고 크게 시범을 보인다
+    // TODO(목소리 게이지): 작게 · 무음 반응 끝에 캐릭터 외침과 함께 게이지가 꽉 차오르게 (docs/P05_SCENARIO.md 우주비행사)
+    const voice = await practice()
+    set({ bar: { part: 'tutorial', done: 7 } })
+    if (voice === 'loud') await say('07', L.loud, 'loud', PARTNER)
+    else if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER)
+    else await say('09', L.silent, 'silent', LEAD)
     set({ big: null })
 
     // ── F1 · G · F2 — 문장 2개 ──
