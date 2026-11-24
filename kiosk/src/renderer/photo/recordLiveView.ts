@@ -10,7 +10,7 @@
  *  - 기기 안에만 둔다 — 서버로 보내지 않고, 체험이 끝나면 세션 폴더째 지워진다 (CLAUDE.md 금지사항 4).
  *    이 파일은 Blob만 만든다. 저장은 화면이 window.api.video.save로 메인에 맡긴다.
  *  - 소리는 녹음하지 않는다 (영상 트랙뿐이다)
- *  - 화면에 보이는 것과 같은 가운데 잘라내기(CELL_ASPECT)로, **좌우 반전하지 않은 원본 방향**으로 담는다.
+ *  - 화면에 보이는 것과 같은 가운데 잘라내기(cellAspect — 고른 직업 프레임의 칸 비율)로, **좌우 반전하지 않은 원본 방향**으로 담는다.
  *    거울처럼 보여 주는 것은 재생하는 쪽(P-07)이 한다
  *  - ⚠️ 녹화는 덤이다. 지원하지 않거나 캔버스가 잠기면(SecurityError) 조용히 영상 없이 간다.
  *    촬영 · 카운트다운을 막거나 늦추지 않도록, 여기의 어떤 함수도 예외를 던지거나 거절하지 않는다
@@ -22,7 +22,6 @@
  * TODO(디자인): 영상 길이 · 구간(컷마다 몇 초만 담을지 등)은 디자인 때 정한다 (PAGE_SPEC P-06)
  */
 
-import { CELL_ASPECT } from './composeFourCut'
 
 /** 녹화 폭 상한(px) — 라이브뷰가 더 작으면 그 크기를 쓴다 */
 const MAX_WIDTH = 960
@@ -62,9 +61,10 @@ function pickMimeType(): string | null {
 function coverCrop(
   width: number,
   height: number,
+  aspect: number,
 ): { sx: number; sy: number; sw: number; sh: number } {
-  const sw = Math.min(width, height * CELL_ASPECT)
-  const sh = Math.min(height, width / CELL_ASPECT)
+  const sw = Math.min(width, height * aspect)
+  const sh = Math.min(height, width / aspect)
   return { sx: (width - sw) / 2, sy: (height - sh) / 2, sw, sh }
 }
 
@@ -85,6 +85,8 @@ function even(n: number): number {
  */
 export function startLiveViewRecording(
   img: HTMLImageElement,
+  /** 담을 비율 — 사진 칸의 가로 ÷ 세로 (composeFourCut.cellAspect) */
+  aspect: number,
   onStatus?: (status: 'recording' | 'failed') => void,
 ): LiveViewRecording | null {
   const picked = pickMimeType()
@@ -145,7 +147,7 @@ export function startLiveViewRecording(
     const { naturalWidth, naturalHeight } = img
     if (!naturalWidth || !naturalHeight) return
     try {
-      const { sx, sy, sw, sh } = coverCrop(naturalWidth, naturalHeight)
+      const { sx, sy, sw, sh } = coverCrop(naturalWidth, naturalHeight, aspect)
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
     } catch {
       /* 이번 장만 건너뛴다 (스트림이 잠깐 끊긴 경우 등) */
@@ -158,11 +160,11 @@ export function startLiveViewRecording(
     if (!naturalWidth || !naturalHeight) return // 아직 첫 프레임 전
 
     try {
-      const { sw } = coverCrop(naturalWidth, naturalHeight)
+      const { sw } = coverCrop(naturalWidth, naturalHeight, aspect)
       const width = even(Math.min(MAX_WIDTH, sw))
       canvas = document.createElement('canvas')
       canvas.width = width
-      canvas.height = even(width / CELL_ASPECT)
+      canvas.height = even(width / aspect)
       ctx = canvas.getContext('2d', { alpha: false })
       if (!ctx) throw new Error('2D 컨텍스트를 만들 수 없습니다')
 

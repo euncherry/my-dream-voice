@@ -5,7 +5,7 @@
  * 근거: PAGE_SPEC P-04 · P-06 · SPEC §4-1 · 구성 스케치 docs/user-flow/wf/p04-job.svg · print.svg
  *
  * 인쇄되는 네컷(photo/composeFourCut.ts)을 화면에 작게 옮긴 것이다 — 캔버스가 아니라 DOM/CSS 로 그린다.
- * 칸 · 띠 위치는 FOURCUT 좌표를 % 로 바꿔 놓으므로 좌표를 다시 적지 않는다.
+ * 칸 · 띠 위치는 FOURCUT 좌표(칸은 직업 프레임마다 — cellsFor)를 % 로 바꿔 놓으므로 좌표를 다시 적지 않는다.
  *
  * 프레임 아트(public/frames/<jobId>.png — 직업마다 어느 파일인지는 composeFourCut.ts 의 FRAME_FILE · 2026-11-23 직업별 6장)가
  * 있으면 사진 위에 얹고,
@@ -18,7 +18,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { FOURCUT, type Rect } from '@shared/constants'
 import { JOB_BY_ID, jobLabel } from '@shared/jobs'
 import type { JobId } from '@shared/types'
-import { PLACEHOLDER_FRAME_COPY, loadFrameArt, peekFrameArt } from './composeFourCut'
+import { PLACEHOLDER_FRAME_COPY, cellsFor, loadFrameArt, peekFrameArt } from './composeFourCut'
 import '../styles/frame.css'
 
 const pct = (value: number, of: number): string => `${(value / of) * 100}%`
@@ -34,7 +34,6 @@ function place(rect: Rect): CSSProperties {
 }
 
 const FRAME_RATIO = `${FOURCUT.width} / ${FOURCUT.height}`
-const CELL_STYLES: CSSProperties[] = FOURCUT.cells.map(place)
 const STRIP_STYLE: CSSProperties = place(FOURCUT.strip)
 
 export function FramePreview({
@@ -66,7 +65,8 @@ export function FramePreview({
   // undefined = 아직 확인 전 (한 번 확인한 직업은 peekFrameArt 로 첫 그림부터 맞게 나온다)
   const art = loaded?.job === job ? loaded.art : peekFrameArt(job)
   const kind = art === undefined ? 'pending' : art ? 'art' : 'placeholder'
-  const activeStyle = activeCell === undefined ? undefined : CELL_STYLES[activeCell]
+  const cellStyles = cellsFor(job).map(place)
+  const activeStyle = activeCell === undefined ? undefined : cellStyles[activeCell]
 
   const style = {
     aspectRatio: FRAME_RATIO,
@@ -81,7 +81,7 @@ export function FramePreview({
       aria-label={`${jobLabel(job)} 프레임`}
       style={style}
     >
-      {CELL_STYLES.map((cellStyle, i) => {
+      {cellStyles.map((cellStyle, i) => {
         const shot = shots?.[i]
         return (
           <div key={i} className="frame__cell" style={cellStyle}>

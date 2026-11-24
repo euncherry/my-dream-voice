@@ -28,7 +28,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { DevStrip, PlaceholderTag, Screen } from '../components/Screen'
 import { useSession } from '../store/session'
-import { composeFourCut, composePlaceholderFourCut, frameArtSrc } from '../photo/composeFourCut'
+import { cellAspect, cellsFor, composeFourCut, composePlaceholderFourCut, frameArtSrc } from '../photo/composeFourCut'
 import { FramePreview } from '../photo/FramePreview'
 import { startLiveViewRecording, type LiveViewRecording } from '../photo/recordLiveView'
 import { CAPTURE_INTERVAL_SEC, CUT_COUNT, FOURCUT } from '@shared/constants'
@@ -158,9 +158,9 @@ export function P06Capture(): ReactNode {
       return
     }
     const img = liveImgRef.current
-    if (!img) return
+    if (!img || !job) return
 
-    const recording = startLiveViewRecording(img, setRecState)
+    const recording = startLiveViewRecording(img, cellAspect(job), setRecState)
     recordingRef.current = recording
     setRecState(recording ? 'waiting' : 'unsupported')
 
@@ -170,7 +170,7 @@ export function P06Capture(): ReactNode {
       if (recordingRef.current === recording) recordingRef.current = null
       setRecState('idle')
     }
-  }, [liveUrl, liveCors])
+  }, [liveUrl, liveCors, job])
 
   // ── 촬영 ──
   useEffect(() => {
@@ -353,7 +353,7 @@ export function P06Capture(): ReactNode {
    * 라이브뷰 칸 = 지금 찍는 사진 칸 — 비율도 그 칸에 맞춘다 (칸마다 조금씩 다르다).
    * 그 칸 둘레의 프레임을 라이브뷰 위에 겹쳐서, 인쇄될 모습 그대로 보이게 한다 (2026-11-23 지정)
    */
-  const liveCell = FOURCUT.cells[activeCell >= 0 ? activeCell : 0]!
+  const liveCell = cellsFor(job)[activeCell >= 0 ? activeCell : 0]!
   const frameOver = {
     '--fx': liveCell.x / liveCell.width,
     '--fy': liveCell.y / liveCell.width,

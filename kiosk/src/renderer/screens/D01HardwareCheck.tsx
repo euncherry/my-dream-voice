@@ -48,7 +48,8 @@ import type {
  * 네컷 인쇄에 필요한 사진 칸 1개 크기 — 카메라 프리뷰 해상도를 견주는 기준.
  * ⚠️ 칸 좌표는 임시값이다 (가로 칸 726×546 — 디자이너 값이 오면 constants.ts만 바뀐다 · SPEC §4-1)
  */
-const CUT = FOURCUT.cells[0]!
+/** 가장 큰 사진 칸 — 직업 프레임마다 칸이 다를 수 있어(FOURCUT.cellsByJob) 그중 세로가 가장 긴 것으로 잰다 */
+const CUT = [...FOURCUT.cells, ...Object.values(FOURCUT.cellsByJob).flat()].reduce((a, b) => (b.height > a.height ? b : a))
 
 interface Recorded {
   path: string

@@ -53,6 +53,19 @@ export const FOURCUT = {
   ] as readonly Rect[],
   /** 오른쪽 세로 띠 — 로고 자리 */
   strip: { x: 1562, y: 62, width: 220, height: 1116 } as Rect,
+  /**
+   * 칸 자리가 다른 프레임 — 직업 id → 칸 4개 (없으면 위 cells).
+   * 우주비행사 (2026-11-24 새 프레임 · 노란 격자 · 띠 없음): 투명 칸 네 개가 모두 762×561 —
+   * 그림에서 잰 구멍(59,52 · 835,52 · 59,627 · 835,627)에 둘레 3px을 더했다.
+   */
+  cellsByJob: {
+    astronaut: [
+      { x: 56, y: 49, width: 768, height: 567 },
+      { x: 832, y: 49, width: 768, height: 567 },
+      { x: 56, y: 624, width: 768, height: 567 },
+      { x: 832, y: 624, width: 768, height: 567 },
+    ],
+  } as Readonly<Record<string, readonly Rect[]>>,
 } as const
 
 /** 촬영 컷 수 */

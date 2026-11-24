@@ -22,8 +22,19 @@ import { FOURCUT, type Rect } from '@shared/constants'
 import { JOB_BY_ID, jobLabel } from '@shared/jobs'
 import type { JobId } from '@shared/types'
 
+/**
+ * 그 직업 프레임의 사진 칸 4개 — 프레임마다 칸 자리가 다를 수 있다 (FOURCUT.cellsByJob · 없으면 FOURCUT.cells).
+ * 합성 · 미리보기(FramePreview) · 촬영 라이브뷰(P-06) · 촬영 장면 녹화가 모두 이것을 쓴다.
+ */
+export function cellsFor(job: JobId): readonly Rect[] {
+  return FOURCUT.cellsByJob[job] ?? FOURCUT.cells
+}
+
 /** 사진 칸 가로 ÷ 세로 — P-06 촬영 프리뷰가 이 비율로 잘라 보여 줘야 인쇄물과 같은 구도가 된다 */
-export const CELL_ASPECT: number = FOURCUT.cells[0]!.width / FOURCUT.cells[0]!.height
+export function cellAspect(job: JobId): number {
+  const cell = cellsFor(job)[0]!
+  return cell.width / cell.height
+}
 
 // ────────────────────────────────────────────────────────────
 // 프레임 아트 (있으면 쓰고, 없으면 placeholder)
@@ -204,7 +215,7 @@ function newCanvas(): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D
 
 /**
  * 칸을 꽉 채우도록 가운데를 잘라 그린다 (CSS object-fit: cover 와 같은 결과).
- * 카메라 원본은 3:2 — 칸 비율(CELL_ASPECT)과 다른 만큼 위아래나 좌우가 잘린다.
+ * 카메라 원본은 3:2 — 칸 비율(cellAspect)과 다른 만큼 위아래나 좌우가 잘린다.
  * **거울처럼 좌우 반전해서 그린다** (2026-11-23 지정) — P-06 라이브뷰에서 본 모습 그대로 인쇄되게
  * (오른손을 들면 사진에서도 오른쪽 · 옷의 글씨는 거꾸로). 사진만 뒤집고 프레임 그림은 뒤집지 않는다.
  */
@@ -244,13 +255,13 @@ async function drawFrame(ctx: CanvasRenderingContext2D, job: JobId): Promise<voi
 
 /**
  * 촬영한 네 컷을 고른 직업 프레임 한 장에 합성한다.
- * @param shots 컷 4개 (FOURCUT.cells 순서 — 왼쪽 위 → 오른쪽 위 → 왼쪽 아래 → 오른쪽 아래)
+ * @param shots 컷 4개 (cellsFor(job) 순서 — 왼쪽 위 → 오른쪽 위 → 왼쪽 아래 → 오른쪽 아래)
  * @returns PNG dataURL (1844 × 1240)
  */
 export async function composeFourCut(shots: ImageBitmap[], job: JobId): Promise<string> {
   const { canvas, ctx } = newCanvas()
 
-  FOURCUT.cells.forEach((cell, i) => {
+  cellsFor(job).forEach((cell, i) => {
     const shot = shots[i]
     if (shot) drawCover(ctx, shot, cell)
     else fillCell(ctx, cell) // 컷이 모자라면 빈 칸으로 — 눈에 보이게
@@ -267,7 +278,7 @@ export async function composeFourCut(shots: ImageBitmap[], job: JobId): Promise<
 export async function composePlaceholderFourCut(job: JobId): Promise<string> {
   const { canvas, ctx } = newCanvas()
 
-  FOURCUT.cells.forEach((cell, i) => {
+  cellsFor(job).forEach((cell, i) => {
     fillCell(ctx, cell)
 
     const cx = cell.x + cell.width / 2
