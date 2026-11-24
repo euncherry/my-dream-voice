@@ -1,12 +1,11 @@
 /**
  * src/main/mock/server.ts — ⚠️ MOCK 백엔드 서버 (나중에 교체될 자리)
  *
- * 백엔드 API가 아직 없다 (SPEC T-14 — 주소 · 인증 · 오류 코드 · 로그인 확인 방식 모두 합의 전).
+ * 백엔드 API가 아직 없다 (SPEC T-14 — 주소 · 인증 · 오류 코드 모두 합의 전).
  * 그래서 서버가 할 대답을 앱 안에서 흉내 낸다. 화면 흐름(P-02a · P-07)만 돌려 보기 위한 것이다.
  *
- *   세션 열기        → 세션 번호 + QR 주소 (가짜 주소 — 폰으로 찍어도 열리지 않는다)
- *   로그인 확인      → 개발용 [카카오 로그인 완료 흉내]를 누르면 연결된 것으로 답한다
- *   이메일 전달      → 받았다고만 답한다. ⚠️ 주소를 저장하지도 로그에 쓰지도 않는다
+ *   세션 열기        → 보호자 이메일을 받고 세션 번호를 준다. ⚠️ 주소를 저장하지도 로그에 쓰지도 않는다
+ *                      (2026-11-24 카카오 로그인 없앰 — QR · 로그인 확인 없음)
  *   리포트 데이터    → 받았다고만 답한다 (내용은 버린다 — 로그에는 크기만)
  *   연결 끊김 흉내   → DevBar [MOCK 서버: 끊김]이면 모든 요청이 실패한다
  *
@@ -30,7 +29,6 @@ const LATENCY_MS = 500
 const OFFLINE_LATENCY_MS = 1_200
 
 interface MockSession {
-  linked: boolean
   reportReceived: boolean
 }
 
@@ -55,26 +53,14 @@ function find(sessionToken: string): MockSession {
 }
 
 export const mockBackend = {
-  async openSession(): Promise<{ sessionToken: string; qrUrl: string }> {
-    await reach()
-    const sessionToken = randomBytes(12).toString('base64url')
-    sessions.set(sessionToken, { linked: false, reportReceived: false })
-    log(`세션 열림 (열려 있는 세션 ${sessions.size}개)`)
-    // .invalid는 실제로 존재할 수 없는 주소다 — 가짜임이 드러나게
-    return { sessionToken, qrUrl: `https://mock-server.invalid/s/${sessionToken}` }
-  },
-
-  async linkStatus(sessionToken: string): Promise<{ linked: boolean }> {
-    await reach()
-    return { linked: find(sessionToken).linked }
-  },
-
-  async submitEmail(sessionToken: string, email: string): Promise<void> {
+  async openSession(email: string): Promise<{ sessionToken: string }> {
     await reach()
     if (!email) throw new Error('MOCK: 이메일이 비어 있음')
-    find(sessionToken).linked = true
+    const sessionToken = randomBytes(12).toString('base64url')
+    sessions.set(sessionToken, { reportReceived: false })
     // ⚠️ 주소는 어디에도 남기지 않는다 (CLAUDE.md 금지사항 4)
-    log('이메일 전달 받음 → 보호자 연결됨 (주소는 기록하지 않음)')
+    log(`세션 열림 — 보호자 이메일 받음 (주소는 기록하지 않음 · 열려 있는 세션 ${sessions.size}개)`)
+    return { sessionToken }
   },
 
   async sendReport(payload: ReportPayload): Promise<void> {
@@ -105,12 +91,4 @@ export function mockServerSet(next: Partial<MockServerState>): MockServerState {
     log(`연결 상태 → ${state.network === 'online' ? '연결됨' : '끊김'}`)
   }
   return { ...state }
-}
-
-/** 보호자가 폰에서 카카오 로그인을 끝낸 것처럼 만든다 */
-export function mockKakaoLogin(sessionToken: string): void {
-  const session = sessions.get(sessionToken)
-  if (!session) return
-  session.linked = true
-  log('카카오 로그인 완료 흉내 → 보호자 연결됨')
 }

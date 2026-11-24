@@ -158,14 +158,8 @@ export const BEAT_GAP_MS = 250
 
 // ── P-02a 보호자 연결 (⚠️ 전부 임시값 — 서버와 합의 후 정한다, SPEC T-14) ──
 
-/** 카카오 로그인이 끝났는지 서버에 묻는 주기 */
-export const LINK_POLL_MS = 2_000
-
-/** 세션 열기 · 이메일 전달 · 로그인 확인 요청 타임아웃 */
+/** 세션 열기(이메일과 함께) 요청 타임아웃 */
 export const LINK_REQUEST_TIMEOUT_MS = 5_000
-
-/** 로그인 확인이 연속으로 이만큼 실패하면 "연결이 잘 안 돼요"를 띄운다 */
-export const LINK_POLL_FAIL_LIMIT = 3
 
 /** "연결됐어요"를 보여 주고 P-03으로 넘어가기까지 */
 export const LINKED_SHOW_MS = 1_500

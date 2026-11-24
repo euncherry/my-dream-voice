@@ -18,11 +18,11 @@ import {
 import { openCameraFolder, runCameraSelfTest } from './cameraSelfTest'
 import { getMainWindow } from './index'
 import { runAnalysis } from './mock/analysis'
-import { mockKakaoLogin, mockServerGet, mockServerSet } from './mock/server'
+import { mockServerGet, mockServerSet } from './mock/server'
 import { transcribe } from './mock/stt'
 import { renderPhotoPdf } from './pdf'
 import { listPrinters, printSilent, readPrinterPaper } from './print'
-import { closeSession, linkStatus, openSession, sendReport, submitEmail } from './server'
+import { closeSession, openSession, sendReport } from './server'
 import {
   beginSession,
   deleteWav,
@@ -42,6 +42,7 @@ import {
   type CameraCaptureRequest,
   type EnvInfo,
   type MockServerState,
+  type OpenSessionRequest,
   type PrintMode,
   type PrintRequest,
   type RenderPhotoPdfRequest,
@@ -50,7 +51,6 @@ import {
   type SaveWavRequest,
   type SendReportRequest,
   type SttRequest,
-  type SubmitEmailRequest,
 } from '../shared/types'
 
 /**
@@ -133,17 +133,12 @@ export function registerIpcHandlers(): void {
   })
 
   // ── 백엔드 서버 (⚠️ 지금은 mock 응답 — src/main/server.ts) ──
-  ipcMain.handle(IPC.SERVER_OPEN_SESSION, () => openSession())
-  ipcMain.handle(IPC.SERVER_LINK_STATUS, (_e, sessionToken: string) => linkStatus(sessionToken))
-  ipcMain.handle(IPC.SERVER_SUBMIT_EMAIL, (_e, req: SubmitEmailRequest) => submitEmail(req))
+  ipcMain.handle(IPC.SERVER_OPEN_SESSION, (_e, req: OpenSessionRequest) => openSession(req))
   ipcMain.handle(IPC.SERVER_SEND_REPORT, (_e, req: SendReportRequest) => sendReport(req))
   ipcMain.handle(IPC.SERVER_CLOSE_SESSION, (_e, sessionToken: string) => closeSession(sessionToken))
   ipcMain.handle(IPC.SERVER_MOCK_GET, () => mockServerGet())
   ipcMain.handle(IPC.SERVER_MOCK_SET, (_e, state: Partial<MockServerState>) =>
     mockServerSet(state),
-  )
-  ipcMain.handle(IPC.SERVER_MOCK_KAKAO_LOGIN, (_e, sessionToken: string) =>
-    mockKakaoLogin(sessionToken),
   )
 }
 

@@ -200,9 +200,8 @@ export interface Consents {
   photo: true
 }
 
-/** P-02a — 보호자가 연결돼 세션이 열리면. 직접 입력한 이메일은 여기 남기지 않는다 */
+/** P-02a — 보호자 이메일을 서버가 받아 세션이 열리면. 이메일은 여기 남기지 않는다 (2026-11-24 카카오 로그인 없앰 — 이메일만) */
 export interface GuardianLink {
-  method: 'kakao' | 'email'
   /** 서버가 준 세션 번호 — P-07 전송에 쓴다 (SPEC §6-4) */
   sessionToken: string
   linkedAt: string
@@ -542,21 +541,18 @@ export type ServerResult<T = unknown> =
   | ({ ok: true } & T)
   | { ok: false; reason: ServerFailReason; error?: string }
 
-/** P-02a 도착 시 — 세션 번호 · QR 주소를 받는다 (SPEC §6-4) */
-export type OpenSessionResult = ServerResult<{
-  sessionToken: string
-  /** QR로 그릴 주소 (예: https://<서버>/s/<세션 번호>) */
-  qrUrl: string
-}>
-
-/** 카카오 로그인이 끝났는지 — 몇 초마다 묻는다 (방식은 T-14) */
-export type LinkStatusResult = ServerResult<{ linked: boolean }>
-
-/** 직접 입력한 이메일 전달 — 보낸 뒤 기기에 남기지 않는다 (로그에도 쓰지 않는다) */
-export interface SubmitEmailRequest {
-  sessionToken: string
+/**
+ * P-02a 주소 확인 창의 [맞아요] — 보호자 이메일과 함께 세션을 연다 (SPEC §6-4 · 2026-11-24 이메일만).
+ * 이메일은 보낸 뒤 기기에 남기지 않는다 (로그에도 쓰지 않는다)
+ */
+export interface OpenSessionRequest {
   email: string
 }
+
+/** 세션 열기 — 서버가 세션 번호를 준다 */
+export type OpenSessionResult = ServerResult<{
+  sessionToken: string
+}>
 
 /**
  * 렌더러 → 메인: 리포트 데이터 전송 요청.
@@ -660,14 +656,11 @@ export const IPC = {
 
   // ── 백엔드 서버 (⚠️ 지금은 mock 응답 — main/server.ts) ──
   SERVER_OPEN_SESSION: 'server:openSession',
-  SERVER_LINK_STATUS: 'server:linkStatus',
-  SERVER_SUBMIT_EMAIL: 'server:submitEmail',
   SERVER_SEND_REPORT: 'server:sendReport',
   SERVER_CLOSE_SESSION: 'server:closeSession',
-  /** ⚠️ MOCK 전용 — 서버 연결 끊김 흉내 · 카카오 로그인 완료 흉내 */
+  /** ⚠️ MOCK 전용 — 서버 연결 끊김 흉내 */
   SERVER_MOCK_GET: 'server:mockGet',
   SERVER_MOCK_SET: 'server:mockSet',
-  SERVER_MOCK_KAKAO_LOGIN: 'server:mockKakaoLogin',
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]
@@ -734,14 +727,11 @@ export interface KioskApi {
   }
   /** ⚠️ 지금은 mock 응답 (API 합의 전 — SPEC T-14) */
   server: {
-    openSession(): Promise<OpenSessionResult>
-    linkStatus(sessionToken: string): Promise<LinkStatusResult>
-    submitEmail(req: SubmitEmailRequest): Promise<ServerResult>
+    openSession(req: OpenSessionRequest): Promise<OpenSessionResult>
     sendReport(req: SendReportRequest): Promise<SendReportResult>
     closeSession(sessionToken: string): Promise<void>
     /** ⚠️ MOCK 전용 */
     mockGet(): Promise<MockServerState>
     mockSet(state: Partial<MockServerState>): Promise<MockServerState>
-    mockKakaoLogin(sessionToken: string): Promise<void>
   }
 }

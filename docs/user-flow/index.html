@@ -145,7 +145,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
     <h1>마이 드림 보이스 화면 흐름도</h1>
     <p class="lead">어느 화면에서 무엇을 하면 어느 화면으로 가는지 정리한 문서입니다. 2026년 11월 16일 · 18일 · 19일 · 20일 · 22일 · 23일 · 24일에 바뀐 기획과 구현을 반영했습니다. <b>디자인을 입힌 화면(P-00 ~ P-05)은 지금 앱을 1920×1080으로 캡처한 그림</b>이고(2026-11-24 캡처), 아직 디자인 전인 화면(P-06 · P-07 · M-02 · M-03)과 앱에서 바로 띄우기 어려운 모습은 구성 스케치입니다. P-05의 장면 그림은 받는 대로 바꿔 끼우는 중이라 일부는 임시 판입니다.</p>
     <dl class="facts">
-      <div><dt>두 가지 체험 경로</dt><dd><b style="color:var(--a)">A모드</b>는 네컷 사진만 찍습니다. <b style="color:var(--b)">B모드</b>는 고른 직업의 시나리오를 따라 문장 2개를 말하고, 보호자가 목소리 리포트를 메일로 받습니다. 경로는 모드 선택에서 갈리고, 동의는 B모드만 받습니다. B모드는 동의 바로 다음에 <b>보호자를 먼저 연결</b>합니다 (카카오 로그인 또는 이메일 입력).</dd></div>
+      <div><dt>두 가지 체험 경로</dt><dd><b style="color:var(--a)">A모드</b>는 네컷 사진만 찍습니다. <b style="color:var(--b)">B모드</b>는 고른 직업의 시나리오를 따라 문장 2개를 말하고, 보호자가 목소리 리포트를 메일로 받습니다. 경로는 모드 선택에서 갈리고, 동의는 B모드만 받습니다. B모드는 동의 바로 다음에 <b>보호자 이메일을 먼저 받습니다</b> (2026-11-24 카카오 로그인 없앰 — 이메일 직접 입력만).</dd></div>
       <div><dt>그림 보는 법</dt><dd><b>앱 캡처</b>는 지금 앱 화면 그대로입니다 (개발용 버튼은 가리고 찍었습니다. 디자인 전 화면 캡처의 위쪽 어두운 띠는 개발용입니다). <b>구성 스케치</b>는 들어갈 요소와 위치만 잡은 그림입니다.</dd></div>
       <div><dt>화면 표시</dt><dd><span class="st st-new">새 화면</span> 새로 만듦 · <span class="st st-chg">바뀜</span> 위치나 내용이 바뀜 · <span class="st st-same">그대로</span> 순서만 바뀌거나 그대로</dd></div>
     </dl>
@@ -160,7 +160,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
       <thead><tr><th>항목</th><th>v1</th><th>v2 (지금)</th></tr></thead>
       <tbody>
         <tr><td>동의</td><td>연령 다음 (B) · 직업 다음 (A)</td><td><b>B모드만</b>, 모드 선택 바로 다음. 체크 3개를 모두 해야 시작. A모드는 동의 화면 없이 바로 직업 선택</td></tr>
-        <tr><td>보호자 연결</td><td>체험 끝, 결과 화면의 QR로</td><td><b>체험 전, 동의 바로 다음</b> (B). 카카오 로그인(QR) 또는 이메일 직접 입력. 여기서 세션이 열리고 인쇄가 끝나면 닫힌다</td></tr>
+        <tr><td>보호자 연결</td><td>체험 끝, 결과 화면의 QR로</td><td><b>체험 전, 동의 바로 다음</b> (B). <b>이메일 직접 입력</b> (2026-11-24 카카오 로그인 없앰). 주소를 확인받고 [맞아요]에 세션이 열리고 인쇄가 끝나면 닫힌다</td></tr>
         <tr><td>연령</td><td>나이(만 4~8세 이상 5개) + 이름 입력</td><td><b>만 4세 · 만 5세 · 만 6세 이상</b> 중 하나 (이름 받지 않음)</td></tr>
         <tr><td>순서</td><td>직업 → 연령</td><td><b>연령 → 직업</b></td></tr>
         <tr><td>직업</td><td>8개 중 4개</td><td><b>6개 중 1개</b>. 직업 카드가 그 직업의 네컷 프레임 그림</td></tr>
@@ -168,11 +168,11 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
         <tr><td>촬영</td><td>컷마다 5초 카운트다운</td><td><b>7초 간격</b>으로 4컷. 네 컷 모두 같은 직업 프레임</td></tr>
         <tr><td>네컷 사진</td><td>세로, 칸마다 다른 직업</td><td><b>가로</b> — 사진 2×2 + 직업별 프레임. QR 없음. 사진은 <b>라이브 화면에서 본 대로(거울 방향)</b> 인쇄</td></tr>
         <tr><td>추천 직업</td><td>결과 화면과 네컷에 표시</td><td><b>없음</b>. 직업은 역할놀이 소재로만 쓴다</td></tr>
-        <tr><td>분석 중 · 결과 · 인쇄 · QR</td><td>화면 4개</td><td><b>[분석 및 프린트] 한 화면</b>. 촬영 장면 영상을 다시 보여준다 (QR은 보호자 연결 화면으로 옮김)</td></tr>
+        <tr><td>분석 중 · 결과 · 인쇄 · QR</td><td>화면 4개</td><td><b>[분석 및 프린트] 한 화면</b>. 촬영 장면 영상을 다시 보여준다 (QR은 없앰)</td></tr>
         <tr><td>아이가 보는 결과</td><td>긍정 문구 + 추천 직업</td><td>A: 긍정 문구 + SD 캐릭터 · B: <b>리포트 미리보기</b> (관찰 결과는 가림)</td></tr>
         <tr><td>끝</td><td>종료 화면</td><td>5초 뒤 저절로 닫히는 완료 창</td></tr>
-        <tr><td>QR</td><td>A·B 모두, 화면에만</td><td><b>B만, 보호자 연결 화면에만</b>. 분석 및 프린트 화면 · 인쇄물에는 없다</td></tr>
-        <tr><td>보호자가 받는 법</td><td>QR → PDF 바로 받기</td><td>체험 전 <b>카카오 로그인</b> 또는 <b>이메일 직접 입력</b> → 체험이 끝나면 그 <b>이메일</b>로 리포트</td></tr>
+        <tr><td>QR</td><td>A·B 모두, 화면에만</td><td><b>없음</b> (2026-11-24 — 보호자 연결 화면의 카카오 QR도 뺐다)</td></tr>
+        <tr><td>보호자가 받는 법</td><td>QR → PDF 바로 받기</td><td>체험 전 키오스크에서 <b>이메일 직접 입력</b> → 체험이 끝나면 그 <b>이메일</b>로 리포트</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -182,7 +182,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
       <h2>전체 지도</h2>
       <p class="sub">화면을 누르면 그 화면의 설명으로 이동합니다.</p>
     </div>
-    <div class="mapbox"><svg class="map" viewBox="0 0 1150 690" role="img" aria-label="화면 이동 전체 지도. P-00 대기, P-01 모드 선택에서 경로가 갈립니다. B모드는 P-02 동의, P-02a 보호자 연결(카카오 QR 또는 이메일 직접 입력으로 세션이 열림), P-03 연령, P-04 직업, P-05 발화를 거쳐 P-06 촬영으로 가고, A모드는 동의와 보호자 연결 없이 P-04 직업으로 가서 바로 P-06 촬영으로 갑니다. 촬영 뒤 P-07 분석 및 프린트, M-03 완료 창을 지나 세션을 닫고 5초 뒤 P-00으로 돌아옵니다. 보호자 연결 화면에서 카카오를 고르면 보호자가 폰으로 QR을 찍어 카카오 로그인을 하고, 체험이 끝나면 메일로 리포트를 받습니다. 연결이 안 되면 사진만 찍기로 A모드 직업 선택으로 갑니다.">
+    <div class="mapbox"><svg class="map" viewBox="0 0 1150 690" role="img" aria-label="화면 이동 전체 지도. P-00 대기, P-01 모드 선택에서 경로가 갈립니다. B모드는 P-02 동의, P-02a 보호자 연결(이메일 직접 입력 — 주소를 확인받으면 세션이 열림), P-03 연령, P-04 직업, P-05 발화를 거쳐 P-06 촬영으로 가고, A모드는 동의와 보호자 연결 없이 P-04 직업으로 가서 바로 P-06 촬영으로 갑니다. 촬영 뒤 P-07 분석 및 프린트, M-03 완료 창을 지나 세션을 닫고 5초 뒤 P-00으로 돌아옵니다. 보호자는 체험이 끝나면 입력한 이메일로 리포트를 받습니다. 연결이 안 되면 사진만 찍기로 A모드 직업 선택으로 갑니다.">
   <defs>
     <marker id="a-ink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-ink"/></marker><marker id="a-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-a"/></marker><marker id="a-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-b"/></marker><marker id="a-back" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="m-back"/></marker>
   </defs>
@@ -197,24 +197,15 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
   </g>
 
   <rect class="grp" x="560" y="6" width="580" height="192" rx="8"/>
-  <text class="grp-t" x="574" y="30">보호자 폰 (B모드 · 카카오를 고른 경우)</text>
+  <text class="grp-t" x="574" y="30">보호자 메일 (B모드)</text>
   <a href="#guardian" class="node">
-    <image href="wf/phone-login.svg" x="648" y="44" width="56" height="120"/>
-    <image href="wf/phone-sent.svg" x="760" y="44" width="56" height="120"/>
-    <image href="wf/phone-mail.svg" x="872" y="44" width="56" height="120"/>
+    <image href="wf/phone-mail.svg" x="648" y="44" width="56" height="120"/>
   </a>
-  <path d="M708 104 H754" class="l b" marker-end="url(#a-b)"/>
-  <path d="M820 104 H866" class="l b auto" marker-end="url(#a-b)"/>
-  <text class="note" x="676" y="186" text-anchor="middle">카카오 로그인</text>
-  <text class="note" x="788" y="186" text-anchor="middle">연결됐어요</text>
-  <text class="note" x="900" y="186" text-anchor="middle">메일 도착</text>
-  <text class="note" x="948" y="62">로그인이 끝나면 키오스크가</text>
-  <text class="note" x="948" y="82">알아채고 연령 선택으로</text>
-  <text class="note" x="948" y="102">넘어갑니다. 메일은 체험이</text>
-  <text class="note" x="948" y="122">끝나 키오스크가 데이터를</text>
-  <text class="note" x="948" y="142">보내면 서버가 보냅니다.</text>
-  <path d="M676 242 V203" class="l b" marker-end="url(#a-b)"/>
-  <text class="lbl lbl-b" x="688" y="222">QR 찍기</text>
+  <text class="note" x="676" y="186" text-anchor="middle">메일 도착</text>
+  <text class="note" x="736" y="72">P-02a에서 입력한 이메일로 갑니다.</text>
+  <text class="note" x="736" y="96">체험이 끝나 키오스크가 데이터를</text>
+  <text class="note" x="736" y="120">보내면 서버가 보냅니다.</text>
+  <text class="note" x="736" y="144">(2026-11-24 카카오 로그인 · QR 없앰)</text>
 
   <path d="M183 309 H207" class="l ink" marker-end="url(#a-ink)"/>
   <path d="M375 309 H399" class="l b" marker-end="url(#a-b)"/>
@@ -222,7 +213,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
   <path d="M567 309 H591" class="l b" marker-end="url(#a-b)"/>
   <path d="M759 309 H783" class="l b" marker-end="url(#a-b)"/>
   <text class="lbl lbl-b" x="771" y="234" text-anchor="middle">세션 열림</text>
-  <text class="note" x="676" y="376" text-anchor="middle">카카오 QR 또는 이메일 직접 입력</text>
+  <text class="note" x="676" y="376" text-anchor="middle">이메일 직접 입력 → [맞아요]에 세션 열림</text>
   <text class="note" x="676" y="396" text-anchor="middle">연결이 안 되면 [사진만 찍기] → A로 P-04</text>
   <path d="M868 357 V416 H332 V478" class="l b" marker-end="url(#a-b)"/>
   <path d="M292 357 V478" class="l a" marker-end="url(#a-a)"/>
@@ -240,36 +231,36 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
 
   <a href="#p-00" class="node node-common">
     <text x="20" y="256"><tspan class="n-code">P-00</tspan><tspan class="n-name" dx="6">대기</tspan></text>
-    <image href="shots/p00.jpg" x="20" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p00.jpg" x="20" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="20" y="264" width="160" height="90" rx="4"/>
   </a><a href="#p-01" class="node node-common">
     <text x="212" y="256"><tspan class="n-code">P-01</tspan><tspan class="n-name" dx="6">모드 선택</tspan></text>
-    <image href="shots/p01.jpg" x="212" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p01.jpg" x="212" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="212" y="264" width="160" height="90" rx="4"/>
   </a><a href="#p-02" class="node node-b">
     <text x="404" y="256"><tspan class="n-code">P-02</tspan><tspan class="n-name" dx="6">동의</tspan></text>
     <g class="n-tag"><rect x="530" y="244" width="34" height="16" rx="3"/><text x="547" y="256" text-anchor="middle">바뀜</text></g>
-    <image href="wf/p02-consent.svg" x="404" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p02.jpg" x="404" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="404" y="264" width="160" height="90" rx="4"/>
   </a><a href="#p-02a" class="node node-b">
     <text x="596" y="256"><tspan class="n-code">P-02a</tspan><tspan class="n-name" dx="6">보호자 연결</tspan></text>
     <g class="n-tag"><rect x="726" y="244" width="30" height="16" rx="3"/><text x="741" y="256" text-anchor="middle">새로</text></g>
-    <image href="wf/p02a-link.svg" x="596" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p02a-email.jpg" x="596" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="596" y="264" width="160" height="90" rx="4"/>
   </a><a href="#p-03" class="node node-b">
     <text x="788" y="256"><tspan class="n-code">P-03</tspan><tspan class="n-name" dx="6">연령 선택</tspan></text>
     <g class="n-tag"><rect x="914" y="244" width="34" height="16" rx="3"/><text x="931" y="256" text-anchor="middle">바뀜</text></g>
-    <image href="wf/p03-age.svg" x="788" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p03.jpg" x="788" y="264" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="788" y="264" width="160" height="90" rx="4"/>
   </a><a href="#p-04" class="node node-common">
     <text x="212" y="498"><tspan class="n-code">P-04</tspan><tspan class="n-name" dx="6">직업 선택</tspan></text>
     <g class="n-tag"><rect x="338" y="486" width="34" height="16" rx="3"/><text x="355" y="498" text-anchor="middle">바뀜</text></g>
-    <image href="wf/p04-job.svg" x="212" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p04.jpg" x="212" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="212" y="506" width="160" height="90" rx="4"/>
   </a><a href="#p-05" class="node node-b">
     <text x="404" y="498"><tspan class="n-code">P-05</tspan><tspan class="n-name" dx="6">발화</tspan></text>
     <g class="n-tag"><rect x="530" y="486" width="34" height="16" rx="3"/><text x="547" y="498" text-anchor="middle">바뀜</text></g>
-    <image href="wf/p05-speak.svg" x="404" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
+    <image href="shots/v2-p05-talk.jpg" x="404" y="506" width="160" height="90" preserveAspectRatio="xMidYMid slice"/>
     <rect class="n-frame" x="404" y="506" width="160" height="90" rx="4"/>
   </a><a href="#p-06" class="node node-common">
     <text x="596" y="498"><tspan class="n-code">P-06</tspan><tspan class="n-name" dx="6">촬영</tspan></text>
@@ -290,7 +281,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
     <rect class="n-frame" x="980" y="506" width="160" height="90" rx="4"/>
   </a>
 </svg></div>
-    <nav class="jump" aria-label="화면 바로 가기"><a href="#p-00">P-00</a><a href="#p-01">P-01</a><a href="#p-02">P-02</a><a href="#p-02a">P-02a</a><a href="#p-03">P-03</a><a href="#p-04">P-04</a><a href="#p-05">P-05</a><a href="#p-06">P-06</a><a href="#p-07">P-07</a><a href="#m-03">M-03</a><a href="#m-02">M-02</a><a href="#guardian">보호자 폰</a><a href="#print">사진 규격</a><a href="#todo">정할 것</a></nav>
+    <nav class="jump" aria-label="화면 바로 가기"><a href="#p-00">P-00</a><a href="#p-01">P-01</a><a href="#p-02">P-02</a><a href="#p-02a">P-02a</a><a href="#p-03">P-03</a><a href="#p-04">P-04</a><a href="#p-05">P-05</a><a href="#p-06">P-06</a><a href="#p-07">P-07</a><a href="#m-03">M-03</a><a href="#m-02">M-02</a><a href="#guardian">보호자 메일</a><a href="#print">사진 규격</a><a href="#todo">정할 것</a></nav>
   </section>
 
   <section>
@@ -371,15 +362,11 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
     <span class="mono code">P-02a</span><h3>보호자 연결</h3>
     <span class="chip chip-b">B모드</span><span class="st st-new">새 화면</span>
   </header>
-  <p class="desc">B모드에서 동의 바로 다음에 나옵니다. 리포트를 받을 보호자를 <b>체험 전에</b> 먼저 연결합니다. 선택지는 두 개입니다 — <b>① 카카오로 간편 로그인</b> (화면의 QR을 보호자 폰으로 찍기) · <b>② 이메일 직접 입력</b> (화면 키보드). 어느 쪽이든 끝나면 이번 체험의 <b>세션이 열리고</b>, 사진 인쇄가 끝나면 닫힙니다. 서버에 연결이 안 되면 다시 시도해 보고, 그래도 안 되면 사진만 찍기(A모드)로 넘어갑니다. 보호자가 폰으로 가입하는 동안 기다리는 시간은 전체 타임아웃을 정할 때 같이 정합니다.</p>
+  <p class="desc">B모드에서 동의 바로 다음에 나옵니다. 리포트를 받을 보호자의 <b>이메일을 체험 전에</b> 받습니다. <b>2026-11-24 카카오 로그인을 없앴습니다</b> — 화면은 바로 이메일 입력(화면 키보드 · 자주 쓰는 주소 버튼)으로 열리고, QR은 없습니다. [확인]을 누르면 주소를 크게 한 번 더 보여 주고, <b>[맞아요]를 누르면 이메일과 함께 이번 체험의 세션이 열립니다</b> (사진 인쇄가 끝나면 닫힘). 서버에 연결이 안 되면 다시 시도해 보고, 그래도 안 되면 사진만 찍기(A모드)로 넘어갑니다. 폰에서 보호자를 확인하는 단계가 없어져 <b>오타를 막는 것은 주소 확인 창뿐</b>입니다 (충분한지는 법무 확인).</p>
   <div class="figs figs-2">
     <figure class="fig">
-      <button class="shot" type="button" data-src="shots/v2-p02a-link.jpg" aria-label="보호자 연결 처음 상태 크게 보기"><img src="shots/v2-p02a-link.jpg" alt="보호자 연결 처음 상태" loading="lazy" width="1920" height="1080"></button>
-      <figcaption><span class="kind">앱 캡처.</span> 처음 상태. 왼쪽 카카오 QR, 오른쪽 이메일 직접 입력 (QR은 개발용 가짜 서버 주소)</figcaption>
-    </figure>
-    <figure class="fig">
       <button class="shot" type="button" data-src="shots/v2-p02a-email.jpg" aria-label="이메일 직접 입력 크게 보기"><img src="shots/v2-p02a-email.jpg" alt="이메일 직접 입력" loading="lazy" width="1920" height="1080"></button>
-      <figcaption><span class="kind">앱 캡처.</span> 이메일 직접 입력. 화면 키보드와 자주 쓰는 주소 버튼 (고지 문구는 법무 확인 뒤)</figcaption>
+      <figcaption><span class="kind">앱 캡처.</span> 처음 상태 = 이메일 입력. 제목 아래 "목소리 리포트는 보호자님 메일로 보내 드려요" · 화면 키보드 · 자주 쓰는 주소 버튼 (고지 문구는 법무 확인 뒤)</figcaption>
     </figure>
     <figure class="fig">
       <button class="shot" type="button" data-src="shots/v2-p02a-confirm.jpg" aria-label="이메일 주소 확인 크게 보기"><img src="shots/v2-p02a-confirm.jpg" alt="이메일 주소 확인" loading="lazy" width="1920" height="1080"></button>
@@ -393,15 +380,14 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
   <div class="tbl"><table>
     <thead><tr><th>이렇게 하면</th><th>이렇게 됩니다</th><th>다음 화면</th></tr></thead>
     <tbody>
-      <tr><td>(자동) 화면 도착</td><td>서버에 세션 열기를 요청하고, 받은 번호로 QR을 띄웁니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
-      <tr><td>보호자가 QR을 찍고 카카오 로그인을 끝냄</td><td>키오스크가 서버에서 연결을 확인하고 "연결됐어요"를 잠깐 보여 줍니다. 세션이 열립니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 선택</a></td></tr>
-      <tr><td>[이메일 입력하기] 누름</td><td>화면 키보드가 나옵니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(자동) 화면 도착</td><td>바로 이메일 입력입니다. 아직 서버에 아무것도 보내지 않습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>자주 쓰는 주소 버튼 누름</td><td>@ 뒷부분을 그 주소로 채웁니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
       <tr><td>이메일을 넣고 [확인]</td><td>입력한 주소를 크게 보여 주고 확인을 받습니다. 형식이 틀리면(@ 없음 등) 안내합니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
-      <tr><td>[맞아요] 누름</td><td>이메일을 서버로 보내고 세션이 열립니다. 기기에는 이메일을 남기지 않습니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 선택</a></td></tr>
+      <tr><td>[맞아요] 누름</td><td>이메일과 함께 서버에 세션 열기를 요청합니다. 세션이 열리면 "연결됐어요"를 잠깐 보여 줍니다. 기기에는 이메일을 남기지 않습니다</td><td><a class="go" href="#p-03"><span class="mono">P-03</span> 연령 선택</a></td></tr>
       <tr><td>[고치기] 누름</td><td>입력 화면으로 돌아갑니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
-      <tr><td>(오류) 서버에 연결이 안 됨</td><td>"연결이 잘 안 돼요" + [다시 시도]</td><td><span class="stay">이 화면에 그대로</span></td></tr>
+      <tr><td>(오류) 서버에 연결이 안 됨</td><td>"연결이 잘 안 돼요" + [다시 시도] — 주소 확인 창으로 돌아가 [맞아요]를 다시 받습니다</td><td><span class="stay">이 화면에 그대로</span></td></tr>
       <tr><td>(오류) 다시 해도 안 됨 → [사진만 찍기]</td><td>A모드로 바꿉니다 (동의 기록은 지웁니다)</td><td><a class="go" href="#p-04"><span class="mono">P-04</span> 직업 선택</a></td></tr>
-      <tr><td>[뒤로] 누름</td><td>열던 세션은 버립니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 동의</a></td></tr>
+      <tr><td>[뒤로] 누름 (이메일 입력에서만)</td><td>치던 주소는 지웁니다</td><td><a class="go" href="#p-02"><span class="mono">P-02</span> 동의</a></td></tr>
     </tbody>
   </table></div>
 </section>
@@ -595,29 +581,19 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
 
 <section class="scr" id="guardian">
   <header class="scr-head">
-    <h3>보호자 폰</h3>
-    <span class="chip chip-b">B모드</span><span class="st st-new">새 화면</span>
+    <h3>보호자 메일</h3>
+    <span class="chip chip-b">B모드</span><span class="st st-chg">바뀜</span>
   </header>
-  <p class="desc">키오스크 밖, 보호자 폰에서 보는 화면입니다. 백엔드 서버가 띄웁니다. <b>보호자 연결(P-02a)에서 카카오를 고른 경우에만</b> 씁니다 — 화면의 QR을 찍으면 바로 카카오 로그인으로 가고, 클릭만으로 끝납니다. 로그인이 끝나면 키오스크는 저절로 연령 선택으로 넘어갑니다. 리포트는 체험이 끝난 뒤 카카오 계정 이메일로 갑니다 (PDF 첨부 + 본문 + 네컷 이미지). 메일을 언제 어떻게 보낼지는 서버가 정합니다 — 키오스크는 데이터를 보내면 끝입니다.</p>
+  <p class="desc">보호자가 받는 것은 <b>메일 한 통</b>입니다. P-02a에서 입력한 이메일로, 체험이 끝나 키오스크가 데이터를 보내면 백엔드 서버가 보냅니다 (PDF 첨부 + 본문 + 네컷 이미지). 메일을 언제 어떻게 보낼지는 서버가 정합니다 — 키오스크는 데이터를 보내면 끝입니다. <b>2026-11-24 카카오 로그인을 없애</b> 보호자 폰에서 QR을 찍고 로그인하는 화면은 없습니다.</p>
   <div class="figs figs-phone">
     <figure class="fig">
-      <button class="shot wf" type="button" data-src="wf/phone-login.svg" aria-label="카카오 로그인 크게 보기"><img src="wf/phone-login.svg" alt="카카오 로그인" loading="lazy" width="400" height="860"></button>
-      <figcaption>① 카카오 로그인 · 동의. 카카오가 띄우는 화면입니다</figcaption>
-    </figure>
-    <figure class="fig">
-      <button class="shot wf" type="button" data-src="wf/phone-sent.svg" aria-label="연결됐어요 크게 보기"><img src="wf/phone-sent.svg" alt="연결됐어요" loading="lazy" width="400" height="860"></button>
-      <figcaption>② "연결됐어요". 아이는 키오스크에서 체험을 이어 갑니다</figcaption>
-    </figure>
-    <figure class="fig">
       <button class="shot wf" type="button" data-src="wf/phone-mail.svg" aria-label="메일 도착 크게 보기"><img src="wf/phone-mail.svg" alt="메일 도착" loading="lazy" width="400" height="860"></button>
-      <figcaption>③ 메일 도착. 체험이 끝나 키오스크가 데이터를 보내면 서버가 보냅니다</figcaption>
+      <figcaption>메일 도착. 체험이 끝나 키오스크가 데이터를 보내면 서버가 보냅니다</figcaption>
     </figure>
   </div>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>이런 경우</th><th>보호자가 보는 것</th></tr></thead>
+    <thead><tr><th>이런 경우</th><th>보호자가 받는 것</th></tr></thead>
     <tbody>
-      <tr><td>카카오 계정에 쓸 수 있는 이메일이 없음</td><td>"카카오 계정의 이메일을 확인해 주세요" — 키오스크에서 [이메일 직접 입력]을 골라도 됩니다</td></tr>
-      <tr><td>다른 사람이 같은 QR을 찍음</td><td>"이미 연결된 QR이에요" (QR 하나에 처음 연결된 1명만)</td></tr>
       <tr><td>소리를 하나도 살펴보지 못함</td><td>"오늘은 목소리를 살펴보지 못했어요" 안내 리포트가 메일로 갑니다</td></tr>
       <tr><td>체험이 중간에 끝나 데이터가 안 옴</td><td>서버가 정합니다</td></tr>
     </tbody>
@@ -659,7 +635,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
       <li><b>컨셉 문구</b> (P-00 대기). 추천 직업이 빠져 기존 "내 목소리는 어떤 직업에 어울릴까?"는 쓰지 않습니다</li>
       <li><b>직업별 네컷 프레임 6종</b> (가로) — 직업 선택 화면(P-04)의 카드 그림으로도 씁니다. 규격은 위 <a href="#print">인쇄물</a> 표</li>
       <li><b>시나리오 장면 그림 · 목소리</b> (P-05 발화) — 직업마다 배경 + 남녀 포즈 그림 · 대사 음성. 우주비행사부터 받는 중이고, 화면 디자인은 입혔습니다. 장면 목록과 그림 규격: <code>docs/P05_SCENARIO.md</code></li>
-      <li><b>보호자 연결 화면</b> (P-02a) — 카카오 QR · 이메일 입력 두 선택지, 화면 키보드, 주소 확인 창, 연결 실패 화면</li>
+      <li><b>보호자 연결 화면</b> (P-02a) — 이메일 입력(시안 있음 · 자주 쓰는 주소와 키보드 모양만 입힘), 주소 확인 창, 연결 실패 화면 (2026-11-24 카카오 QR 선택지는 없앰)</li>
       <li><b>리포트 미리보기 모양</b> (P-07 B모드) — 관찰 결과를 가리는 방법과 "보호자 메일로 보내 드려요" 안내</li>
       <li><b>긍정 문구 세트와 SD 캐릭터</b> (P-07 A모드, B모드 분석 중). A모드 문구는 직업 · 사진 칭찬만 — 말하기를 안 했으므로 목소리 칭찬은 B모드에만</li>
       <li><b>촬영 장면 영상</b>의 길이와 구간 (P-06에서 녹화, P-07에서 재생)</li>
@@ -667,7 +643,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
       <li><b>완료 창 문구</b> (M-03)</li>
       <li><b>A 안내 한 줄</b> (P-01) — 2026-11-22 화면에서 뺌. 필요한지 · 필요하면 어디에 둘지 (법무 확인)</li>
       <li>동의 전문은 법무 검토 뒤 들어갑니다 (P-02). A모드를 동의 없이 안내로 운영해도 되는지와 안내 문구도 법무 확인 (P-01). 이메일 직접 입력 화면의 고지 문구도 법무 확인 (P-02a)</li>
-      <li>보호자가 폰으로 가입하는 동안 기다리는 시간 · 무조작 타임아웃 (P-02a) — 전체 타임아웃을 정할 때 같이 정합니다</li>
+      <li>P-02a에서 이메일을 치는 동안 · 서버를 기다리는 동안의 무조작 타임아웃 — 전체 타임아웃을 정할 때 같이 정합니다</li>
     </ul>
   </section>
 </main>

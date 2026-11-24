@@ -2,7 +2,7 @@
  * src/main/server.ts — 백엔드 서버와 주고받기 (B모드에서만 쓴다 — A모드는 인터넷을 쓰지 않는다)
  *
  * 키오스크 몫은 "세션 열기 → 데이터 보내기 → 세션 닫기"까지다 (SPEC §6-1).
- *   P-02a  세션 열기 · 카카오 로그인이 끝났는지 확인 · 직접 입력한 이메일 전달
+ *   P-02a  세션 열기 — 보호자가 직접 입력한 이메일과 함께 한 번에 (2026-11-24 카카오 로그인 없앰)
  *   P-07   리포트 데이터 전송 (타임아웃 15초 · 실패해도 화면에 안 띄움 · 다시 보내려고 남기지 않음)
  *   M-03   세션 닫기
  * 리포트 PDF · 메일 발송 · 데이터가 안 왔을 때의 처리는 서버 몫이다.
@@ -21,21 +21,17 @@ import { KIOSK_ID, LINK_REQUEST_TIMEOUT_MS, REPORT_SEND_TIMEOUT_MS } from '../sh
 import { MockNetworkError, mockBackend } from './mock/server'
 import { composedPhotoPath, fileSize } from './storage'
 import type {
-  LinkStatusResult,
+  OpenSessionRequest,
   OpenSessionResult,
   ReportPayload,
   SendReportRequest,
   SendReportResult,
   ServerFailReason,
-  ServerResult,
-  SubmitEmailRequest,
 } from '../shared/types'
 
 /** 서버가 해 주는 일 — mock과 (나중의) HTTP 구현이 같은 모양을 채운다 */
 interface Backend {
-  openSession(): Promise<{ sessionToken: string; qrUrl: string }>
-  linkStatus(sessionToken: string): Promise<{ linked: boolean }>
-  submitEmail(sessionToken: string, email: string): Promise<void>
+  openSession(email: string): Promise<{ sessionToken: string }>
   sendReport(payload: ReportPayload): Promise<void>
   closeSession(sessionToken: string): Promise<void>
 }
@@ -76,37 +72,19 @@ function failure(e: unknown): { ok: false; reason: ServerFailReason; error: stri
 
 // ── P-02a ────────────────────────────────────────────────────
 
-export async function openSession(): Promise<OpenSessionResult> {
-  try {
-    const opened = await withTimeout(backend.openSession(), LINK_REQUEST_TIMEOUT_MS)
-    return { ok: true, ...opened }
-  } catch (e) {
-    return failure(e)
-  }
-}
-
-export async function linkStatus(sessionToken: string): Promise<LinkStatusResult> {
-  try {
-    const status = await withTimeout(backend.linkStatus(sessionToken), LINK_REQUEST_TIMEOUT_MS)
-    return { ok: true, linked: status.linked }
-  } catch (e) {
-    return failure(e)
-  }
-}
-
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * 직접 입력한 이메일을 세션 번호와 함께 보낸다.
+ * 보호자 이메일과 함께 세션을 연다 — 서버가 세션 번호를 준다.
  * ⚠️ 주소는 여기서 서버로 넘기고 끝이다 — 변수에 두지 않고, 로그 · 파일에 쓰지 않는다.
  */
-export async function submitEmail(req: SubmitEmailRequest): Promise<ServerResult> {
-  if (!EMAIL_SHAPE.test(req.email)) {
+export async function openSession(req: OpenSessionRequest): Promise<OpenSessionResult> {
+  if (typeof req?.email !== 'string' || !EMAIL_SHAPE.test(req.email)) {
     return { ok: false, reason: 'rejected', error: '이메일 형식이 아님' }
   }
   try {
-    await withTimeout(backend.submitEmail(req.sessionToken, req.email), LINK_REQUEST_TIMEOUT_MS)
-    return { ok: true }
+    const opened = await withTimeout(backend.openSession(req.email), LINK_REQUEST_TIMEOUT_MS)
+    return { ok: true, sessionToken: opened.sessionToken }
   } catch (e) {
     return failure(e)
   }
