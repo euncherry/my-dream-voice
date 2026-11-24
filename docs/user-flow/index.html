@@ -128,6 +128,40 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
   .scr td:last-child { white-space: normal; }
 }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+/* ── 인쇄 · PDF (2026-11-24) — 화면 하나에 한 장 · 전체 지도는 가로 한 장.
+   화면용 grid는 페이지 경계에서 잘리면 그림과 표가 겹친다 → 인쇄에서는 block / inline-block으로 푼다 ── */
+@page { size: A4 portrait; margin: 12mm 10mm; }
+@page wide { size: A4 landscape; margin: 8mm 10mm; }
+@media print {
+  html { scroll-behavior: auto; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff; }
+  .theme, dialog, .jump { display: none !important; }
+  .wrap { display: block; max-width: none; padding: 0; }
+  .wrap > * + * { margin-top: 22px; }
+  td { padding-top: 5px; padding-bottom: 5px; }
+  .map-sec { page: wide; break-before: page; break-after: page; }
+  .mapbox { overflow: visible; padding: 10px; }
+  .map { min-width: 0; }
+  .scrs-sec { break-before: page; }
+  .scrs { display: block; }
+  .scr, #print, #todo { display: block; break-before: page; }
+  .scrs .scr:first-child { break-before: avoid; }
+  .scr > * + *, .panel > * + * { margin-top: 12px; }
+  .scr-head { break-after: avoid; }
+  .figs { display: block; font-size: 0; }
+  .fig { display: inline-block; vertical-align: top; font-size: 15px; break-inside: avoid; margin: 0 0 10px; }
+  .figs-1 .fig { width: 70%; }
+  .figs-2 .fig { width: calc(50% - 7px); }
+  .figs-2 .fig:nth-child(odd) { margin-right: 14px; }
+  .figs-3 .fig { width: calc(33.33% - 10px); margin-right: 14px; }
+  .figs-3 .fig:nth-child(3n) { margin-right: 0; }
+  .figs-phone .fig { width: 190px; margin-right: 14px; }
+  .figs-print .fig { width: 46%; margin-right: 3%; }
+  .figs-print .tbl { display: inline-block; vertical-align: top; width: 50%; font-size: 14px; }
+  .tbl { overflow: visible; }
+  tr, .notes li { break-inside: avoid; }
+  thead { display: table-header-group; }
+}
 </style>
 <script>
   try {
@@ -177,7 +211,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
     </table></div>
   </section>
 
-  <section>
+  <section class="map-sec">
     <div class="section-head">
       <h2>전체 지도</h2>
       <p class="sub">화면을 누르면 그 화면의 설명으로 이동합니다.</p>
@@ -284,7 +318,7 @@ dialog img { display: block; max-width: 96vw; max-height: 96vh; width: auto; hei
     <nav class="jump" aria-label="화면 바로 가기"><a href="#p-00">P-00</a><a href="#p-01">P-01</a><a href="#p-02">P-02</a><a href="#p-02a">P-02a</a><a href="#p-03">P-03</a><a href="#p-04">P-04</a><a href="#p-05">P-05</a><a href="#p-06">P-06</a><a href="#p-07">P-07</a><a href="#m-03">M-03</a><a href="#m-02">M-02</a><a href="#guardian">보호자 메일</a><a href="#print">사진 규격</a><a href="#todo">정할 것</a></nav>
   </section>
 
-  <section>
+  <section class="scrs-sec">
     <div class="section-head">
       <h2>화면별 동작</h2>
       <p class="sub">그림을 누르면 크게 볼 수 있습니다.</p>
