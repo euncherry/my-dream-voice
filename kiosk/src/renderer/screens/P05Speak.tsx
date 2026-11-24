@@ -596,14 +596,18 @@ function SpeakFlow({
     set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null }, bar: { part: 'tutorial', done: 6 } })
     await say('06', COMMON.practice, 'practice', LEAD)
     let voice = await practice()
-    if (voice === 'silent') {
-      // 한 번만 다시 — 또 무음이면 그냥 진행
-      await say('09', L.silent, 'silent', LEAD)
+    // 작거나 무음이면 한 번만 다시 (2026-11-24 — 작을 때도 다시: 크게 외쳐 보고 넘어가게).
+    // 두 번째는 크기와 상관없이 칭찬하고 넘어간다 — 또 무음이면 반응 없이 진행. 진행 바는 다시 하기로 넘기지 않는다
+    if (voice !== 'loud') {
+      if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER)
+      else await say('09', L.silent, 'silent', LEAD)
       voice = await practice()
+      if (voice === 'quiet') voice = 'loud'
     }
-    if (voice !== 'silent') set({ bar: { part: 'tutorial', done: 7 } })
-    if (voice === 'loud') await say('07', L.loud, 'loud', PARTNER)
-    else if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER)
+    if (voice === 'loud') {
+      set({ bar: { part: 'tutorial', done: 7 } })
+      await say('07', L.loud, 'loud', PARTNER)
+    }
     set({ big: null })
 
     // ── F1 · G · F2 — 문장 2개 ──
