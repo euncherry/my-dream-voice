@@ -39,6 +39,16 @@ export interface Rect {
  * 오른쪽 띠(strip)는 프레임 그림이 없을 때 그리는 PLACEHOLDER 프레임에서만 쓴다.
  * QR 자리는 없다 (2026-11-20 — A · B 같은 프레임).
  */
+/**
+ * 2026-11-24 새 틀(노란 격자 · 띠 없음)의 사진 칸 — 우주비행사 그림에서 잰 구멍(153,52 · 929,52 · 153,627 · 929,627 · 762~763×561)에 둘레 3px
+ */
+const NEW_FRAME_CELLS: readonly Rect[] = [
+  { x: 150, y: 49, width: 768, height: 567 },
+  { x: 926, y: 49, width: 769, height: 567 },
+  { x: 150, y: 624, width: 768, height: 567 },
+  { x: 926, y: 624, width: 769, height: 567 },
+]
+
 export const FOURCUT = {
   width: 1844,
   height: 1240,
@@ -59,12 +69,9 @@ export const FOURCUT = {
    * 그림에서 잰 구멍(153,52 · 929,52 · 153,627 · 929,627)에 둘레 3px을 더했다.
    */
   cellsByJob: {
-    astronaut: [
-      { x: 150, y: 49, width: 768, height: 567 },
-      { x: 926, y: 49, width: 769, height: 567 },
-      { x: 150, y: 624, width: 768, height: 567 },
-      { x: 926, y: 624, width: 769, height: 567 },
-    ],
+    astronaut: NEW_FRAME_CELLS,
+    /** 가수 — 2026-11-24 시험: 우주비행사와 같은 틀에 왼쪽 아래 칸만 구름 모양(구멍 152,630 · 764×553 — 같은 네모 안에 들어간다) */
+    singer: NEW_FRAME_CELLS,
   } as Readonly<Record<string, readonly Rect[]>>,
 } as const
 

@@ -48,7 +48,7 @@ export function cellAspect(job: JobId): number {
 const FRAME_FILE: Record<JobId, string> = {
   police: 'police.png',
   astronaut: 'astronaut.png',
-  singer: 'singer.png',
+  singer: 'singer-test.png', // 2026-11-24 시험 — 새 틀(구름 칸). 원래 그림은 singer.png 그대로 있다
   creator: 'creator.png',
   doctor: 'doctor.png',
   roboticist: 'roboticist.png',
