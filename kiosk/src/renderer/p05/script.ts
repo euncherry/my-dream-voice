@@ -37,6 +37,11 @@ export interface LayeredScene {
   gauge?: number
   /** 이 장면에서만 인물 키를 바꿀 때 (기본 1 — 발끝은 그대로, 헬멧 가운데 기준) */
   scale?: { girl?: number; boy?: number }
+  /**
+   * 이 장면에서만 인물이 서는 가로 자리 (판 폭 대비 · 헬멧 가운데 — 기본 여 0.36 · 남 0.595).
+   * A-04부터 두 아이가 살짝 멀어져 가운데에 마이크 자리를 연다 (2026-11-26 사용자 지정 — 그 전 장면은 그대로)
+   */
+  cast?: { girl?: number; boy?: number }
 }
 
 /**
@@ -127,7 +132,7 @@ const MOON_PROPS: readonly SceneProp[] = [
  * 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타나고(겹치지 않게 둘은 뺌), 오른쪽 작은 별 · 행성은 커진 로켓에 가리지 않게 로켓 옆 빈 하늘로
  */
 const ROCKET_PROPS: readonly SceneProp[] = [
-  { name: 'prop-star-rainbow', cx: 170, cy: 168, w: 150, fx: 'twinkle' },
+  { name: 'prop-star-rainbow', cx: 278, cy: 175, w: 150, fx: 'twinkle' },
   { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1330, cy: 160, w: 55, fx: 'glow' },
   { name: 'prop-planet', cx: 1650, cy: 160, w: 160 },
   // 발끝 자리(배경 y 588)는 그대로 두고 키운다
@@ -221,7 +226,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         bg: 'bg-moon',
         girl: 'girl-point',
         boy: 'boy-look',
-        // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 367, 301 — 11-26 두 아이 사이를 벌린 뒤)에서 팔 방향 그대로 위쪽 왼쪽에 새 별
+        // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 480, 301)에서 팔 방향 그대로 위쪽 왼쪽에 새 별
         scale: { girl: 0.88 },
         props: ROCKET_PROPS,
         gauge: 0,

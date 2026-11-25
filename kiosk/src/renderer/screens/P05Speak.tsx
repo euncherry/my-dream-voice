@@ -154,9 +154,9 @@ const OPENING_MS = 500
  * 레이어 장면의 인물 자리 — 판 기준 비율 (A-01 완성 그림에서 잰 값).
  *   CAST_CX: 헬멧 가운데의 가로 자리 · BODY_H: 헬멧 꼭대기 ~ 발끝 키 (판 높이 대비 — 1보다 커서 헬멧이 판 위로 튀어나온다)
  *   FEET: 발끝의 세로 자리 (판 높이 대비)
- *   2026-11-26 두 아이 사이를 벌렸다 (36% · 59.5% → 30% · 68%) — 가운데는 마이크가 뜨는 자리 (docs/P05_SCENARIO.md A-04)
+ *   장면마다 `cast`로 바꿀 수 있다 — A-04부터 두 아이가 살짝 멀어져 가운데에 마이크 자리 (2026-11-26)
  */
-const CAST_CX = { girl: 0.3, boy: 0.68 } as const
+const CAST_CX = { girl: 0.36, boy: 0.595 } as const
 const BODY_H = 1.085
 const FEET = 0.965
 
@@ -742,7 +742,12 @@ function SpeakFlow({
               <SceneFrame job={job} scene={view.scene} />
               <StepBar bar={view.bar} />
               {view.subtitle && (
-                <SpeechBubble key={view.step} text={view.subtitle} who={view.who} />
+                <SpeechBubble
+                  key={view.step}
+                  text={view.subtitle}
+                  who={view.who}
+                  cast={SCRIPTS[job].layered?.[view.scene]?.cast}
+                />
               )}
             </div>
 
@@ -1011,14 +1016,14 @@ function LayeredArt({
       <Props job={job} props={def.props ?? NO_PROPS} panel={panel} k={k} />
       <Sprite
         url={layerUrl(job, def.girl)}
-        cx={CAST_CX.girl}
+        cx={def.cast?.girl ?? CAST_CX.girl}
         scale={def.scale?.girl ?? 1}
         panelH={panelH}
         who="girl"
       />
       <Sprite
         url={layerUrl(job, def.boy)}
-        cx={CAST_CX.boy}
+        cx={def.cast?.boy ?? CAST_CX.boy}
         scale={def.scale?.boy ?? 1}
         panelH={panelH}
         who="boy"
@@ -1216,7 +1221,16 @@ function SpritePose({
  *   여자아이 분홍 · 남자아이 파랑 · 둘이 같이 보라(꼬리 두 개). 말풍선은 가운데 그대로 — 꼬리만 그 아이 쪽으로.
  * 꼬리 자리는 인물이 서는 자리(CAST_CX)에서 계산한다 — 말풍선의 실제 폭을 재서 그 안에서의 자리로 바꾼다.
  */
-function SpeechBubble({ text, who }: { text: string; who: Who | null }): ReactNode {
+function SpeechBubble({
+  text,
+  who,
+  cast,
+}: {
+  text: string
+  who: Who | null
+  /** 장면마다 바뀐 인물 자리 (LayeredScene.cast) */
+  cast?: { girl?: number; boy?: number }
+}): ReactNode {
   const ref = useRef<HTMLParagraphElement>(null)
   const [tails, setTails] = useState<number[]>([])
   const long = text.replace(/\s/g, '').length > SUBTITLE_LONG_CHARS
@@ -1233,10 +1247,10 @@ function SpeechBubble({ text, who }: { text: string; who: Who | null }): ReactNo
     const margin = 46 // 둥근 모서리에 걸리지 않게
     setTails(
       kids.map((k) =>
-        Math.min(el.offsetWidth - margin, Math.max(margin, CAST_CX[k] * FRAME_W - left)),
+        Math.min(el.offsetWidth - margin, Math.max(margin, (cast?.[k] ?? CAST_CX[k]) * FRAME_W - left)),
       ),
     )
-  }, [text, who])
+  }, [text, who, cast])
 
   return (
     <p ref={ref} className="p05-subtitle" data-long={long} data-who={who ?? undefined}>
