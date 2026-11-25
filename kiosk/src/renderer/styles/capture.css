@@ -421,6 +421,8 @@
 .p06-timer__text {
   position: relative;
   margin-top: 6px;
+  /* 숫자보다 연하게 (2026-11-25 지정 — 불투명도 90%) */
+  opacity: 0.9;
   font-family: var(--d-font-button);
   font-size: 22px;
   font-weight: 700;
