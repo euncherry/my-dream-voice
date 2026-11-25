@@ -1008,10 +1008,22 @@ function LayeredArt({
         style={{ left: -panel.left * k, top: -panel.top * k, width: panel.width * k }}
       />
       <Props job={job} props={def.props ?? NO_PROPS} panel={panel} k={k} />
-      <Sprite url={layerUrl(job, def.girl)} cx={CAST_CX.girl} panelH={panelH} who="girl" />
-      <Sprite url={layerUrl(job, def.boy)} cx={CAST_CX.boy} panelH={panelH} who="boy" />
+      <Sprite
+        url={layerUrl(job, def.girl)}
+        cx={CAST_CX.girl}
+        scale={def.scale?.girl ?? 1}
+        panelH={panelH}
+        who="girl"
+      />
+      <Sprite
+        url={layerUrl(job, def.boy)}
+        cx={CAST_CX.boy}
+        scale={def.scale?.boy ?? 1}
+        panelH={panelH}
+        who="boy"
+      />
       {def.gauge !== undefined && (
-        <VoiceGauge level={def.gauge} rocketUrl={layerUrl(job, 'prop-rocket')} />
+        <VoiceGauge level={def.gauge} />
       )}
     </div>
   )
@@ -1083,11 +1095,11 @@ function Props({
 }
 
 /**
- * 목소리 게이지 — 그림 위 오른쪽에 크게 덮어 그리는 세로 캡슐 + 꼭대기의 작은 로켓 (2026-11-26 — 로켓과 따로, 눈에 띄게).
+ * 목소리 게이지 — 그림 위 오른쪽에 크게 덮어 그리는 세로 캡슐 (2026-11-26 — 로켓과 따로, 눈에 띄게 · 꼭대기 작은 로켓은 같은 날 뺌).
  * 아래에서부터 차오른다 (0 ~ 1). ⚠️ 모양 · 색은 임시 — 디자인을 받으면 바꾼다.
  * 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
  */
-function VoiceGauge({ level, rocketUrl }: { level: number; rocketUrl: string | undefined }): ReactNode {
+function VoiceGauge({ level }: { level: number }): ReactNode {
   const pct = Math.round(Math.min(1, Math.max(0, level)) * 100)
   return (
     <span className="p05-vgauge" aria-hidden="true">
@@ -1096,7 +1108,6 @@ function VoiceGauge({ level, rocketUrl }: { level: number; rocketUrl: string | u
           <span className="p05-vgauge__fill" style={{ height: `${pct}%` }} />
         </span>
       </span>
-      {rocketUrl && <img className="p05-vgauge__rocket" src={rocketUrl} alt="" draggable={false} />}
     </span>
   )
 }
@@ -1105,24 +1116,27 @@ function VoiceGauge({ level, rocketUrl }: { level: number; rocketUrl: string | u
 function Sprite({
   url,
   cx,
+  scale,
   panelH,
   who,
 }: {
   url: string | undefined
   cx: number
+  /** 이 장면에서의 키 배율 (LayeredScene.scale — 기본 1) */
+  scale: number
   panelH: number
   who: 'girl' | 'boy'
 }): ReactNode {
-  const [poses, setPoses] = useState(() => (url ? [{ url, n: 0 }] : []))
+  const [poses, setPoses] = useState(() => (url ? [{ url, scale, n: 0 }] : []))
 
   useEffect(() => {
     if (!url) return
     setPoses((ps) => {
       const last = ps[ps.length - 1]
-      if (last?.url === url) return ps
-      return last ? [last, { url, n: last.n + 1 }] : [{ url, n: 0 }]
+      if (last?.url === url) return last.scale === scale ? ps : [...ps.slice(0, -1), { ...last, scale }]
+      return last ? [last, { url, scale, n: last.n + 1 }] : [{ url, scale, n: 0 }]
     })
-  }, [url])
+  }, [url, scale])
 
   useEffect(() => {
     if (poses.length < 2) return
@@ -1137,6 +1151,7 @@ function Sprite({
           key={pose.n}
           url={pose.url}
           cx={cx}
+          scale={pose.scale}
           panelH={panelH}
           who={who}
           fade={poses.length > 1 ? (i === 0 ? 'out' : 'in') : undefined}
@@ -1149,12 +1164,14 @@ function Sprite({
 function SpritePose({
   url,
   cx,
+  scale,
   panelH,
   who,
   fade,
 }: {
   url: string
   cx: number
+  scale: number
   panelH: number
   who: 'girl' | 'boy'
   fade?: 'in' | 'out'
@@ -1176,7 +1193,7 @@ function SpritePose({
 
   if (!box) return null
   // 키를 판 높이에 맞추고, 헬멧 가운데 · 발끝을 정한 자리에 놓는다
-  const s = (BODY_H * panelH) / (box.bottom - box.top)
+  const s = (BODY_H * scale * panelH) / (box.bottom - box.top)
   return (
     <img
       className={`p05-sprite${fade ? ` is-${fade}` : ''}`}

@@ -810,11 +810,11 @@ img.p05-scene__art--pop {
   }
 }
 
-/* 목소리 게이지 (2026-11-26) — 그림 위 오른쪽에 크게 덮는 세로 캡슐 + 꼭대기 작은 로켓. ⚠️ 모양 · 색 임시 */
+/* 목소리 게이지 (2026-11-26) — 그림 위 오른쪽에 크게 덮는 세로 캡슐. ⚠️ 모양 · 색 임시 */
 .p05-vgauge {
   position: absolute;
   right: 30px;
-  top: 96px;
+  top: 40px;
   bottom: 44px;
   width: 84px;
   z-index: 2;
@@ -852,17 +852,6 @@ img.p05-scene__art--pop {
   background: linear-gradient(to top, #fe6a4e, #ffb347 55%, #ffe45c);
   box-shadow: 0 0 16px rgb(255 200 80 / 0.8);
   transition: height 0.12s linear;
-}
-
-/* 꼭대기 로켓 — 캡슐 위에 올라앉고 그림 칸 위로 조금 튀어나온다 */
-.p05-vgauge__rocket {
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 100px;
-  max-width: none;
-  translate: -50% 22px;
-  filter: drop-shadow(0 4px 6px rgb(5 9 84 / 0.35));
 }
 
 /* 게이지가 있는 장면 — 말풍선이 게이지를 덮지 않게 폭을 줄이고 조금 왼쪽으로 (꼬리 자리는 left로 계산하므로 left를 옮긴다) */
