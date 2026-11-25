@@ -1,0 +1,135 @@
+/*
+ * frame.css — 직업 프레임 미리보기 (photo/FramePreview.tsx)
+ *
+ * 쓰는 곳: P-04 [직업 선택] 카드 · P-06 [촬영] 옆 패널.
+ * 인쇄되는 네컷(1844 × 1240 · 가로)을 작게 옮긴 것이다. 비율 · 칸 · 띠 위치는
+ * FramePreview 가 FOURCUT(src/shared/constants.ts) 값으로 넣는다 — 여기에 좌표를 적지 않는다.
+ *
+ * 글자 크기는 컨테이너 기준(cqw)이라 카드(폭 약 300px)에서도 큰 패널에서도 같은 모양으로 줄고 늘어난다.
+ *
+ * ⚠️ 아래 --frame-* 은 화면 토큰이 아니라 **종이 위의 색**이다 —
+ *    photo/composeFourCut.ts 의 PAPER 와 같은 값 (PLACEHOLDER 프레임을 같은 모양으로 그리려고).
+ *    프레임 아트(public/frames/<jobId>.png)가 오면 placeholder 쪽은 쓰이지 않는다.
+ */
+
+.frame {
+  --frame-paper: #ffffff;
+  --frame-strip: rgba(255, 255, 255, 0.88);
+  --frame-ink: #1b1f27;
+  --frame-empty: #d9dce2;
+  --frame-empty-ink: #6b707a;
+
+  position: relative;
+  /* 부모 너비에 맞춘다. 높이에 맞추려면 쓰는 쪽에서 className 으로 width: auto · height: 100% */
+  width: 100%;
+  /* flex 안에서 눌려 비율이 깨지지 않게 */
+  flex-shrink: 0;
+  overflow: hidden;
+  container-type: inline-size;
+  background: var(--frame-paper);
+}
+
+/* 아트가 있는지 확인하는 동안에는 빈 칸만 보인다 */
+.frame[data-frame='pending'] {
+  background: var(--c-surface-2);
+}
+
+/* PLACEHOLDER 프레임 — 칸 바깥이 직업 색 (JobDef.placeholderColor) */
+.frame[data-frame='placeholder'] {
+  background: var(--frame-color, var(--c-placeholder));
+}
+
+/* ── 사진 칸 4개 ── */
+
+.frame__cell {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--frame-empty);
+  color: var(--frame-empty-ink);
+}
+
+/* composeFourCut 의 가운데 자르기와 같은 결과 */
+/* 찍은 사진은 거울 방향으로 — 인쇄되는 네컷(composeFourCut)과 같다 (2026-11-23) */
+.frame__shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.frame__num {
+  font-size: 8cqw;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── 프레임 아트 — 사진 위 맨 위 (사진 칸은 투명) ── */
+
+.frame__art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── PLACEHOLDER 프레임의 오른쪽 세로 띠 ──
+   안쪽 글자는 띠 너비 기준(cqw) — 비율은 composeFourCut.ts 의 STRIP 과 맞춘 값이다 */
+
+.frame__strip {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  container-type: inline-size;
+  background: var(--frame-strip);
+  color: var(--frame-ink);
+  /* 인쇄물(캔버스)과 같은 글꼴 */
+  font-family: 'Malgun Gothic', sans-serif;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.frame__strip-in {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10cqw;
+  padding: 12cqw 10cqw;
+}
+
+.frame__brand {
+  display: flex;
+  flex-direction: column;
+  font-size: 18cqw;
+}
+
+.frame__job {
+  font-size: 16cqw;
+}
+
+/* 띠가 좁아 placeholder 표시는 세로로 — 위에서 아래로 읽힌다 */
+.frame__mark {
+  margin-top: auto;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  font-size: 26cqw;
+  line-height: 1;
+}
+
+/* ── 지금 찍는 칸 (P-06) — 프레임 아트보다 위 ── */
+
+.frame__active {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1cqw var(--c-accent-2);
+}

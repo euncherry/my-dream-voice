@@ -1,12 +1,13 @@
 /**
  * src/main/acoustic.ts — 발화 음향 특성 (진폭 · 무음 비율 · 음도 변동)
  *
- * SPEC §7 T-1 후보 B: "음향 특성(목소리 크기/속도/높낮이 변화) 기반 중립 매칭 → 평가가 아님"
+ * 처음에는 추천 직업(SPEC T-1 후보 B — 음향 특성 기반 중립 매칭)에 쓰려던 값이다. 추천 직업은 v2에서 없어졌고(T-1 종료),
+ * 지금은 녹음 상태 확인에만 쓴다.
  *
  * ⚠️ 여기서 내는 값은 **녹음 품질·기술 지표**다. 아동을 평가하는 점수가 아니다.
  *    - 보호자 리포트에 넣지 않는다 (CLAUDE.md 금지사항 9)
  *    - 음도는 수치가 아니라 범주형 요약(stable / varied / unknown)으로만 낸다
- *    - 용도: 무음·클리핑 판정(재시도), 향후 T-1 중립 매칭 입력
+ *    - 용도: 무음 · 클리핑 확인 (P-05 받아쓰기 전 무음 검사 — isSilent · D-01 녹음 표)
  *
  * 무거운 계산이라 메인 프로세스에 둔다 (CLAUDE.md 금지사항 2).
  */
@@ -22,6 +23,11 @@ const USABLE_MIN_RMS = 0.02
 const USABLE_MAX_SILENCE = 0.6
 /** 피크가 이 이상이면 클리핑 */
 const CLIP_PEAK = 0.99
+/**
+ * 소리가 난 프레임을 다 합쳐 이보다 짧으면 무음으로 본다 (P-05 받아쓰기 전 검사) — 임시 임계값.
+ * 실제 아이 녹음으로 맞춘다. 받아쓰기 프로그램(faster-whisper)이 붙으면 그쪽의 무음 걸러내기(VAD)와 맞춰 본다.
+ */
+const SOUND_MIN_MS = 200
 
 /** 음도 추정 범위 — 아동 음성 80~400Hz */
 const F0_MIN_HZ = 80
@@ -117,9 +123,22 @@ export function measurePcm(pcm: Float32Array, sampleRate: number, index: number)
     amplitudeRms: round(amplitudeRms),
     peak: round(peak),
     silenceRatio: round(silenceRatio),
+    soundMs: (frames - silent) * HOP_MS,
     pitchSummary: pitchSummary(pcm, sampleRate),
     usable,
   }
+}
+
+/**
+ * 무음인가 — 소리가 난 시간을 다 합쳐도 SOUND_MIN_MS 에 못 미치면 true.
+ * P-05에서 받아쓰기 전에 본다: 무음이면 받아쓰지 않고 "무음"으로 처리한다 (V2_PLAN §3).
+ *
+ * `usable`(무음 **비율**)을 그대로 쓰지 않는다 — v2는 아이가 [다 말했어요]를 눌러야 녹음이 끝나서,
+ * 짧은 어절을 말하고 버튼을 늦게 누르면 말을 했는데도 무음 비율이 높게 나온다.
+ * 클리핑도 무음이 아니다 (말소리는 들어 있다).
+ */
+export function isSilent(feature: SpeechFeature): boolean {
+  return feature.soundMs < SOUND_MIN_MS
 }
 
 /** 저장된 16bit 모노 WAV를 읽어 측정한다 (storage.ts가 쓰는 RIFF 규격 그대로) */

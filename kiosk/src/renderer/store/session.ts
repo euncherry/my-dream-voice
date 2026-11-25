@@ -1,238 +1,314 @@
 /**
- * store/session.ts — 세션 스토어 (화면 전환의 단일 소스)
+ * store/session.ts — 세션 스토어 (화면 전환의 단일 소스 · v2)
  *
- * PAGE_SPEC §5-2:
- *   "화면 전환은 세션 상태 기반 — 라우터 경로에 데이터를 싣지 말고
- *    세션 스토어를 단일 소스로 (중간 이탈·타임아웃 복구가 쉬움)"
+ * PAGE_SPEC §7-1: 화면 전환은 세션 상태 기반 — 라우터 없이 `screen` 값 하나로 화면을 고른다.
+ * 화면 순서는 `nextScreen()` · `prevScreen()` 두 곳에만 있다 (PAGE_SPEC §1 전체 흐름).
  *
- * → react-router를 쓰지 않는다. screen 값 하나로 렌더링할 화면을 고른다.
+ *   P-00 → P-01 ─ A ────────────────────────→ P-04 ────────→ P-06 → P-07 → (M-03) → P-00
+ *               └ B → P-02 → P-02a → P-03 → P-04 → P-05 → P-06 → P-07 → (M-03) → P-00
+ *
+ * M-03[완료 안내]은 화면이 아니라 P-07 위에 뜨는 창이다 (`doneOpen`).
  */
 
 import { create } from 'zustand'
-import { toAgeGroup } from '@shared/jobs'
-import type { AnalysisScenario, JobId, KioskMode, Session } from '@shared/types'
+import { TAP_GUARD_MS } from '@shared/constants'
+import type {
+  AgeGroup,
+  AnalysisScenario,
+  Consents,
+  GuardianLink,
+  JobId,
+  KioskMode,
+  PrintMode,
+  Session,
+} from '@shared/types'
 
 export type ScreenId =
   | 'D-01' // 하드웨어 체크 (개발 전용)
   | 'P-00' // 대기
   | 'P-01' // 모드 선택
-  | 'P-02' // 직업 선택
-  | 'P-03' // 연령 입력 (B)
-  | 'P-04' // 동의 (B)
+  | 'P-02' // 동의 (B)
+  | 'P-02a' // 보호자 연결 (B)
+  | 'P-03' // 연령 선택 (B)
+  | 'P-04' // 직업 선택
   | 'P-05' // 발화 (B)
   | 'P-06' // 촬영
-  | 'P-07' // 분석 중 (B)
-  | 'P-08' // 결과 (B)
-  | 'P-09' // 인쇄
-  | 'P-10' // QR 제공
-  | 'P-11' // 종료
+  | 'P-07' // 분석 및 프린트
 
 export const SCREEN_TITLES: Record<ScreenId, string> = {
   'D-01': '하드웨어 체크',
-  'P-00': '대기 화면',
+  'P-00': '대기',
   'P-01': '모드 선택',
-  'P-02': '직업 선택',
-  'P-03': '연령 입력',
-  'P-04': '동의',
+  'P-02': '동의',
+  'P-02a': '보호자 연결',
+  'P-03': '연령 선택',
+  'P-04': '직업 선택',
   'P-05': '발화',
   'P-06': '촬영',
-  'P-07': '분석 중',
-  'P-08': '결과',
-  'P-09': '인쇄',
-  'P-10': 'QR 제공',
-  'P-11': '종료',
+  'P-07': '분석 및 프린트',
 }
 
-/** PAGE_SPEC §0 스파이크 범위 표기 */
-export type SpikeLevel = 'full' | 'min' | 'none'
-export const SCREEN_SPIKE: Record<ScreenId, SpikeLevel> = {
-  'D-01': 'full',
-  'P-00': 'min',
-  'P-01': 'min',
-  'P-02': 'min',
-  'P-03': 'min',
-  'P-04': 'none',
-  'P-05': 'full',
-  'P-06': 'full',
-  'P-07': 'min',
-  'P-08': 'min',
-  'P-09': 'full',
-  'P-10': 'full',
-  'P-11': 'min',
-}
+/** DevBar 화면 이동 목록 순서 */
+export const SCREEN_ORDER: ScreenId[] = [
+  'D-01',
+  'P-00',
+  'P-01',
+  'P-02',
+  'P-02a',
+  'P-03',
+  'P-04',
+  'P-05',
+  'P-06',
+  'P-07',
+]
 
-/** 업로드 진행 상태 (SPEC §6-1) */
-export type UploadState = 'idle' | 'pending' | 'done' | 'failed'
-
-/** M-02 [오류·폴백 안내] — 아동이 읽어도 무섭지 않은 문구 */
-export interface Fallback {
-  /** 개발자용 케이스 구분 */
-  kind: 'print' | 'upload' | 'analysis' | 'device'
-  /** 화면에 그대로 보여줄 문구 */
-  message: string
-  /** 개발자용 상세 (스파이크 화면에서만 노출) */
-  detail?: string
-}
-
-const EMPTY_SESSION: Session = { jobs: [] }
-
-/** PAGE_SPEC §1 전체 흐름 */
+/** 다음 화면 — 경로는 P-01[모드 선택]에서 갈린다 (2026-11-19) */
 export function nextScreen(current: ScreenId, mode: KioskMode | undefined): ScreenId {
   switch (current) {
     case 'P-00':
       return 'P-01'
     case 'P-01':
-      return 'P-02'
+      // A는 동의 · 보호자 연결 없이 바로 직업 선택
+      return mode === 'B' ? 'P-02' : 'P-04'
     case 'P-02':
-      return mode === 'B' ? 'P-03' : 'P-06'
+      return 'P-02a'
+    case 'P-02a':
+      return 'P-03'
     case 'P-03':
       return 'P-04'
     case 'P-04':
-      return 'P-05'
+      return mode === 'B' ? 'P-05' : 'P-06'
     case 'P-05':
       return 'P-06'
     case 'P-06':
-      return mode === 'B' ? 'P-07' : 'P-09'
+      return 'P-07'
     case 'P-07':
-      return 'P-08'
-    case 'P-08':
-      return 'P-09'
-    case 'P-09':
-      return 'P-10'
-    case 'P-10':
-      return 'P-11'
-    case 'P-11':
+      // M-03이 닫히면 endSession()이 P-00으로 보낸다
       return 'P-00'
     default:
       return 'P-00'
   }
 }
 
+/** [뒤로] — 없는 화면(촬영 · 분석 및 프린트 등)은 null */
+export function prevScreen(current: ScreenId, mode: KioskMode | undefined): ScreenId | null {
+  switch (current) {
+    case 'P-01':
+      return 'P-00'
+    case 'P-02':
+      return 'P-01'
+    case 'P-02a':
+      return 'P-02'
+    case 'P-03':
+      // 보호자 연결이 이미 끝났으므로, 연결을 버리고 모드 선택부터 다시 (PAGE_SPEC P-03 — 제안)
+      return 'P-01'
+    case 'P-04':
+      return mode === 'B' ? 'P-03' : 'P-01'
+    case 'P-05':
+      // 2026-11-23 발화 시안에 [뒤로]가 있다 — 직업을 다시 고른다 (녹음은 P-05가 지우고 나간다)
+      return 'P-04'
+    default:
+      return null
+  }
+}
+
+/** M-02 [오류·폴백 안내] — 아동이 읽어도 무섭지 않은 문구 */
+export interface Fallback {
+  /**
+   * 띄우는 경우는 둘뿐이다: 카메라/마이크 없음(device) · 인쇄 실패(print).
+   * 분석 실패 · 서버 전송 실패 · P-02a 연결 실패는 M-02를 띄우지 않는다 (PAGE_SPEC M-02).
+   */
+  kind: 'device' | 'print'
+  /** 화면에 그대로 보여줄 문구 */
+  message: string
+  /** 개발자용 상세 */
+  detail?: string
+}
+
+/**
+ * ⚠️ MOCK 전용 — 받아쓰기 프로그램이 없는 동안 P-05 다시 말하기 흐름을 돌리는 방법
+ *   manual = "잘 듣고 있어요" 동안 화면의 개발용 버튼(통과 / 실패 / 무음)으로 고른다
+ *   pass / fail = 고르지 않고 항상 그 결과 (무음 검사는 실제로 한다)
+ */
+export type MockSttMode = 'manual' | 'pass' | 'fail'
+
+const EMPTY_SESSION: Session = {}
+
 interface SessionStore {
   screen: ScreenId
   session: Session
   fallback: Fallback | null
+  /** M-03[완료 안내]이 떠 있는가 */
+  doneOpen: boolean
 
-  /** ⚠️ MOCK 전용 — 두 리포트 레이아웃을 모두 확인하기 위한 시나리오 토글 */
+  // ── 개발 · MOCK 전용 (DevBar) ──
   mockScenario: AnalysisScenario
-
-  /**
-   * 업로드 진행 상태 (SPEC §6-1).
-   * P-09[인쇄]에서 시작해 P-10[QR]이 결과만 받는다 — 화면이 바뀌어도 진행 중인
-   * Promise는 계속 살아 있으므로, 상태를 스토어에 두고 P-10은 이 값만 본다.
-   */
-  uploadState: UploadState
-  uploadError: string | null
+  mockStt: MockSttMode
+  /** P-07 인쇄 — fake면 종이를 쓰지 않는다. 기본값은 메인이 정한다 (설치판 real · 개발 실행 fake) */
+  printMode: PrintMode
 
   goto: (screen: ScreenId) => void
   next: () => void
+  /** [뒤로] — 화면에 따라 지울 데이터도 함께 정리한다 */
+  back: () => void
   patch: (partial: Partial<Session>) => void
 
+  /** P-01 */
   setMode: (mode: KioskMode) => void
-  toggleJob: (jobId: JobId) => void
-  setAge: (age: number) => void
+  /** P-02 — 세 항목 모두 체크했을 때만 부른다 */
+  setConsents: (consents: Consents) => void
+  /** P-02a — 보호자가 연결돼 세션이 열렸다 */
+  setGuardianLink: (link: GuardianLink) => void
+  /** P-02a — 연결 실패 → [사진만 찍기]: A모드로 바꾸고 동의 기록을 지운 뒤 P-04 */
+  switchToPhotoOnly: () => void
+  /** P-03 */
+  setAgeGroup: (ageGroup: AgeGroup) => void
+  /** P-04 — 1개 (다른 카드를 누르면 바뀐다) */
+  setJob: (job: JobId) => void
 
   setFallback: (fallback: Fallback | null) => void
   setMockScenario: (scenario: AnalysisScenario) => void
+  setMockStt: (mode: MockSttMode) => void
+  setPrintMode: (mode: PrintMode) => void
 
-  /** 세션 폴더 발급 (메인) */
+  /** P-00 — 남은 세션이 있으면 지우고 새 세션 폴더를 발급받는다 */
   beginSession: () => Promise<void>
-  /**
-   * 최종 산출물 업로드 — **P-09[인쇄]에서 인쇄와 동시에 호출한다** (SPEC §6-1).
-   * 중복 호출은 내부에서 막으므로 StrictMode 이중 마운트에도 안전하다.
-   */
-  startUpload: () => Promise<void>
-  /** P-11 — 로컬 산출물 삭제 + 상태 초기화 */
+  /** P-07 — 인쇄 완료 + (B) 분석 끝 + 전송 완료 또는 실패 뒤에 부른다 */
+  openDone: () => void
+  /** M-03이 닫힐 때 — 세션 닫기(B) · 로컬 데이터 삭제 · P-00 */
   endSession: () => Promise<void>
 }
 
+/**
+ * 세션 폴더 삭제 + 서버 세션 닫기. 실패해도 다음 손님을 막지 않는다.
+ *
+ * 폴더(녹음 · 사진 · 영상)를 **먼저** 지운다 — 서버 응답을 기다리는 사이에 앱이 꺼져도 아이 데이터가 남지 않게.
+ * 서버 세션 닫기는 기다리지 않는다 (서버가 느려도 완료 창이 멈춰 있지 않게).
+ * 삭제가 실패해도 메인이 다음 세션을 시작할 때 · 앱을 시작할 때 남은 폴더를 다시 치운다 (main/storage.ts).
+ */
+async function disposeSession(session: Session): Promise<void> {
+  if (session.sessionId) {
+    try {
+      await window.api.session.purge(session.sessionId)
+    } catch (e) {
+      console.warn('[session] 세션 폴더 삭제 실패', e)
+    }
+  }
+  const token = session.guardianLink?.sessionToken
+  if (token) void window.api.server.closeSession(token).catch(() => undefined)
+}
+
+/**
+ * 화면이 바뀐 직후의 터치는 받지 않는다 — [← 뒤로]는 모든 화면에서 같은 자리라,
+ * 연달아 두드리면 새 화면의 [뒤로]까지 눌려 두 칸을 넘어간다 (P-04 → P-03 → P-01: 보호자 연결이 버려진다).
+ */
+let screenChangedAt = 0
+
+/** 방금(TAP_GUARD_MS 안에) 화면이 바뀌었는가 — 화면이 뜨자마자 들어온 터치를 거를 때 쓴다 */
+export function justChangedScreen(): boolean {
+  return performance.now() - screenChangedAt < TAP_GUARD_MS
+}
+
 export const useSession = create<SessionStore>((set, get) => ({
-  screen: 'D-01', // 스파이크 시작점. 운영 빌드에서는 P-00.
+  screen: 'D-01', // 개발 단계 시작점. 운영 빌드에서는 P-00
   session: EMPTY_SESSION,
   fallback: null,
+  doneOpen: false,
+
   mockScenario: 'random',
-  uploadState: 'idle',
-  uploadError: null,
+  mockStt: 'manual',
+  printMode: 'fake', // App.tsx가 시작할 때 메인의 기본값으로 바꾼다
 
   goto: (screen) => set({ screen }),
   next: () => set((s) => ({ screen: nextScreen(s.screen, s.session.mode) })),
+
+  back: () => {
+    // 연타 방지 — 화면이 바뀐 직후의 [뒤로]는 무시한다. (next에는 걸지 않는다: 코드가 부르는 전환을 삼키면 안 된다)
+    if (justChangedScreen()) return
+
+    const { screen, session } = get()
+    const target = prevScreen(screen, session.mode)
+    if (!target) return
+
+    if (screen === 'P-03') {
+      // 연결을 버리고 모드 선택부터 다시 — 열린 세션도 닫는다
+      const token = session.guardianLink?.sessionToken
+      if (token) void window.api.server.closeSession(token).catch(() => undefined)
+      set({
+        screen: target,
+        session: {
+          ...session,
+          mode: undefined,
+          consentAt: undefined,
+          consents: undefined,
+          guardianLink: undefined,
+          ageGroup: undefined,
+        },
+      })
+      return
+    }
+
+    if (screen === 'P-02') {
+      set({ screen: target, session: { ...session, consentAt: undefined, consents: undefined } })
+      return
+    }
+
+    set({ screen: target })
+  },
+
   patch: (partial) => set((s) => ({ session: { ...s.session, ...partial } })),
 
   setMode: (mode) => set((s) => ({ session: { ...s.session, mode } })),
 
-  toggleJob: (jobId) =>
-    set((s) => {
-      const jobs = s.session.jobs
-      const picked = jobs.includes(jobId)
-      // 재터치=해제 / 4개를 채우면 더 못 고름 (PAGE_SPEC P-02)
-      const nextJobs = picked
-        ? jobs.filter((j) => j !== jobId)
-        : jobs.length >= 4
-          ? jobs
-          : [...jobs, jobId]
-      return { session: { ...s.session, jobs: nextJobs } }
-    }),
+  setConsents: (consents) =>
+    set((s) => ({
+      session: { ...s.session, consents, consentAt: new Date().toISOString() },
+    })),
 
-  setAge: (age) =>
-    set((s) => ({ session: { ...s.session, age, ageGroup: toAgeGroup(age) } })),
+  setGuardianLink: (guardianLink) => set((s) => ({ session: { ...s.session, guardianLink } })),
+
+  switchToPhotoOnly: () =>
+    set((s) => ({
+      screen: 'P-04',
+      session: {
+        ...s.session,
+        mode: 'A',
+        // A는 동의 화면이 없다 — B에서 받은 동의 기록을 남기지 않는다
+        consentAt: undefined,
+        consents: undefined,
+        guardianLink: undefined,
+        ageGroup: undefined,
+        speech: undefined,
+      },
+    })),
+
+  setAgeGroup: (ageGroup) => set((s) => ({ session: { ...s.session, ageGroup } })),
+  setJob: (job) => set((s) => ({ session: { ...s.session, job } })),
 
   setFallback: (fallback) => set({ fallback }),
   setMockScenario: (mockScenario) => set({ mockScenario }),
+  setMockStt: (mockStt) => set({ mockStt }),
+  setPrintMode: (printMode) => set({ printMode }),
 
   beginSession: async () => {
+    // 이전 세션 잔여 데이터 폐기 (PAGE_SPEC P-00)
+    await disposeSession(get().session)
     const paths = await window.api.session.begin()
-    set((s) => ({
-      session: { ...s.session, sessionId: paths.sessionId, paths },
-    }))
-  },
-
-  startUpload: async () => {
-    // 중복 방지 — P-09 재진입·StrictMode 이중 마운트에도 한 번만 올라간다
-    if (get().uploadState !== 'idle') return
-
-    const { mode, reportPdf, composedPhoto } = get().session
-    // ⚠️ 업로드 대상은 최종 산출물만 (CLAUDE.md 금지사항 4)
-    const isReport = mode === 'B' && !!reportPdf
-    const target = isReport ? reportPdf : composedPhoto
-
-    if (!target) {
-      set({ uploadState: 'failed', uploadError: '업로드할 산출물이 없습니다' })
-      return
-    }
-
-    set({ uploadState: 'pending', uploadError: null })
-
-    const res = await window.api.upload.artifact({
-      kind: isReport ? 'report-pdf' : 'fourcut-image',
-      filePath: target,
+    set({
+      session: { sessionId: paths.sessionId, paths, createdAt: new Date().toISOString() },
+      fallback: null,
+      doneOpen: false,
     })
-
-    if (res.ok && res.downloadUrl) {
-      set((s) => ({
-        session: { ...s.session, downloadUrl: res.downloadUrl },
-        uploadState: 'done',
-      }))
-    } else {
-      set({ uploadState: 'failed', uploadError: `${res.reason} · ${res.error}` })
-    }
   },
+
+  openDone: () => set({ doneOpen: true }),
 
   endSession: async () => {
-    const { sessionId } = get().session
-    // PAGE_SPEC P-11: 세션 데이터 폐기 — 로컬 WAV·사진·PDF 삭제
-    if (sessionId) {
-      try {
-        await window.api.session.purge(sessionId)
-      } catch {
-        /* 폐기 실패가 다음 손님을 막지 않게 한다 */
-      }
-    }
-    set({
-      session: EMPTY_SESSION,
-      fallback: null,
-      screen: 'P-00',
-      uploadState: 'idle',
-      uploadError: null,
-    })
+    await disposeSession(get().session)
+    set({ session: EMPTY_SESSION, fallback: null, doneOpen: false, screen: 'P-00' })
   },
 }))
+
+useSession.subscribe((state, prev) => {
+  if (state.screen !== prev.screen) screenChangedAt = performance.now()
+})

@@ -1,29 +1,30 @@
 /**
  * src/main/storage.ts — 세션 폴더 · 파일 저장 규칙
  *
- * SPIKE_PLAN ③ 완료 기준: "저장 위치·파일명 규칙이 정해져 있다 (세션 폴더 단위)"
- *
  * 저장 규칙
  *   <dataRoot>/<sessionId>/
- *     audio/   01_police.wav  02_chef.wav  ...      ← 16kHz 모노 16bit
- *     photo/   cut_01.jpg ... cut_04.jpg            ← 카메라 원본
- *     output/  fourcut.png · photo_4x6.pdf · report.pdf
+ *     audio/   01_police.wav · 02_police.wav    ← 16kHz 모노 16bit (타깃 문장 순번)
+ *              01-2_police.wav                  ← 만 4세는 어절 순번을 붙인다
+ *              01_police_retry.wav              ← 다시 말한 녹음 (판단 직후 안 쓰는 쪽을 지운다)
+ *     photo/   cut_01.jpg ... cut_04.jpg        ← 카메라 원본
+ *     video/   capture.webm                     ← 촬영 장면 영상 (P-07 재생용 · 서버로 보내지 않는다)
+ *     output/  fourcut.png · photo_4x6.pdf
  *
  *   sessionId = YYYYMMDD-HHmmss-xxxx
  *
- * ⚠️ 세션 종료(P-11) 시 폴더 전체를 삭제한다 — PAGE_SPEC P-11 "세션 데이터 폐기"
- *    단, 스파이크 기간에는 분석용 WAV 샘플 채집이 목적이므로 D-01 녹음은 별도 세션에 남긴다.
+ * ⚠️ 체험이 끝나면(M-03) 폴더 전체를 삭제한다 — PAGE_SPEC M-03 "세션 데이터 폐기"
+ *    D-01에서 만든 dev- 세션은 WAV 샘플 채집용이라 지우지 않는다.
  */
 
 import { app } from 'electron'
 import { randomBytes } from 'node:crypto'
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { extname, join, resolve, sep } from 'node:path'
 import { measurePcm } from './acoustic'
 import type {
   DspFlags,
-  JobId,
   SavePhotoRequest,
+  SaveVideoRequest,
   SaveWavRequest,
   SavedFile,
   SessionPaths,
@@ -59,7 +60,7 @@ function makeSessionId(prefix?: string, now = new Date()): string {
   const d = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`
   const t = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
   const id = `${d}-${t}-${randomBytes(2).toString('hex')}`
-  // D-01은 'dev' — 채집한 WAV 샘플은 P-11 폐기 대상이 아니다 (SPIKE_PLAN 산출물 3)
+  // D-01은 'dev' — 채집한 WAV 샘플은 M-03 폐기 대상이 아니다
   const safe = prefix?.replace(/[^a-z0-9]/gi, '').slice(0, 8)
   return safe ? `${safe}-${id}` : id
 }
@@ -71,24 +72,77 @@ export function pathsFor(sessionId: string): SessionPaths {
     root,
     audioDir: join(root, 'audio'),
     photoDir: join(root, 'photo'),
+    videoDir: join(root, 'video'),
     outputDir: join(root, 'output'),
   }
 }
 
 export async function beginSession(prefix?: string): Promise<SessionPaths> {
+  // 손님 세션은 한 번에 하나뿐이다 — 새로 시작하기 전에 남은 것을 치운다 (D-01의 dev- 세션은 건드리지 않는다)
+  if (!prefix) await purgeLeftoverSessions()
+
   const paths = pathsFor(makeSessionId(prefix))
   await mkdir(paths.audioDir, { recursive: true })
   await mkdir(paths.photoDir, { recursive: true })
+  await mkdir(paths.videoDir, { recursive: true })
   await mkdir(paths.outputDir, { recursive: true })
   return paths
 }
 
-/** P-11 — 로컬 WAV·사진·PDF 삭제 */
-export async function purgeSession(sessionId: string): Promise<void> {
-  if (!sessionId || sessionId.includes('..') || sessionId.includes('/') || sessionId.includes('\\')) {
-    throw new Error(`purgeSession: 잘못된 sessionId (${sessionId})`)
+/** 렌더러가 넘긴 sessionId 가 폴더 이름 하나인지 확인한다 ('.' · '..' · 경로 구분자 · 빈 값 거부) */
+export function assertSessionId(sessionId: string, what: string): void {
+  if (typeof sessionId !== 'string' || !/^[\w-]+$/.test(sessionId)) {
+    throw new Error(`${what}: 잘못된 sessionId (${String(sessionId)})`)
   }
-  await rm(join(dataRoot, sessionId), { recursive: true, force: true })
+}
+
+/** 렌더러가 넘긴 경로가 세션 폴더(dataRoot) 안인지 확인하고 정규화한다 */
+export function insideDataRoot(path: string, what: string): string {
+  const full = resolve(String(path))
+  if (!full.startsWith(resolve(dataRoot) + sep)) {
+    throw new Error(`${what}: 세션 폴더 밖의 파일입니다 (${path})`)
+  }
+  return full
+}
+
+/** Windows는 백신 · 색인이 파일을 잠깐 잡고 있으면 삭제가 실패한다 — 몇 번 다시 해 본다 */
+const RM_OPTIONS = { recursive: true, force: true, maxRetries: 5, retryDelay: 200 } as const
+
+/** M-03 — 로컬 WAV · 사진 · 영상 · PDF 삭제 */
+export async function purgeSession(sessionId: string): Promise<void> {
+  assertSessionId(sessionId, 'purgeSession')
+  await rm(join(dataRoot, sessionId), RM_OPTIONS)
+}
+
+/** 손님 세션 폴더 이름 (접두어 없는 것). dev- 로 시작하는 D-01 세션은 맞지 않는다 */
+const GUEST_SESSION_DIR = /^\d{8}-\d{6}-[0-9a-f]{4}$/
+
+/**
+ * 끝까지 못 간 세션의 폴더(녹음 · 사진 · 영상)를 치운다.
+ *
+ * 세션 폴더는 M-03에서 지우지만, 체험 도중 앱이 꺼지거나(정전 · 종료 · 오류) 삭제가 실패하면
+ * 그 폴더를 기억하는 곳이 없어 아이 데이터가 기기에 계속 남는다 (SPEC §6-1 · §10-2).
+ * 그래서 앱을 시작할 때와 새 세션을 시작할 때(P-00) 남은 손님 세션 폴더를 지운다.
+ *
+ * **설치판에서만 지운다.** 개발 실행(kiosk/sessions)은 뽑아 본 네컷 · 점검용 파일을 남겨 두려고 건드리지 않는다.
+ * 실패해도 앱 시작 · 다음 손님을 막지 않는다.
+ */
+export async function purgeLeftoverSessions(): Promise<void> {
+  if (!app.isPackaged) return
+  try {
+    const entries = await readdir(dataRoot, { withFileTypes: true })
+    for (const entry of entries) {
+      if (!entry.isDirectory() || !GUEST_SESSION_DIR.test(entry.name)) continue
+      try {
+        await rm(join(dataRoot, entry.name), RM_OPTIONS)
+        console.log(`[storage] 남은 세션 폴더 삭제: ${entry.name}`)
+      } catch (e) {
+        console.warn(`[storage] 남은 세션 폴더 삭제 실패: ${entry.name} — ${(e as Error).message}`)
+      }
+    }
+  } catch (e) {
+    console.warn(`[storage] 남은 세션 폴더 확인 실패 — ${(e as Error).message}`)
+  }
 }
 
 // ────────────────────────────────────────────────────────────
@@ -184,11 +238,19 @@ function dspSuffix(dsp: DspFlags): string {
   return on.length ? `_dsp-${on.join('-')}` : ''
 }
 
-function wavFileName(index: number, jobId: JobId | string, dsp: DspFlags): string {
-  return `${pad(index + 1)}_${jobId}${dspSuffix(dsp)}.wav`
+function wavFileName(req: SaveWavRequest): string {
+  if (!Number.isInteger(req.lineIndex) || req.lineIndex < 0) {
+    throw new Error(`saveWav: 잘못된 문장 순번 (${req.lineIndex})`)
+  }
+  // 만 4세는 어절 순번을 붙인다 — 01-2_police.wav
+  const part = Number.isInteger(req.partIndex) ? `-${req.partIndex! + 1}` : ''
+  const job = String(req.jobId).replace(/[^a-z]/gi, '')
+  const retry = req.retry ? '_retry' : ''
+  return `${pad(req.lineIndex + 1)}${part}_${job}${retry}${dspSuffix(req.dsp)}.wav`
 }
 
 export async function saveWav(req: SaveWavRequest): Promise<SavedFile> {
+  assertSessionId(req.sessionId, 'saveWav')
   const paths = pathsFor(req.sessionId)
   await mkdir(paths.audioDir, { recursive: true })
 
@@ -196,22 +258,69 @@ export async function saveWav(req: SaveWavRequest): Promise<SavedFile> {
   const resampled = resample(source, req.sampleRate, TARGET_SAMPLE_RATE)
   const wav = wavContainer(floatToPcm16(resampled), TARGET_SAMPLE_RATE)
 
-  const filePath = join(paths.audioDir, wavFileName(req.index, req.jobId, req.dsp))
+  const filePath = join(paths.audioDir, wavFileName(req))
   await writeFile(filePath, wav)
 
-  // 디스크에 쓴 것과 같은 16kHz PCM으로 음향 특성을 잰다 (D-01 표 · 재시도 판정)
-  const quality = measurePcm(resampled, TARGET_SAMPLE_RATE, req.index)
+  // 디스크에 쓴 것과 같은 16kHz PCM으로 음향 특성을 잰다 (D-01 표 · 무음 확인)
+  const quality = measurePcm(resampled, TARGET_SAMPLE_RATE, req.lineIndex)
 
   return { path: filePath, bytes: wav.length, quality }
 }
 
 /** D-01 청음 확인 — 저장된 WAV를 그대로 되읽는다 */
 export async function readWav(path: string): Promise<ArrayBuffer> {
-  if (!path.startsWith(dataRoot) || !path.toLowerCase().endsWith('.wav')) {
+  const full = insideDataRoot(path, 'readWav')
+  if (extname(full).toLowerCase() !== '.wav') {
     throw new Error(`readWav: 세션 폴더 안의 .wav만 읽을 수 있습니다 (${path})`)
   }
-  const buf = await readFile(path)
+  const buf = await readFile(full)
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+}
+
+/**
+ * P-05 다시 말하기 — 두 녹음 중 안 쓰게 된 쪽을 판단 직후 지운다 (SPEC §2).
+ * 이미 없으면 조용히 넘어간다.
+ */
+export async function deleteWav(path: string): Promise<void> {
+  const full = insideDataRoot(path, 'deleteWav')
+  if (extname(full).toLowerCase() !== '.wav') {
+    throw new Error(`deleteWav: .wav만 지울 수 있습니다 (${path})`)
+  }
+  await unlink(full).catch((e: NodeJS.ErrnoException) => {
+    if (e.code !== 'ENOENT') throw e
+  })
+}
+
+// ────────────────────────────────────────────────────────────
+// 촬영 장면 영상 (P-06 → P-07) — 기기 안에만 둔다
+// ────────────────────────────────────────────────────────────
+
+const VIDEO_FILE = 'capture.webm'
+
+export async function saveVideo(req: SaveVideoRequest): Promise<SavedFile> {
+  assertSessionId(req.sessionId, 'saveVideo')
+  const { videoDir } = pathsFor(req.sessionId)
+  await mkdir(videoDir, { recursive: true })
+  const filePath = join(videoDir, VIDEO_FILE)
+  const bytes = Buffer.from(req.data)
+  await writeFile(filePath, bytes)
+  return { path: filePath, bytes: bytes.length }
+}
+
+/** P-07 재생용 — 세션 폴더 안의 촬영 영상만 되읽는다 */
+export async function readVideo(path: string): Promise<ArrayBuffer> {
+  const full = insideDataRoot(path, 'readVideo')
+  if (extname(full).toLowerCase() !== '.webm') {
+    throw new Error(`readVideo: 촬영 영상(.webm)만 읽을 수 있습니다 (${path})`)
+  }
+  const buf = await readFile(full)
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+}
+
+/** 네컷 합성본의 고정 경로 — 서버 전송은 이 파일만 읽는다 (main/server.ts) */
+export function composedPhotoPath(sessionId: string): string {
+  assertSessionId(sessionId, 'composedPhotoPath')
+  return join(pathsFor(sessionId).outputDir, 'fourcut.png')
 }
 
 // ────────────────────────────────────────────────────────────
@@ -227,6 +336,10 @@ function decodeDataUrl(dataUrl: string): Buffer {
 }
 
 export async function savePhoto(req: SavePhotoRequest): Promise<SavedFile> {
+  assertSessionId(req.sessionId, 'savePhoto')
+  if (!req.composed && (!Number.isInteger(req.index) || req.index < 0 || req.index > 3)) {
+    throw new Error(`savePhoto: 컷 번호는 0~3입니다 (${req.index})`)
+  }
   const paths = pathsFor(req.sessionId)
   const dir = req.composed ? paths.outputDir : paths.photoDir
   await mkdir(dir, { recursive: true })

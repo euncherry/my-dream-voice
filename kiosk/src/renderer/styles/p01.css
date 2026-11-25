@@ -1,0 +1,437 @@
+/*
+ * p01.css — P-01 [모드 선택] (디자인 입힘 · 2026-11-22)
+ *
+ * 좌표는 전부 1920×1080 도화지 기준 px다 (components/Stage.tsx가 창 크기에 맞춰 통째로 줄인다).
+ * 디자인 시안(모드 선택 화면 2000×1126)에서 잰 값을 0.96배 해서 옮겼다 — 시안이 바뀌면 여기만 고친다.
+ * [← 뒤로]는 공통 부품이다 (styles/design.css).
+ */
+
+.p01 {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  /* 배경 그림이 뜨기 전 · 화면 비율이 달라 남는 자리의 바탕색 (하늘색) */
+  background: var(--d-sky);
+}
+
+.p01 img {
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* ── 위쪽 영문 로고 (타이틀 화면과 같은 그림 · 같은 크기) ── */
+.p01-logo {
+  position: absolute;
+  left: 743px;
+  top: -28px;
+  width: 434px;
+}
+
+/* ── 제목 · 안내 한 줄 ── */
+.p01-title {
+  position: absolute;
+  /* 시안의 제목은 물음표 때문에 한가운데보다 5px 오른쪽에 놓인다 */
+  left: 5px;
+  top: 98px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-button);
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 100px;
+  color: var(--d-navy);
+  -webkit-text-stroke: 1.5px currentColor;
+  paint-order: stroke fill;
+}
+
+.p01-sub {
+  position: absolute;
+  left: 0;
+  top: 200px;
+  width: 1920px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 56px;
+  color: var(--d-navy);
+}
+
+/* ── 별 (배경 2개 + 카드 안 2개) ──
+   별마다 "떠다니는 상자(.p01-starbox)" 안에 별 그림과 반짝이 2개가 들어 있다 (P01ModeSelect.tsx의 Star).
+   상자: 자리 · 크기 · 기울기(rotate — 시안의 별은 하나씩 조금 기울어 있다) + 떠다니는 움직임
+   반짝이: 차례가 오면 별 옆에 잠깐 나타났다 사라진다 — 강조는 이것뿐이고, 별 그림은 커지지 않는다
+   움직임 값(박자 · 폭)은 맨 아래 "움직임"에 모아 뒀다 */
+.p01-starbox {
+  position: absolute;
+  display: block;
+  /* 꾸밈이다 — 배경의 별이 터치를 가로채지 않게 */
+  pointer-events: none;
+}
+
+.p01-starbox__img {
+  width: 100%;
+}
+
+/* 반짝이 — 네 갈래 빛 모양. 평소에는 안 보인다 */
+.p01-starbox__spark {
+  position: absolute;
+  width: 30%;
+  aspect-ratio: 1;
+  background: #fffbe0;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  opacity: 0;
+}
+
+.p01-starbox__spark--1 {
+  left: 80%;
+  top: 0;
+}
+
+.p01-starbox__spark--2 {
+  left: -6%;
+  top: 62%;
+  width: 21%;
+}
+
+.p01-star--yellow {
+  left: 43px;
+  top: 620px;
+  width: 83px;
+  rotate: -16deg;
+}
+
+.p01-star--coral {
+  left: 1801px;
+  top: 262px;
+  width: 82px;
+  rotate: -24deg;
+}
+
+/* ── 카드 (한 장이 통째로 버튼) ── */
+.p01-card {
+  position: absolute;
+  top: 277px;
+  width: 750px;
+  height: 777px;
+  padding: 0;
+  border: 0;
+  border-radius: 91px;
+  background: #fff;
+  /* 아래쪽 안에 옅은 하늘색 두께 + 바깥으로 번지는 파란 그림자 (아래가 가장 진하고, 옆은 중간, 위는 거의 없다 — 버튼과 같은 꼴) */
+  box-shadow:
+    inset 0 -10px 8px -2px rgb(var(--d-glow) / 0.14),
+    0 8px 12px 4px rgb(var(--d-glow) / 0.9);
+  font: inherit;
+  color: var(--d-ink);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.p01-card--a {
+  left: 182px;
+}
+
+.p01-card--b {
+  left: 988px;
+}
+
+.p01-card:active {
+  transform: scale(0.985);
+}
+
+.p01-card:focus-visible {
+  outline: 5px solid var(--d-navy);
+  outline-offset: 5px;
+}
+
+/* 카드 안 요소는 전부 카드 왼쪽 위를 기준으로 놓는다 */
+.p01-card > span {
+  position: absolute;
+  display: block;
+}
+
+/* ── 그림 — 색 덩어리 · 별 · 캐릭터 ── */
+.p01-art {
+  left: 0;
+  top: 0;
+  width: 750px;
+  height: 364px;
+  /* 그림은 터치를 받지 않는다 — 카드 안에서는 터치가 아래의 카드(버튼)로 떨어지고,
+     캐릭터가 보이는 창이 카드 위 80px까지 올라가 있어도 그 빈 자리(안내 한 줄이 놓인 곳)는 눌리지 않는다 */
+  pointer-events: none;
+}
+
+.p01-art__blob {
+  position: absolute;
+  left: 35px;
+  top: 55px;
+  width: 680px;
+  height: 309px;
+  display: block;
+}
+
+.p01-card--a .p01-art__blob {
+  fill: var(--d-blob-pink);
+}
+
+.p01-card--b .p01-art__blob {
+  fill: var(--d-blob-purple);
+}
+
+.p01-card--a .p01-art__star {
+  left: 558px;
+  top: 250px;
+  width: 107px;
+  rotate: 6deg;
+}
+
+/* A 카드의 별은 색 덩어리의 오른쪽 아래 모서리에 가깝다 — 반짝이를 덩어리 안쪽(왼쪽 위)으로 */
+.p01-card--a .p01-art__star .p01-starbox__spark--1 {
+  left: -8%;
+  top: 2%;
+}
+
+.p01-card--a .p01-art__star .p01-starbox__spark--2 {
+  left: 66%;
+  top: -10%;
+}
+
+.p01-card--b .p01-art__star {
+  left: 58px;
+  top: 119px;
+  width: 111px;
+  rotate: -10deg;
+}
+
+/* B 카드의 별은 색 덩어리의 왼쪽 가장자리에 가깝다 — 반짝이를 오른쪽으로 */
+.p01-card--b .p01-art__star .p01-starbox__spark--2 {
+  left: 70%;
+  top: 76%;
+}
+
+/* 캐릭터가 보이는 창 — 아래는 색 덩어리의 아랫줄(카드 위에서 364px)에서 자르고, 위는 카드 밖 80px까지 연다 */
+.p01-art__clip {
+  position: absolute;
+  left: 0;
+  top: -80px;
+  width: 750px;
+  height: 444px;
+  overflow: hidden;
+}
+
+.p01-art__char {
+  position: absolute;
+}
+
+.p01-card--a .p01-art__char {
+  left: 111px;
+  top: 32px;
+  width: 505px;
+}
+
+.p01-card--b .p01-art__char {
+  left: 119px;
+  top: 37px;
+  width: 494px;
+}
+
+/* ── 카드 글자 ── */
+.p01-card__name {
+  left: 0;
+  width: 750px;
+  text-align: center;
+  font-family: var(--d-font-button);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.6px currentColor;
+  paint-order: stroke fill;
+}
+
+/* 이름의 앞 낱말("네컷 사진" · "목소리도 분석")은 강조색으로 (2026-11-22 지정) — 외곽선도 같은 색을 따라간다 */
+.p01-card__name em {
+  font-style: normal;
+  color: var(--d-coral);
+}
+
+.p01-card--a .p01-card__name {
+  top: 392px;
+  font-size: 85px;
+}
+
+/* B는 이름이 길어 글자가 조금 작다(시안 그대로) — 글자 아랫변을 A와 같은 높이에 맞춘다 */
+.p01-card--b .p01-card__name {
+  top: 400px;
+  font-size: 76px;
+}
+
+/* 한 줄 설명 — 두 카드가 같은 자리 · 같은 크기 (2026-11-22: 카드 글자를 이름 + 한 줄로 줄였다) */
+.p01-card__desc {
+  left: 0;
+  top: 500px;
+  width: 750px;
+  text-align: center;
+  font-family: var(--d-font-display);
+  font-size: 37px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+/* ── [선택하기] — 누르는 곳임을 보여 주는 알약 ([시작하기]와 같은 꼴 · 작은 크기) ── */
+.p01-go {
+  left: 64px;
+  top: 616px;
+  width: 622px;
+  height: 109px;
+  border-radius: 55px;
+  /* 시안의 알약은 위가 희고 아래로 갈수록 옅은 하늘빛이 돈다 */
+  background: linear-gradient(#fff 18%, #f4f8fe 55%, #ecf4fd 90%);
+  box-shadow:
+    inset 0 -6px 6px rgb(var(--d-glow) / 0.2),
+    0 0 0 1.5px rgb(var(--d-glow) / 0.12),
+    0 3px 4px rgb(var(--d-glow) / 0.35),
+    0 11px 17px -2px rgb(var(--d-glow) / 1);
+  color: var(--d-navy);
+}
+
+.p01-card > .p01-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 0;
+}
+
+.p01-go__label {
+  position: relative;
+  top: 1px;
+  font-family: var(--d-font-button);
+  font-size: 65px;
+  font-weight: 700;
+  line-height: 1;
+  /* [시작하기]와 같은 방법 — 같은 색 외곽선으로 획을 굵게, 가로로 5% 넓게 */
+  -webkit-text-stroke: 1.3px currentColor;
+  paint-order: stroke fill;
+  transform: scaleX(1.05);
+  letter-spacing: 0.01em;
+  margin: 0 0.085em 0 0.095em;
+}
+
+.p01-go__arrow {
+  flex: 0 0 auto;
+  width: 73px;
+  height: 73px;
+  border-radius: 50%;
+  background: var(--d-coral);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.p01-go__arrow svg {
+  width: 81%;
+  height: 81%;
+}
+
+/* ── 움직임 — 별만, 잔잔하게 (2026-11-22 지정) ──
+   멈춘 화면은 고장으로 보인다 (PAGE_SPEC §2-5) — 그래서 별 네 개만 조금씩 떠다닌다. 캐릭터 · 카드 · 버튼은 멈춰 있다.
+   별 하나에 두 가지가 겹친다 (상자 · 서로 다른 속성이라 함께 돈다):
+     ① 위아래 (translate — 위로 11px · 아래로 5px)   ② 좌우 흔들림 + 기울기 (transform — ±8px · ±5도)
+   ①②는 별마다 주기가 달라서 같은 길을 되풀이하지 않는다.
+   강조는 반짝이다 — 7.2초에 한 번, 별 옆에 반짝이 두 개가 0.25초 차이로 나타났다 사라진다 (별 넷이 1.8초쯤씩 어긋나 돌아가며).
+   정한 과정 (다시 되돌리지 않게 적어 둔다):
+     · 폭은 처음 골랐던 미리보기 ① "별이 주인공" 값 그대로다. 폭을 2배쯤 키운 "더 화려하게"는 너무 둥실거려서 되돌렸다
+     · 별이 한 번씩 커졌다 돌아오는 것(1.16배)은 뺐다 — 대신 옆에 반짝이가 생기는 정도로만 강조한다
+     · 박자는 미리보기 ①보다 20% 빠르다 (주기 · 지연에 똑같이 0.8배 — 별끼리 · 위아래와 좌우 사이의 어긋남은 그대로)
+   위쪽 폭이 더 넓다 — A 카드의 별 아래에는 색 덩어리가 14px쯤만 남아 있다 */
+.p01-starbox {
+  animation:
+    d-star-bob var(--bob, 5.6s) ease-in-out var(--bob-at, 0s) infinite,
+    d-star-sway var(--sway, 6.4s) ease-in-out var(--sway-at, 0s) infinite;
+}
+
+.p01-starbox__spark {
+  animation: p01-star-spark 7.2s ease-out var(--spark-at, 0s) infinite;
+}
+
+/* 둘째 반짝이는 0.25초 늦게 */
+.p01-starbox__spark--2 {
+  animation-delay: calc(var(--spark-at, 0s) + 0.25s);
+}
+
+/* 별마다의 박자 — 위아래(--bob) · 좌우(--sway) 주기와 시작 자리(-at), 반짝이 차례(--spark-at)
+   반짝이 차례는 화면이 뜨는 순간에 어느 반짝이도 켜져 있지 않게 잡았다 (켜진 채로 시작하면 "나타나는" 대목 없이 사라지기만 한다).
+   반짝이 하나가 켜져 있는 구간은 차례가 온 뒤 0~1.906초다 — --spark-at 을 바꿀 때는 네 값을 같은 만큼 옮기고,
+   어느 값도 -1.906s ~ 0s 사이에 오지 않게 한다. 순서: 산호(0.05초) → 노랑(1.81초) → B 카드(3.49초) → A 카드(5.25초) */
+.p01-star--yellow {
+  --bob: 5.92s;
+  --bob-at: -1.2s;
+  --sway: 7.04s;
+  --sway-at: -4.8s;
+  --spark-at: -5.39s;
+}
+
+.p01-star--coral {
+  --bob: 4.96s;
+  --bob-at: -3.2s;
+  --sway: 6.08s;
+  --sway-at: -1.6s;
+  --spark-at: -7.15s;
+}
+
+/* A 카드의 별은 색 덩어리의 오른쪽 아래 모서리에 가깝다 — '맨 아래'와 '맨 오른쪽'이 겹치지 않게 좌우 박자를 잡았다 */
+.p01-card--a .p01-art__star {
+  --bob: 5.44s;
+  --bob-at: -2.56s;
+  --sway: 6.56s;
+  --sway-at: -5.84s;
+  --spark-at: -1.95s;
+}
+
+.p01-card--b .p01-art__star {
+  --bob: 6.4s;
+  --bob-at: -0.48s;
+  --sway: 5.28s;
+  --sway-at: -3.52s;
+  --spark-at: -3.71s;
+}
+
+/* 떠다니는 키프레임(d-star-bob · d-star-sway)은 공통이다 — styles/design.css.
+   별은 커지지 않는다 — 강조는 아래 반짝이뿐이다 */
+
+/* 반짝이 — 0.5초 동안 나타나 돌면서 1.7초쯤에 사라지고, 나머지 5.5초는 쉰다 */
+@keyframes p01-star-spark {
+  0%,
+  23%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  7% {
+    opacity: 1;
+    transform: scale(1.15) rotate(40deg);
+  }
+  15% {
+    opacity: 0.85;
+    transform: scale(0.8) rotate(75deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p01-starbox,
+  .p01-starbox__spark {
+    animation: none;
+  }
+
+  .p01-card {
+    transition: none;
+  }
+}

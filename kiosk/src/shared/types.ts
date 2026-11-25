@@ -1,83 +1,130 @@
 /**
- * src/shared/types.ts — IPC 계약 · 데이터 인터페이스
+ * src/shared/types.ts — IPC 계약 · 데이터 인터페이스 (v2)
  *
  * 메인 · preload · 렌더러가 함께 쓰는 단일 정의.
- * SPIKE_PLAN.md §5 / §7-4 · PAGE_SPEC.md §4 기준.
+ * 기준: PAGE_SPEC.md §5(세션 데이터 모델) · SPEC.md §6-2(서버로 보내는 데이터) · V2_PLAN.md §1
  *
- * ⚠️ 이번 스파이크의 산출물 중 하나가 "확정된 데이터 인터페이스"다.
- *    분석(ONNX/whisper) 모듈은 나중에 이 인터페이스를 그대로 채운다.
+ * 분석(파이썬 별도 프로그램 — faster-whisper 받아쓰기 · 정밀 분석)은 아직 mock이다.
+ * 나중에 붙는 프로그램은 여기의 SttRequest/SttResult · AnalysisInput/AnalysisOutput을 그대로 채운다.
  */
 
 // ────────────────────────────────────────────────────────────
-// 1. 직업 (SPEC.md §5 — 대표 직업 8종 확정)
+// 1. 직업 (SPEC §5 — 6종 · 아이는 1개만 고른다)
 // ────────────────────────────────────────────────────────────
 
 export type JobId =
-  | 'athlete' // 운동선수
-  | 'doctor' // 의사
-  | 'chef' // 요리사
-  | 'singer' // 가수/아이돌
-  | 'police' // 경찰관
-  | 'creator' // 콘텐츠크리에이터
+  | 'police' // 경찰
   | 'astronaut' // 우주비행사
+  | 'singer' // 가수
+  | 'creator' // 크리에이터
+  | 'doctor' // 의사
   | 'roboticist' // 로봇개발자
 
 export type JobCategory = 'traditional' | 'future'
 
 export interface JobDef {
   id: JobId
-  /** 화면·리포트 표기명 */
+  /** 화면 · 리포트 표기명 */
   label: string
   category: JobCategory
-  /** 아트 미제작 → 프레임/카드 placeholder 색 (PAGE_SPEC §5-5) */
+  /** 프레임 아트 전 — 카드 · 프레임 placeholder 색 */
   placeholderColor: string
 }
 
 // ────────────────────────────────────────────────────────────
-// 2. 연령 (SPEC.md §3-2 — 판정 기준이 아니라 "무엇을 살펴볼지" 필터)
+// 2. 연령 (SPEC §3-2 — 판정 기준이 아니라 문장 난이도 · 안내 톤을 정하는 필터)
 // ────────────────────────────────────────────────────────────
 
-/** 관찰 문장 난이도 · 안내 톤을 정하는 구간 */
-export type AgeGroup = '4-5' | '6-7' | '8+'
+/** 만 4세 · 만 5세 · 만 6세 이상 */
+export type AgeGroup = '4' | '5' | '6+'
 
 /** 관찰 목표음 — 우리말에서 늦게 습득되는 소리 (SPEC §3-2) */
 export type TargetSound = 'ㅅ' | 'ㅆ' | 'ㄹ'
 
 // ────────────────────────────────────────────────────────────
-// 3. 관찰 결과 (SPEC.md §3-1 — 「판정」이 아닌 「관찰」)
+// 3. 시나리오 (P-05 — 직업 × 연령 → 장면 + 타깃 문장 2개)
+// ────────────────────────────────────────────────────────────
+
+export type ContentSource =
+  /** SPEC.md에 적힌 예시 문장 (자문 전 — T-3) */
+  | 'spec'
+  /** 발화 대사 자문 자료에서 받은 문장 (2026-11-24 — 지금은 우주비행사만) */
+  | 'expert'
+  /** 흐름도 구성 스케치에 적힌 예시 (임시) */
+  | 'sketch'
+  /** 시나리오 초안의 후보 문장 (docs/P05_SCENARIO.md — 전문가 확인 전 · T-3) */
+  | 'draft'
+  /** ⚠️ 미확정 — 화면에 PLACEHOLDER로 보인다 */
+  | 'placeholder'
+
+/** 따라 말하는 한 구간 — 지금은 늘 문장 전체 (2026-11-24 만 4세 어절 끊기 없앰 · 모양은 그대로 둔다) */
+export interface LinePart {
+  text: string
+}
+
+export interface TargetLine {
+  /** 타깃 문장 = 자막 */
+  text: string
+  parts: LinePart[]
+  /** 이 문장에서 살펴보는 소리와 그 소리가 든 낱말 (SPEC §3-2) */
+  targets: { sound: TargetSound; word: string }[]
+  source: ContentSource
+}
+
+/**
+ * 아이 차례 하나 — 타깃 문장 하나.
+ * 장면 · 캐릭터 대사(대본)는 화면 쪽 renderer/p05/script.ts 에 있다 (docs/P05_SCENARIO.md).
+ */
+export interface ScenarioTurn {
+  line: TargetLine
+}
+
+export interface Scenario {
+  job: JobId
+  ageGroup: AgeGroup
+  /** 아이 차례는 항상 2번 (타깃 문장 2개 — SPEC §2) */
+  turns: [ScenarioTurn, ScenarioTurn]
+}
+
+// ────────────────────────────────────────────────────────────
+// 4. 관찰 결과 (SPEC §3-1 — 「판정」이 아닌 「관찰」)
 // ────────────────────────────────────────────────────────────
 
 /**
- * 결과 표현은 2단계뿐. 3단계(정상/주의/지연 의심) 금지 — CLAUDE.md 금지사항 8.
+ * 결과 표현은 "잘 인식됨 / 다르게 인식됨" 2단계뿐이다 (CLAUDE.md 금지사항 8).
+ * skipped = 소음 · 무음 등으로 살펴보지 못함(판단 보류) — 결과 단계가 아니다.
  * 문장의 주어는 아동이 아니라 AI의 인식이다. ("~하게 인식되었습니다")
  */
-export type PhonemeResult = 'recognized' | 'different'
+export type SoundResult = 'well' | 'different' | 'skipped'
 
-export interface PhonemeObservation {
+export interface SoundObservation {
   sound: TargetSound
-  result: PhonemeResult
+  /** 그 소리가 든 낱말 (목표 문장의 낱말이지, 아이가 낸 소리가 아니다) */
+  word?: string
+  result: SoundResult
 }
 
 export interface ObservationResult {
-  /** 참고형 안내 구조임을 응답 스스로 명시한다 (검수표 4) */
+  /** 참고형 안내 구조임을 응답 스스로 명시한다 */
   type: 'reference'
   /** 진단이 아니다 — 항상 false. 이 값이 true가 되는 코드는 존재하면 안 된다 */
   diagnostic: false
-  /** 관찰 대상 음소별 결과 — SPEC §3-2 */
-  phonemes: PhonemeObservation[]
-  /** 하나라도 different면 리포트에 '가능한 이유 + 연습 문장' 섹션 추가 */
+  sounds: SoundObservation[]
+  /** 하나라도 different면 리포트에 '가능한 이유 + 연습 문장' 섹션이 붙는다 */
   hasDifferent: boolean
+  /** 모든 소리가 판단 보류 — 표시해서 보내면 서버가 안내 리포트를 보낸다 (SPEC §6-5) */
+  allSkipped: boolean
 }
 
-/** 음도 요약 — 수치·그래프가 아니라 범주형만 낸다 (CLAUDE.md 금지사항 9) */
+/** 음도 요약 — 수치 · 그래프가 아니라 범주형만 낸다 (CLAUDE.md 금지사항 9) */
 export type PitchSummary = 'stable' | 'varied' | 'unknown'
 
 /**
- * 발화 1건의 음향 특성 — **녹음 품질·기술 지표**이지 아동 평가가 아니다.
- * 보호자 리포트(SessionResult)에는 넣지 않는다. 용도: 무음·클리핑 판정(재시도), 향후 T-1 중립 매칭.
+ * 녹음 1건의 음향 특성 — **녹음 품질 · 기술 지표**이지 아동 평가가 아니다.
+ * 리포트 · 서버로 보내지 않는다. 용도: 무음 · 클리핑 확인.
  */
 export interface SpeechFeature {
-  /** 0-based 발화 순번 */
+  /** 0-based 순번 */
   index: number
   /** 전체 RMS 진폭 (0~1) */
   amplitudeRms: number
@@ -85,119 +132,205 @@ export interface SpeechFeature {
   peak: number
   /** 무음으로 판단된 20ms 프레임 비율 (0~1) */
   silenceRatio: number
+  /** 소리가 난 프레임을 다 합친 시간(ms) — P-05 무음 검사에 쓴다 */
+  soundMs: number
   pitchSummary: PitchSummary
-  /** 분석에 쓸 만한 녹음인가 — 무음·클리핑이면 false (재시도 대상) */
+  /** 분석에 쓸 만한 녹음인가 — 무음 · 클리핑이면 false */
   usable: boolean
 }
 
 /**
  * ⚠️ 여기에 점수 · 백분율 · 또래 비교 · 아동의 실제 인식 결과("사건→다건")를
- *    담는 필드를 절대 추가하지 말 것 — CLAUDE.md 금지사항 9.
+ *    서버 · 리포트로 나가는 타입에 추가하지 말 것 — CLAUDE.md 금지사항 9.
  */
 
 // ────────────────────────────────────────────────────────────
-// 4. 세션 (PAGE_SPEC.md §4 — 화면 간 공유 상태)
+// 5. 리포트 문구 완성본 (키오스크가 완성해서 보낸다 — SPEC §4-2 · §6-2)
+// ────────────────────────────────────────────────────────────
+
+export interface ReportSection {
+  title: string
+  /** 한 줄 또는 여러 줄 */
+  lines: string[]
+}
+
+/**
+ * 메일 리포트와 P-07 미리보기에 **똑같이** 쓰이는 문구.
+ * 1~5(header · job · spoken · sounds · why)는 미리보기에도 나오고,
+ * observation 이하는 아이 화면에서 가린다 (CLAUDE.md 금지사항 7 · SPEC T-16).
+ */
+export interface ReportText {
+  title: string
+  /** "만 6세 이상 · 2026.11.20 · 한국잡월드" — 이름 없음 */
+  header: string
+  job: ReportSection
+  spoken: ReportSection
+  sounds: ReportSection
+  why: ReportSection
+  /** 오늘의 관찰 결과 — 미리보기에서는 가린다 */
+  observation: ReportSection
+  /** 전부 잘 인식된 경우의 종합 한 줄 */
+  summary?: string
+  /** 다르게 인식된 소리가 있을 때만 */
+  reason?: ReportSection
+  practice?: ReportSection
+  closing: string
+  disclaimer: string
+}
+
+// ────────────────────────────────────────────────────────────
+// 6. 세션 (PAGE_SPEC §5 — 화면 간 공유 상태)
 // ────────────────────────────────────────────────────────────
 
 export type KioskMode = 'A' | 'B'
 
-/** 세션 폴더 경로 묶음 — 메인이 만들고 렌더러가 참조만 한다 */
+/** 세션 폴더 경로 묶음 — 메인이 만들고 렌더러는 참조만 한다 */
 export interface SessionPaths {
   /** YYYYMMDD-HHmmss-xxxx */
   sessionId: string
-  /** 세션 루트 폴더 (절대경로) */
   root: string
   audioDir: string
   photoDir: string
+  /** 촬영 장면 영상 — 기기 안에만, 체험이 끝나면 삭제 */
+  videoDir: string
   outputDir: string
+}
+
+export interface Consents {
+  guardian: true
+  voice: true
+  photo: true
+}
+
+/** P-02a — 보호자 이메일을 서버가 받아 세션이 열리면. 이메일은 여기 남기지 않는다 (2026-11-24 카카오 로그인 없앰 — 이메일만) */
+export interface GuardianLink {
+  /** 서버가 준 세션 번호 — P-07 전송에 쓴다 (SPEC §6-4) */
+  sessionToken: string
+  linkedAt: string
+}
+
+/** 따라 말한 한 구간의 결과 */
+export interface SpeechPart {
+  /** 이 구간의 목표 글자 */
+  text: string
+  /** 남긴 녹음 (다시 말했으면 인식률이 높은 쪽) · 둘 다 무음이면 없음 */
+  wav?: string
+  /** 받아쓰기 — P-07 정밀 분석에도 쓴다. 서버로 보내지 않는다 */
+  transcript?: string
+  /** 다시 말하기 판단용 — 화면 · 서버로 보내지 않는다 */
+  cer?: number
+  retried: boolean
+}
+
+export interface SpeechLine {
+  /** 타깃 문장 */
+  line: string
+  /** 지금은 늘 1개 (문장 전체 — 2026-11-24 만 4세 끊기 없앰) */
+  parts: SpeechPart[]
+}
+
+export interface AnalysisState {
+  status: 'running' | 'done' | 'failed'
+  /** 전부 판단 보류일 수 있다 */
+  observation?: ObservationResult
+  /** 서버로 보내고, P-07 미리보기에도 쓴다 */
+  reportText?: ReportText
+  positiveMessage?: string
 }
 
 export interface Session {
   /** P-00에서 발급 — 메인의 세션 폴더와 1:1 */
   sessionId?: string
   paths?: SessionPaths
+  createdAt?: string
 
-  mode?: KioskMode
-
-  /** P-02 · 4개 · 선택 순서 = 발화·촬영 순서 (SPEC §2) */
-  jobs: JobId[]
+  mode?: KioskMode // P-01
 
   // ── B모드 전용 ──
-  childName?: string // P-03
-  age?: number // P-03
-  ageGroup?: AgeGroup // P-03 (age에서 파생)
-  consentAt?: string // P-04 (ISO8601)
-  recordings?: string[] // P-05 · WAV 경로 4개
-  lines?: string[] // P-05 · 실제 발화한 대사 4개
+  consentAt?: string // P-02 (A는 동의 화면이 없어 비어 있다)
+  consents?: Consents
+  guardianLink?: GuardianLink // P-02a
+  ageGroup?: AgeGroup // P-03
+  speech?: SpeechLine[] // P-05 — 타깃 문장마다 (2개)
 
   // ── 공통 ──
-  photos?: string[] // P-06 · 원본 4컷
-  composedPhoto?: string // P-06 · 4×6 합성본 (1200×1800 @300dpi)
+  job?: JobId // P-04 — 1개
+  photos?: string[] // P-06 — 원본 4컷
+  composedPhoto?: string // P-06 — 4×6 가로 합성본 (1844×1240 · QR 없음)
+  captureVideo?: string // P-06 — 촬영 장면 영상 (기기 안에만)
 
-  // ── 분석 결과 (P-07 — 스파이크에서는 mock) ──
-  observation?: ObservationResult
-  recommendedJob?: JobId
-  positiveMessage?: string
-
-  // ── 산출물 ──
-  reportPdf?: string // P-09 이전 생성
-  photoPdf?: string // 인쇄용 4×6 PDF (풀블리드)
-  downloadUrl?: string // P-10
-}
-
-/**
- * 리포트 렌더에 필요한 값만 추린 스냅샷.
- * 리포트 템플릿은 이 객체 하나만 받아 렌더한다 (템플릿 1개 · 하드코딩 없음 — SPIKE_PLAN ④)
- */
-export interface SessionResult {
-  childName: string
-  ageGroup: AgeGroup
-  /** 표기용 실제 나이 (만 N세) */
-  age: number
-  /** YYYY-MM-DD */
-  date: string
-  /** "한국잡월드" */
-  place: string
-  /** 아동이 선택한 4종 (순서 = 발화·촬영 순서) */
-  jobs: JobId[]
-  /** 실제 발화한 대사 4개 (jobs와 같은 순서) */
-  lines: string[]
-  observation: ObservationResult
-  recommendedJob: JobId
-  /** 아동용 한 줄 긍정 문구 — 리포트가 아니라 P-08 화면용 */
-  positiveMessage: string
+  // ── P-07 ──
+  analysis?: AnalysisState
+  reportSend?: { status: 'sending' | 'sent' | 'failed' }
+  print?: { status: 'printing' | 'done' | 'failed' }
 }
 
 // ────────────────────────────────────────────────────────────
-// 5. 분석 인터페이스 (이번 스파이크는 mock · 이후 이 자리를 실제 모듈이 채운다)
+// 7. 받아쓰기 (STT) — P-05에서 녹음마다 (⚠️ 지금은 mock)
 // ────────────────────────────────────────────────────────────
 
-/** MOCK 전용 — 두 리포트 레이아웃을 모두 확인하기 위한 시나리오 토글 (SPIKE_PLAN §5) */
-export type AnalysisScenario = 'random' | 'all-recognized' | 'some-different'
+/** ⚠️ MOCK 전용 — 실제 받아쓰기 프로그램은 이 값을 무시한다 */
+export type MockSttOutcome = 'pass' | 'fail' | 'silent'
+
+export interface SttRequest {
+  /** 세션 폴더 안의 WAV */
+  wavPath: string
+  /** 목표 글자 — 받아쓰기에 힌트로 준다 (SPEC §2 · 2026-11-20 결정) */
+  targetText: string
+  /** ⚠️ MOCK 전용 */
+  mock?: {
+    outcome: MockSttOutcome
+    /** 개발용 버튼으로 직접 고른 경우 — 실제 무음 검사를 건너뛴다 */
+    skipSilenceCheck?: boolean
+  }
+}
+
+export interface SttResult {
+  /** 무음이라 받아쓰지 않았다 */
+  silent: boolean
+  transcript?: string
+  /** 글자 단위 CER (띄어쓰기 · 문장부호 무시). 인식률 = 1 − cer. 화면 · 서버로 내보내지 않는다 */
+  cer?: number
+  /** 받아쓰기에 걸린 시간 (D-01 측정용 — SPEC T-15) */
+  elapsedMs: number
+  /** mock 결과인가 — D-01 표시용 */
+  mock: boolean
+}
+
+// ────────────────────────────────────────────────────────────
+// 8. 정밀 분석 — P-07에서 촬영 뒤 (⚠️ 지금은 mock)
+// ────────────────────────────────────────────────────────────
+
+/** ⚠️ MOCK 전용 — 리포트 갈래를 모두 확인하기 위한 시나리오 토글 */
+export type AnalysisScenario =
+  | 'random'
+  | 'all-well'
+  | 'some-different'
+  /** 전부 판단 보류 → 서버 안내 리포트 경로 */
+  | 'all-skipped'
+  /** 분석 실패 → 미리보기 없이 인쇄 경로 */
+  | 'fail'
 
 export interface AnalysisInput {
   sessionId: string
   ageGroup: AgeGroup
-  jobs: JobId[]
-  lines: string[]
-  /** P-05에서 저장된 WAV 절대경로 4개 */
-  recordings: string[]
-  /** ⚠️ MOCK 전용. 실제 분석 모듈은 이 필드를 무시한다. */
+  job: JobId
+  /** P-05 결과 — 남긴 WAV + 받아쓰기 */
+  speech: SpeechLine[]
+  /** ⚠️ MOCK 전용. 실제 분석 프로그램은 이 필드를 무시한다 */
   scenario?: AnalysisScenario
 }
 
 export interface AnalysisOutput {
-  /** 발화별 음향 특성 — 실측값. 리포트로 넘기지 않는다 */
+  /** 남긴 녹음별 음향 특성 — 실측값. 리포트 · 서버로 넘기지 않는다 */
   speechFeatures: SpeechFeature[]
   observation: ObservationResult
-  recommendedJob: JobId
-  positiveMessage: string
-  /** 소요 시간(ms) — P-07 체감 관리 검증용 */
+  /** 소요 시간(ms) — B모드는 이만큼 사진이 늦게 나온다 (SPEC T-15) */
   elapsedMs: number
 }
 
 // ────────────────────────────────────────────────────────────
-// 6. 하드웨어 · 환경 (D-01)
+// 9. 하드웨어 · 환경 (D-01)
 // ────────────────────────────────────────────────────────────
 
 export interface EnvInfo {
@@ -208,7 +341,14 @@ export interface EnvInfo {
   arch: string
   /** 세션 폴더들이 놓이는 루트 */
   dataRoot: string
+  /** 설치판인가 (false = npm run dev) */
+  packaged: boolean
+  /** P-07 인쇄 기본값 — 설치판은 real, 개발 실행은 fake (MDV_PRINT로 덮어쓴다) */
+  printMode: PrintMode
 }
+
+/** fake = 종이를 쓰지 않고 인쇄 시간만 흉내 낸다. 화면에 반드시 표시한다 */
+export type PrintMode = 'real' | 'fake'
 
 /** 프린터 연결 방식 — Windows 포트명으로 판별한다 */
 export type PrinterConnection = 'usb' | 'network' | 'virtual' | 'other'
@@ -244,17 +384,24 @@ export interface PrinterPaperInfo {
 }
 
 // ────────────────────────────────────────────────────────────
-// 7. 파일 저장 (③ 녹음 · ② 촬영)
+// 10. 파일 저장 (녹음 · 촬영 · 영상)
 // ────────────────────────────────────────────────────────────
 
 /**
  * 렌더러는 getUserMedia로 PCM만 뽑아 넘긴다.
  * 리샘플링(→16kHz) · WAV 헤더 작성 · 디스크 IO는 전부 메인 (CLAUDE.md 금지사항 2)
+ *
+ * 파일명: 01_police.wav · 02_police.wav — 만 4세는 어절 순번(01-2_police.wav),
+ *         다시 말한 녹음은 _retry (판단 직후 안 쓰는 쪽을 지운다)
  */
 export interface SaveWavRequest {
   sessionId: string
-  /** 0-based 발화 순번 (0~3) */
-  index: number
+  /** 0-based 문장 순번 (P-05는 0~1) */
+  lineIndex: number
+  /** 0-based 어절 순번 — 만 4세만. 문장 단위면 생략 */
+  partIndex?: number
+  /** 다시 말하기 녹음인가 */
+  retry?: boolean
   jobId: JobId
   /** Float32 모노 PCM의 raw ArrayBuffer */
   pcm: ArrayBuffer
@@ -284,12 +431,19 @@ export interface SavePhotoRequest {
   index: number
   /** data:image/png;base64,... */
   dataUrl: string
-  /** true면 4×6 합성본(fourcut.png)으로 저장 */
+  /** true면 4×6 가로 합성본(fourcut.png)으로 저장 */
   composed?: boolean
 }
 
+/** P-06 촬영 장면 영상 — 기기 안에만 둔다 (서버로 보내지 않는다) */
+export interface SaveVideoRequest {
+  sessionId: string
+  /** MediaRecorder가 만든 webm 바이트 */
+  data: ArrayBuffer
+}
+
 // ────────────────────────────────────────────────────────────
-// 7-1. 카메라 사이드카 (CameraHost.exe — R100은 UVC가 아니라 EDSDK로 제어)
+// 10-1. 카메라 사이드카 (CameraHost.exe — R100은 UVC가 아니라 EDSDK로 제어)
 // ────────────────────────────────────────────────────────────
 
 /** fake = 실물 없는 검증용. 화면에 반드시 표시한다 (실제 촬영 오인 방지) */
@@ -328,7 +482,7 @@ export interface CameraCaptureResult extends SavedFile {
   height: number
 }
 
-/** D-01 실카메라 자가진단 — 항목별 판정 */
+/** D-01 실카메라 자가진단 — 항목별 결과 */
 export type SelfTestVerdict = 'pass' | 'warn' | 'fail'
 
 export interface SelfTestItem {
@@ -338,7 +492,7 @@ export interface SelfTestItem {
 }
 
 export interface CameraSelfTestReport {
-  /** 항목 중 가장 나쁜 판정 */
+  /** 항목 중 가장 나쁜 결과 */
   verdict: SelfTestVerdict
   items: SelfTestItem[]
   /** 결과 폴더 (바탕화면) — 사진·결과.txt·camera.log */
@@ -353,15 +507,10 @@ export interface CameraEvent {
 }
 
 // ────────────────────────────────────────────────────────────
-// 8. PDF · 인쇄 · 업로드
+// 11. 네컷 PDF · 인쇄
 // ────────────────────────────────────────────────────────────
 
-export interface RenderReportPdfRequest {
-  sessionId: string
-  result: SessionResult
-}
-
-/** 네컷 이미지를 4×6인치 풀블리드 PDF로 감싼다 (인쇄 규격 고정 — SPIKE_PLAN ⑤) */
+/** 네컷 이미지를 4×6 가로 풀블리드 PDF로 감싼다 (돌리지 않고 1:1) */
 export interface RenderPhotoPdfRequest {
   sessionId: string
   /** 합성된 네컷 PNG 절대경로 */
@@ -382,27 +531,80 @@ export interface PrintResult {
   error?: string
 }
 
-export type UploadKind = 'report-pdf' | 'fourcut-image'
+// ────────────────────────────────────────────────────────────
+// 12. 백엔드 서버 (SPEC §6 — ⚠️ API 합의 전(T-14)이라 지금은 mock 응답)
+//     키오스크 몫: 세션 열기 → 데이터 보내기 → 세션 닫기
+// ────────────────────────────────────────────────────────────
 
-export interface UploadRequest {
-  kind: UploadKind
-  /** 업로드할 최종 산출물 경로. ⚠️ 원본 WAV·개별 사진 금지 — CLAUDE.md 금지사항 4 */
-  filePath: string
+/** 서버 요청이 실패한 까닭 — 개발자용. 아이 화면에는 그대로 내보내지 않는다 */
+export type ServerFailReason = 'offline' | 'timeout' | 'server' | 'rejected'
+
+export type ServerResult<T = unknown> =
+  | ({ ok: true } & T)
+  | { ok: false; reason: ServerFailReason; error?: string }
+
+/**
+ * P-02a 주소 확인 창의 [맞아요] — 보호자 이메일과 함께 세션을 연다 (SPEC §6-4 · 2026-11-24 이메일만).
+ * 이메일은 보낸 뒤 기기에 남기지 않는다 (로그에도 쓰지 않는다)
+ */
+export interface OpenSessionRequest {
+  email: string
 }
 
-export interface UploadResult {
-  ok: boolean
-  /** QR로 렌더할 다운로드 URL */
-  downloadUrl?: string
-  /** 만료 시각 (ISO8601) — 업로드 후 24시간 */
-  expiresAt?: string
-  /** 'timeout' | 'offline' | 'server' | 'config' */
-  reason?: 'timeout' | 'offline' | 'server' | 'config'
-  error?: string
+/** 세션 열기 — 서버가 세션 번호를 준다 */
+export type OpenSessionResult = ServerResult<{
+  sessionToken: string
+}>
+
+/**
+ * 렌더러 → 메인: 리포트 데이터 전송 요청.
+ * 네컷 이미지는 메인이 세션 폴더의 합성본만 읽어 붙인다 — 렌더러는 파일 경로를 넘기지 않는다.
+ */
+export interface SendReportRequest {
+  sessionId: string
+  sessionToken: string
+  createdAt: string
+  ageGroup: AgeGroup
+  job: JobId
+  /** 타깃 문장 2개 (speech[].line) */
+  lines: string[]
+  observation: ObservationResult
+  positiveMessage: string
+  reportText: ReportText
+}
+
+/**
+ * 메인 → 서버: 실제로 나가는 데이터 (SPEC §6-2).
+ * ⚠️ 여기에 없는 것은 나가지 않는다 — 원본 WAV · 개별 사진 · 촬영 영상 · 인식된 글자 · 점수 금지
+ *    (CLAUDE.md 금지사항 4 · 9). 보호자 이메일도 넣지 않는다.
+ */
+export interface ReportPayload {
+  sessionToken: string
+  sessionId: string
+  kioskId: string
+  createdAt: string
+  ageGroup: AgeGroup
+  job: JobId
+  lines: string[]
+  observations: SoundObservation[]
+  /** 모든 소리가 판단 보류 — 서버가 안내 리포트를 보낸다 (SPEC §6-5) */
+  allSkipped: boolean
+  positiveMessage: string
+  reportText: ReportText
+  /** 네컷 이미지 (JPEG) base64 */
+  fourcut: string
+}
+
+export type SendReportResult = ServerResult
+
+/** ⚠️ MOCK 전용 — 개발용 서버 흉내 조작 (DevBar · P-02a 개발용 버튼) */
+export interface MockServerState {
+  /** offline이면 모든 요청이 연결 실패로 끝난다 */
+  network: 'online' | 'offline'
 }
 
 // ────────────────────────────────────────────────────────────
-// 9. IPC 채널
+// 13. IPC 채널
 // ────────────────────────────────────────────────────────────
 
 export const IPC = {
@@ -414,17 +616,26 @@ export const IPC = {
   SYSTEM_REVEAL_PATH: 'system:revealPath',
 
   SESSION_BEGIN: 'session:begin',
-  /** P-11 — 로컬 WAV·사진·PDF 삭제 (PAGE_SPEC P-11) */
+  /** M-03 — 로컬 WAV · 사진 · 영상 · PDF 삭제 */
   SESSION_PURGE: 'session:purge',
 
   RECORDING_SAVE_WAV: 'recording:saveWav',
-  /** D-01 — 저장된 WAV를 되읽어 청음 확인 (SPIKE_PLAN ① 4번) */
+  /** D-01 — 저장된 WAV를 되읽어 청음 확인 */
   RECORDING_READ_WAV: 'recording:readWav',
+  /** P-05 — 다시 말하기로 안 쓰게 된 녹음을 바로 지운다 */
+  RECORDING_DELETE_WAV: 'recording:deleteWav',
+
+  /** ⚠️ MOCK: main/mock/stt.ts — 파이썬 받아쓰기 프로그램으로 교체 예정 */
+  STT_TRANSCRIBE: 'stt:transcribe',
 
   PHOTO_SAVE: 'photo:save',
   /** 촬영 원본을 되읽어 네컷으로 합성한다 */
   PHOTO_READ: 'photo:read',
   PHOTO_RENDER_PDF: 'photo:renderPdf',
+
+  /** P-06 촬영 장면 영상 저장 · P-07 재생용 되읽기 */
+  VIDEO_SAVE: 'video:save',
+  VIDEO_READ: 'video:read',
 
   CAMERA_STATUS: 'camera:status',
   CAMERA_CONNECT: 'camera:connect',
@@ -440,13 +651,18 @@ export const IPC = {
   /** 메인 → 렌더러 푸시 (handle이 아니라 send) */
   CAMERA_EVENT: 'camera:event',
 
+  /** ⚠️ MOCK: main/mock/analysis.ts — 파이썬 분석 프로그램으로 교체 예정 */
   ANALYSIS_RUN: 'analysis:run',
-
-  REPORT_RENDER_PDF: 'report:renderPdf',
 
   PRINT_SILENT: 'print:silent',
 
-  UPLOAD_ARTIFACT: 'upload:artifact',
+  // ── 백엔드 서버 (⚠️ 지금은 mock 응답 — main/server.ts) ──
+  SERVER_OPEN_SESSION: 'server:openSession',
+  SERVER_SEND_REPORT: 'server:sendReport',
+  SERVER_CLOSE_SESSION: 'server:closeSession',
+  /** ⚠️ MOCK 전용 — 서버 연결 끊김 흉내 */
+  SERVER_MOCK_GET: 'server:mockGet',
+  SERVER_MOCK_SET: 'server:mockSet',
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]
@@ -472,12 +688,23 @@ export interface KioskApi {
     saveWav(req: SaveWavRequest): Promise<SavedFile>
     /** 저장된 WAV 원본 바이트 (decodeAudioData로 재생) */
     readWav(path: string): Promise<ArrayBuffer>
+    /** 세션 폴더 안의 WAV 하나를 지운다 */
+    deleteWav(path: string): Promise<void>
+  }
+  stt: {
+    /** ⚠️ MOCK: src/main/mock/stt.ts — 무음 검사는 실측, 받아쓰기는 가짜 */
+    transcribe(req: SttRequest): Promise<SttResult>
   }
   photo: {
     save(req: SavePhotoRequest): Promise<SavedFile>
     /** 세션 폴더 안의 사진 원본 바이트 */
     read(path: string): Promise<ArrayBuffer>
     renderPdf(req: RenderPhotoPdfRequest): Promise<SavedFile>
+  }
+  video: {
+    save(req: SaveVideoRequest): Promise<SavedFile>
+    /** 세션 폴더 안의 촬영 영상 바이트 */
+    read(path: string): Promise<ArrayBuffer>
   }
   camera: {
     status(): Promise<CameraStatus>
@@ -494,16 +721,19 @@ export interface KioskApi {
     onEvent(listener: (event: CameraEvent) => void): () => void
   }
   analysis: {
-    /** ⚠️ MOCK: src/main/mock/analysis.ts — 실제 분석 모듈로 교체 예정 */
+    /** ⚠️ MOCK: src/main/mock/analysis.ts — 실제 분석 프로그램으로 교체 예정 */
     run(req: AnalysisInput): Promise<AnalysisOutput>
-  }
-  report: {
-    renderPdf(req: RenderReportPdfRequest): Promise<SavedFile>
   }
   print: {
     silent(req: PrintRequest): Promise<PrintResult>
   }
-  upload: {
-    artifact(req: UploadRequest): Promise<UploadResult>
+  /** ⚠️ 지금은 mock 응답 (API 합의 전 — SPEC T-14) */
+  server: {
+    openSession(req: OpenSessionRequest): Promise<OpenSessionResult>
+    sendReport(req: SendReportRequest): Promise<SendReportResult>
+    closeSession(sessionToken: string): Promise<void>
+    /** ⚠️ MOCK 전용 */
+    mockGet(): Promise<MockServerState>
+    mockSet(state: Partial<MockServerState>): Promise<MockServerState>
   }
 }

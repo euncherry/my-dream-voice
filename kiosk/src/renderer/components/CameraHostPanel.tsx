@@ -229,12 +229,12 @@ export function CameraHostPanel({
 
       <div className="cam">
         {liveUrl ? (
-          <img className="cam__video" src={liveUrl} alt="라이브뷰" />
+          <img className="cam__video cam__video--mirror" src={liveUrl} alt="라이브뷰" />
         ) : (
           <div className="cam__video" />
         )}
         {shot ? (
-          <img className="cam__video" src={shot.url} alt="테스트 촬영 결과" />
+          <img className="cam__video cam__video--mirror" src={shot.url} alt="테스트 촬영 결과" />
         ) : (
           <div className="cam__video" />
         )}
