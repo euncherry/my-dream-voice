@@ -122,6 +122,18 @@ const MOON_PROPS: readonly SceneProp[] = [
   { name: 'prop-rocket', cx: 1460, cy: 437, w: 213 },
 ]
 
+/**
+ * A-03부터 — 무지갯빛 새 별 · 커진 로켓 · 작아진 행성 (2026-11-26 사용자 지정).
+ * 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타나고(겹치지 않게 둘은 뺌), 오른쪽 작은 별 · 행성은 커진 로켓에 가리지 않게 로켓 옆 빈 하늘로
+ */
+const ROCKET_PROPS: readonly SceneProp[] = [
+  { name: 'prop-star-rainbow', cx: 278, cy: 175, w: 150, fx: 'twinkle' },
+  { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1330, cy: 160, w: 55, fx: 'glow' },
+  { name: 'prop-planet', cx: 1650, cy: 160, w: 160 },
+  // 발끝 자리(배경 y 588)는 그대로 두고 키운다
+  { name: 'prop-rocket', cx: 1505, cy: 381, w: 330 },
+]
+
 export const SCRIPTS: Record<JobId, JobScript> = {
   police: {
     prefix: 'P',
@@ -211,15 +223,17 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         boy: 'boy-look',
         // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 480, 301)에서 팔 방향 그대로 위쪽 왼쪽에 새 별
         scale: { girl: 0.88 },
-        props: [
-          { name: 'prop-star-rainbow', cx: 278, cy: 175, w: 150, fx: 'twinkle' },
-          // 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타난다 (겹치지 않게 둘은 뺌)
-          // 오른쪽 작은 별 · 행성은 커진 로켓에 가리지 않게 로켓 옆 빈 하늘로 옮긴다
-          { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1330, cy: 160, w: 55, fx: 'glow' },
-          { name: 'prop-planet', cx: 1650, cy: 160, w: 160 },
-          // 발끝 자리(배경 y 588)는 그대로 두고 키운다
-          { name: 'prop-rocket', cx: 1505, cy: 381, w: 330 },
-        ],
+        props: ROCKET_PROPS,
+        gauge: 0,
+      },
+      // "네 목소리 신호가 꼭 필요해!" — 두 아이가 무릎을 꿇고 화면 밖 아이에게 손을 내밀며 부탁한다. 뒤로 로켓 · 빈 게이지 (A-03과 같은 소품)
+      // 무릎 꿇은 그림은 몸 높이가 서 있는 그림과 달라, 헬멧 크기가 앞 장면과 같도록 키를 줄인다 (헬멧 폭 ÷ 몸 높이로 잼)
+      '03-2': {
+        bg: 'bg-moon',
+        girl: 'girl-ask',
+        boy: 'boy-ask',
+        scale: { girl: 0.85, boy: 0.83 },
+        props: ROCKET_PROPS,
         gauge: 0,
       },
     },
