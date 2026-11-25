@@ -22,18 +22,30 @@
  *   - 재촬영 (SPEC T-10 미결) · [뒤로] (촬영 중 비활성 — PAGE_SPEC §2-4)
  *   - 찍은 컷을 따로 크게 보여 주는 단계 (둘지는 디자인에서 정한다)
  *
- * ⚠️ 색 · 글꼴 · 배치는 임시다. 프레임 · 포즈 가이드 아트는 미제작 — placeholder로 표시한다.
+ * 🎨 디자인 입힘 (2026-11-25 촬영 시안) — 왼쪽 흰 패널: [● 영상 녹화 중] · [카메라 미리보기] + 라이브뷰(네 귀퉁이 선) ·
+ *   오른쪽 흰 패널: "두 번째 사진" · 2 / 4 · 네컷 미리보기 · "1 / 4 촬영 완료" · 보라 알약 "N초 뒤 찰칵!" · 아래 "다음 포즈로" 안내.
+ *   배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/capture.css.
+ *   시안과 다른 점:
+ *     · 라이브뷰는 지금 찍는 사진 칸의 비율이라 시안(더 넓은 화면)보다 좁다 — 남는 좌우는 옅은 바탕
+ *     · 알약 왼쪽의 손 그림은 그림 파일이 없어 카메라 그림으로 대신했다 (카운트다운이 7초라 손가락 수와도 안 맞는다)
+ *     · [뒤로]는 자리만 두고 잠가 둔다 (촬영 중 비활성) · 위 작은 구름 두 개는 그림 파일이 없어 뺐다
+ * 포즈 가이드 아트는 시안에 없어 뺐다.
  */
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { DevStrip, PlaceholderTag, Screen } from '../components/Screen'
+import { BackButton } from '../components/BackButton'
+import { DevStrip, Screen } from '../components/Screen'
+import { Stage } from '../components/Stage'
 import { useSession } from '../store/session'
 import { cellAspect, cellsFor, composeFourCut, composePlaceholderFourCut, frameArtSrc } from '../photo/composeFourCut'
 import { FramePreview } from '../photo/FramePreview'
 import { startLiveViewRecording, type LiveViewRecording } from '../photo/recordLiveView'
 import { CAPTURE_INTERVAL_SEC, CUT_COUNT, FOURCUT } from '@shared/constants'
-import { jobLabel } from '@shared/jobs'
 import type { CameraBackend, JobId } from '@shared/types'
+import skyUrl from '../assets/bg/sky.webp'
+import logoEnUrl from '../assets/brand/logo-en.png'
+import cloudFrontUrl from '../assets/deco/cloud-front.webp'
+import starYellowUrl from '../assets/deco/star-yellow.png'
 import '../styles/capture.css'
 
 /** M-02[오류·폴백 안내]에 띄우는 문구 (v1과 같다) */
@@ -61,6 +73,34 @@ interface Run {
   cameraDone: boolean
   /** 카운트다운 타이머 */
   timer: number
+}
+
+/** 오른쪽 제목 "○ 번째 사진" */
+const ORDINAL = ['첫 번째', '두 번째', '세 번째', '네 번째'] as const
+
+/** "웃어" 밑에 깔리는 분홍 붓질 — P-03 · P-04 제목과 같은 그림 */
+function TitleMark(): ReactNode {
+  return (
+    <svg className="p06-title__mark" viewBox="0 0 290 56" aria-hidden="true" focusable="false" preserveAspectRatio="none">
+      <path d="M7 31C8 18 17 9 32 8L262 2c14-.5 23 6 23 17 0 13-9 24-22 25L150 45 44 52C20 53 6 45 7 31Z" />
+    </svg>
+  )
+}
+
+/** 카메라 그림 (선) */
+function CameraIcon({ className }: { className?: string }): ReactNode {
+  return (
+    <svg className={className} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <path
+        d="M6 17a5 5 0 0 1 5-5h5l3.5-5h9L32 12h5a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H11a5 5 0 0 1-5-5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4.2"
+        strokeLinejoin="round"
+      />
+      <circle cx="24" cy="26" r="7.5" fill="none" stroke="currentColor" strokeWidth="4.2" />
+    </svg>
+  )
 }
 
 /** 개발용 표시 — 촬영 장면 녹화 상태 */
@@ -360,102 +400,170 @@ export function P06Capture(): ReactNode {
     '--fw': FOURCUT.width / liveCell.width,
   } as CSSProperties
 
+  /** 오른쪽 제목 — "두 번째 사진" · 다 찍으면 "다 찍었어요!" */
+  const sideTitle = phase === 'composing' ? '다 찍었어요!' : `${ORDINAL[cutNo - 1]} 사진`
+
   return (
-    <Screen id="P-06" note="버튼 없이 자동 4컷 · 프레임 · 포즈 가이드 아트는 placeholder">
-      {/* 라이브뷰 비율 = 네컷 사진 칸의 비율 (계산값이라 변수로 넘긴다) */}
-      <div className="p06" style={{ '--p06-aspect': liveCell.width / liveCell.height } as CSSProperties}>
-        <div className="p06-stagebox">
-          <div className="p06-stage">
-            {liveUrl && (
-              <img
-                key={liveCors ? 'cors' : 'plain'}
-                ref={liveImgRef}
-                className="p06-live"
-                // 녹화용 캔버스가 잠기지 않게 한다 (photo/recordLiveView.ts)
-                crossOrigin={liveCors ? 'anonymous' : undefined}
-                src={liveUrl}
-                alt=""
-                onLoad={() => {
-                  liveFrameSeenRef.current = true
-                }}
-                onError={(e) => onLiveError(e.currentTarget)}
-              />
-            )}
+    <Screen id="P-06" designed>
+      <div className="p06">
+        <Stage background={skyUrl}>
+          <img className="p06-logo" src={logoEnUrl} alt="MY DREAM VOICE" draggable={false} />
 
-            {/* 지금 찍는 칸 둘레의 프레임 — 라이브뷰는 거울 · 프레임은 뒤집지 않는다 (인쇄와 같다) */}
-            {activeCell >= 0 && frameArtOk && (
-              <img
-                className="p06-frame-over"
-                src={frameArtSrc(job)}
-                alt=""
-                draggable={false}
-                style={frameOver}
-                onError={() => setFrameArtOk(false)}
-              />
-            )}
+          {/* 촬영 화면에는 돌아갈 곳이 없다 — 시안처럼 자리만 두고 잠가 둔다 (PAGE_SPEC §2-4 촬영 중 비활성) */}
+          <BackButton onClick={() => undefined} disabled />
 
-            {(phase === 'countdown' || phase === 'shutter') && (
-              <div className="p06-pose">
-                <PlaceholderTag label="포즈 가이드 아트 미제작" />
-              </div>
-            )}
+          <img className="p06-star" src={starYellowUrl} alt="" draggable={false} />
 
-            {/* 촬영 플래시 연출 — 컷마다 다시 돈다 */}
-            {phase === 'shutter' && <div key={done} className="p06-flash" />}
+          {/* 아래 구름 — 패널 뒤에 깔린다 */}
+          <img className="p06-cloud p06-cloud--l" src={cloudFrontUrl} alt="" draggable={false} />
+          <img className="p06-cloud p06-cloud--r" src={cloudFrontUrl} alt="" draggable={false} />
 
-            {(phase === 'preparing' || phase === 'composing') && (
-              <span className="p06-notice">
-                {phase === 'preparing' ? '카메라를 켜고 있어요…' : '사진을 만들고 있어요…'}
+          <h1 className="p06-title">
+            카메라를 보고{' '}
+            <span className="p06-title__em">
+              <TitleMark />
+              <span className="p06-title__text">웃어</span>
+            </span>{' '}
+            주세요!
+          </h1>
+          <p className="p06-sub">{CAPTURE_INTERVAL_SEC}초마다 찰칵! 네 장을 자동으로 찍어요</p>
+
+          {/* ── 왼쪽 — 카메라 미리보기 ── */}
+          <section className="p06-panel p06-panel--live">
+            <div className="p06-head">
+              {/* 녹화가 실제로 돌 때만 */}
+              <span className="p06-rec" data-on={recState === 'recording'}>
+                <i className="p06-rec__dot" />
+                영상 녹화 중
               </span>
-            )}
+              <span className="p06-cam">
+                <CameraIcon className="p06-cam__icon" />
+                카메라 미리보기
+              </span>
+            </div>
 
-            {phase === 'error' && (
-              <div className="p06-error">
-                <p className="p06-error__text">{CAMERA_FALLBACK_MESSAGE}</p>
-                <button className="btn btn--primary" onClick={retry}>
-                  다시 시도
-                </button>
-                <DevStrip label="카메라 없는 개발 PC">
-                  <button
-                    className="btn btn--sm"
-                    disabled={placeholderBusy}
-                    onClick={() => void continueWithPlaceholder()}
-                  >
-                    placeholder 사진으로 계속
-                  </button>
-                  {error && <span className="p06-error__detail">{error}</span>}
-                </DevStrip>
+            {/* 라이브뷰 비율 = 네컷 사진 칸의 비율 (계산값이라 변수로 넘긴다) — 남는 좌우는 옅은 바탕 */}
+            <div
+              className="p06-livebox"
+              style={{ '--p06-aspect': liveCell.width / liveCell.height } as CSSProperties}
+            >
+              <div className="p06-stage">
+                {liveUrl && (
+                  <img
+                    key={liveCors ? 'cors' : 'plain'}
+                    ref={liveImgRef}
+                    className="p06-live"
+                    // 녹화용 캔버스가 잠기지 않게 한다 (photo/recordLiveView.ts)
+                    crossOrigin={liveCors ? 'anonymous' : undefined}
+                    src={liveUrl}
+                    alt=""
+                    onLoad={() => {
+                      liveFrameSeenRef.current = true
+                    }}
+                    onError={(e) => onLiveError(e.currentTarget)}
+                  />
+                )}
+
+                {/* 지금 찍는 칸 둘레의 프레임 — 라이브뷰는 거울 · 프레임은 뒤집지 않는다 (인쇄와 같다) */}
+                {activeCell >= 0 && frameArtOk && (
+                  <img
+                    className="p06-frame-over"
+                    src={frameArtSrc(job)}
+                    alt=""
+                    draggable={false}
+                    style={frameOver}
+                    onError={() => setFrameArtOk(false)}
+                  />
+                )}
+
+                {/* 네 귀퉁이 맞춤 선 (시안) */}
+                <span className="p06-corners" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </span>
+
+                {/* 촬영 플래시 연출 — 컷마다 다시 돈다 */}
+                {phase === 'shutter' && <div key={done} className="p06-flash" />}
+
+                {(phase === 'preparing' || phase === 'composing') && (
+                  <span className="p06-notice">
+                    {phase === 'preparing' ? '카메라를 켜고 있어요…' : '사진을 만들고 있어요…'}
+                  </span>
+                )}
+
+                {phase === 'error' && (
+                  <div className="p06-error">
+                    <p className="p06-error__text">{CAMERA_FALLBACK_MESSAGE}</p>
+                    <button className="p06-retry" onClick={retry}>
+                      다시 시도
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </section>
 
-        <aside className="p06-side">
-          <strong className="p06-job">{jobLabel(job)}</strong>
-          <p className="p06-progress">
-            {cutNo} / {CUT_COUNT}
-          </p>
+          {/* ── 오른쪽 — 몇 번째 · 네컷 미리보기 · 카운트다운 ── */}
+          <aside className="p06-panel p06-panel--side">
+            <h2 className="p06-side-title">{sideTitle}</h2>
+            <p className="p06-progress">
+              {cutNo} / {CUT_COUNT}
+            </p>
 
-          {/* 카운트다운 — 라이브뷰를 가리지 않게 오른쪽에 (2026-11-24 지정). 자리는 늘 잡아 둬 미리보기가 들썩이지 않게 */}
-          <div className="p06-count" data-on={phase === 'countdown'} aria-hidden={phase !== 'countdown'}>
-            <span className="p06-count__num">{phase === 'countdown' ? count : ''}</span>
-            <span className="p06-count__text">{count}초 뒤에 찍어요</span>
-          </div>
+            <div className="p06-frame">
+              <FramePreview job={job} shots={frameShots} activeCell={activeCell} />
+            </div>
 
-          <div className="p06-frame">
-            <FramePreview job={job} shots={frameShots} activeCell={activeCell} />
-          </div>
+            <p className="p06-done">
+              {done} / {CUT_COUNT} 촬영 완료
+            </p>
 
-          <div className="p06-tags">
-            {backend === 'fake' && <PlaceholderTag label="가짜 카메라 — 실제 촬영이 아닙니다" />}
-            <PlaceholderTag label="문구 미확정" />
-          </div>
+            {/* 카운트다운 — 라이브뷰를 가리지 않게 오른쪽에 (2026-11-24 지정) */}
+            <div className="p06-count" data-phase={phase} aria-live="off">
+              <span className="p06-count__icon" aria-hidden="true">
+                <CameraIcon />
+              </span>
+              <span className="p06-count__text">
+                {phase === 'countdown' ? (
+                  <>
+                    <em key={count} className="p06-count__num">{count}</em>초 뒤 찰칵!
+                  </>
+                ) : phase === 'shutter' ? (
+                  '찰칵!'
+                ) : phase === 'preparing' ? (
+                  '준비하고 있어요'
+                ) : phase === 'composing' ? (
+                  '사진을 만들고 있어요'
+                ) : (
+                  '잠깐만요!'
+                )}
+              </span>
+            </div>
+          </aside>
 
+          <p className="p06-foot">사진이 찍히면 다음 포즈로 바꿔 주세요</p>
+        </Stage>
+
+        {/* 개발용 — 손님 화면에는 없다 */}
+        <div className="p06-dev">
           <DevStrip label="촬영">
             <span>카메라 {backend ?? '확인 중'}</span>
             <span>· 장면 녹화 {REC_LABEL[recState]}</span>
+            {backend === 'fake' && <span>· 가짜 카메라</span>}
+            {phase === 'error' && (
+              <button
+                className="btn btn--sm"
+                disabled={placeholderBusy}
+                onClick={() => void continueWithPlaceholder()}
+              >
+                placeholder 사진으로 계속
+              </button>
+            )}
+            {phase === 'error' && error && <span className="p06-error__detail">{error}</span>}
           </DevStrip>
-        </aside>
+        </div>
       </div>
     </Screen>
   )

@@ -84,7 +84,7 @@ export function FramePreview({
       {cellStyles.map((cellStyle, i) => {
         const shot = shots?.[i]
         return (
-          <div key={i} className="frame__cell" style={cellStyle}>
+          <div key={i} className="frame__cell" style={cellStyle} data-active={i === activeCell}>
             {shot ? (
               // 인쇄물과 같게 — 좌우 반전하지 않는다
               <img className="frame__shot" src={shot} alt="" draggable={false} />
