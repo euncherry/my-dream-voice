@@ -30,6 +30,11 @@ export interface LayeredScene {
   boy: string
   /** 배경 위 · 인물 뒤에 놓는 소품 (2026-11-26 — 로켓 · 별 · 행성을 배경에서 빼고 따로 받음) */
   props?: readonly SceneProp[]
+  /**
+   * 목소리 게이지 — 그림 위 오른쪽에 크게 덮어 그린다 (0 = 빈 채 ~ 1 = 꽉 참 · 없으면 안 보임).
+   * 2026-11-26: 로켓 문 속 작은 게이지 → 로켓과 따로, 눈에 띄게 크게 (사용자 지정)
+   */
+  gauge?: number
 }
 
 /**
@@ -46,8 +51,6 @@ export interface SceneProp {
   w: number
   /** glow = 노란 빛 번짐 · twinkle = 반짝반짝(빛이 커졌다 작아졌다) */
   fx?: 'glow' | 'twinkle'
-  /** 로켓 목소리 게이지 — 문 자리에 그린다 (0 = 빈 채 ~ 1 = 꽉 참) */
-  gauge?: number
 }
 
 export interface JobScript {
@@ -114,7 +117,7 @@ const MOON_PROPS: readonly SceneProp[] = [
   { name: 'prop-star-yellow-2', img: 'prop-star-yellow', cx: 373, cy: 308, w: 62, fx: 'glow' },
   { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1444, cy: 240, w: 60, fx: 'glow' },
   { name: 'prop-planet', cx: 1688, cy: 255, w: 250 },
-  { name: 'prop-rocket', cx: 1460, cy: 437, w: 213, gauge: 0 },
+  { name: 'prop-rocket', cx: 1460, cy: 437, w: 213 },
 ]
 
 export const SCRIPTS: Record<JobId, JobScript> = {
@@ -199,7 +202,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '02': { bg: 'bg-moon', girl: 'girl-clap', boy: 'boy-badge', props: MOON_PROPS },
       // "달 탐험 끝! 이제 새로운 별로 가자!" · "우주선은 … 목소리를 들어야 출발할 수 있어." —
       // 여자아이가 하늘의 무지갯빛 새 별을 가리키고(왼쪽 위 노란 별 자리에 나타남), 남자아이는 로켓 쪽을 본다.
-      // 로켓이 조금 커지고 문에 빈 목소리 게이지
+      // 로켓이 조금 커지고, 오른쪽에 빈 목소리 게이지가 나타난다
       '03': {
         bg: 'bg-moon',
         girl: 'girl-point',
@@ -210,8 +213,9 @@ export const SCRIPTS: Record<JobId, JobScript> = {
           ...MOON_PROPS.filter(
             (p) => !['prop-star-yellow', 'prop-star-yellow-2', 'prop-rocket'].includes(p.name),
           ),
-          { name: 'prop-rocket', cx: 1505, cy: 418, w: 271, gauge: 0 },
+          { name: 'prop-rocket', cx: 1505, cy: 418, w: 271 },
         ],
+        gauge: 0,
       },
     },
   },

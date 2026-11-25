@@ -734,7 +734,10 @@ function SpeakFlow({
             <span className="p05-chip">{jobLabel(job)}</span>
             <ProgressDots progress={view.progress} />
 
-            <div className="p05-frame">
+            <div
+              className="p05-frame"
+              data-gauge={SCRIPTS[job].layered?.[view.scene]?.gauge !== undefined ? 'true' : undefined}
+            >
               <SceneFrame job={job} scene={view.scene} />
               <StepBar bar={view.bar} />
               {view.subtitle && (
@@ -1007,6 +1010,9 @@ function LayeredArt({
       <Props job={job} props={def.props ?? NO_PROPS} panel={panel} k={k} />
       <Sprite url={layerUrl(job, def.girl)} cx={CAST_CX.girl} panelH={panelH} who="girl" />
       <Sprite url={layerUrl(job, def.boy)} cx={CAST_CX.boy} panelH={panelH} who="boy" />
+      {def.gauge !== undefined && (
+        <VoiceGauge level={def.gauge} rocketUrl={layerUrl(job, 'prop-rocket')} />
+      )}
     </div>
   )
 }
@@ -1069,7 +1075,6 @@ function Props({
             style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
           >
             <img src={url} alt="" draggable={false} />
-            {p.gauge !== undefined && <RocketGauge level={p.gauge} />}
           </span>
         )
       })}
@@ -1078,15 +1083,20 @@ function Props({
 }
 
 /**
- * 로켓 목소리 게이지 — 로켓 문 자리(손잡이 왼쪽, 세로로 긴 둥근 칸)에 그린다. 아래에서부터 차오른다 (0 ~ 1).
- * 받은 로켓 그림(2026-11-26)에 게이지 틀이 없어 앱이 그린다 — 자리는 styles/p05.css .p05-gauge (prop-rocket 그림 안 비율).
- * ⚠️ 모양 · 색은 임시 — 디자인을 받으면 바꾼다. 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
+ * 목소리 게이지 — 그림 위 오른쪽에 크게 덮어 그리는 세로 캡슐 + 꼭대기의 작은 로켓 (2026-11-26 — 로켓과 따로, 눈에 띄게).
+ * 아래에서부터 차오른다 (0 ~ 1). ⚠️ 모양 · 색은 임시 — 디자인을 받으면 바꾼다.
+ * 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
  */
-function RocketGauge({ level }: { level: number }): ReactNode {
+function VoiceGauge({ level, rocketUrl }: { level: number; rocketUrl: string | undefined }): ReactNode {
   const pct = Math.round(Math.min(1, Math.max(0, level)) * 100)
   return (
-    <span className="p05-gauge" aria-hidden="true">
-      <span className="p05-gauge__fill" style={{ height: `${pct}%` }} />
+    <span className="p05-vgauge" aria-hidden="true">
+      <span className="p05-vgauge__tube">
+        <span className="p05-vgauge__track">
+          <span className="p05-vgauge__fill" style={{ height: `${pct}%` }} />
+        </span>
+      </span>
+      {rocketUrl && <img className="p05-vgauge__rocket" src={rocketUrl} alt="" draggable={false} />}
     </span>
   )
 }

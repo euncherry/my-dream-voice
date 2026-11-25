@@ -810,33 +810,76 @@ img.p05-scene__art--pop {
   }
 }
 
-/* 로켓 목소리 게이지 — prop-rocket 그림의 문 자리(손잡이 왼쪽). ⚠️ 모양 · 색 임시 */
-.p05-gauge {
+/* 목소리 게이지 (2026-11-26) — 그림 위 오른쪽에 크게 덮는 세로 캡슐 + 꼭대기 작은 로켓. ⚠️ 모양 · 색 임시 */
+.p05-vgauge {
   position: absolute;
-  left: 20%;
-  top: 29%;
-  width: 13%;
-  height: 30%;
-  border-radius: 999px;
-  background:
-    repeating-linear-gradient(
-      to top,
-      transparent 0 calc(25% - 2px),
-      rgb(255 255 255 / 0.8) calc(25% - 2px) 25%
-    ),
-    rgb(5 9 84 / 0.16);
-  box-shadow: inset 0 2px 5px rgb(5 9 84 / 0.3);
-  overflow: hidden;
+  right: 30px;
+  top: 96px;
+  bottom: 44px;
+  width: 84px;
+  z-index: 2;
+  animation: p05-vgauge-in 0.4s ease-out both;
 }
 
-.p05-gauge__fill {
+.p05-vgauge__tube {
+  position: absolute;
+  inset: 0;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 8px 20px rgb(5 9 84 / 0.35);
+}
+
+.p05-vgauge__track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(to top, transparent 0 calc(20% - 3px), rgb(255 255 255 / 0.45) calc(20% - 3px) 20%),
+    #2b2370;
+  box-shadow: inset 0 3px 8px rgb(0 0 0 / 0.35);
+}
+
+.p05-vgauge__fill {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
   border-radius: inherit;
-  background: linear-gradient(to top, #ff7a3d, #ffd84a);
+  background: linear-gradient(to top, #fe6a4e, #ffb347 55%, #ffe45c);
+  box-shadow: 0 0 16px rgb(255 200 80 / 0.8);
   transition: height 0.12s linear;
+}
+
+/* 꼭대기 로켓 — 캡슐 위에 올라앉고 그림 칸 위로 조금 튀어나온다 */
+.p05-vgauge__rocket {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 100px;
+  max-width: none;
+  translate: -50% 22px;
+  filter: drop-shadow(0 4px 6px rgb(5 9 84 / 0.35));
+}
+
+/* 게이지가 있는 장면 — 말풍선이 게이지를 덮지 않게 폭을 줄이고 조금 왼쪽으로 (꼬리 자리는 left로 계산하므로 left를 옮긴다) */
+.p05-frame[data-gauge] .p05-subtitle {
+  left: calc(50% - 60px);
+  max-width: 1040px;
+}
+
+@keyframes p05-vgauge-in {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
