@@ -780,8 +780,20 @@ img.p05-scene__art--pop {
   height: auto;
 }
 
+/* 나타날 때 — translate는 가운데 맞춤(-50%)에 쓰이므로 transform으로 띄운다 (2026-11-26 — 인물용 애니메이션을 쓰면 가운데 맞춤이 풀렸다) */
 .p05-prop.is-in {
-  animation: p05-sprite-in 0.32s ease-out both;
+  animation: p05-prop-in 0.32s ease-out both;
+}
+
+@keyframes p05-prop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .p05-prop.is-out {
@@ -793,11 +805,11 @@ img.p05-scene__art--pop {
   filter: drop-shadow(0 0 10px rgb(255 214 64 / 0.75));
 }
 
-/* 무지갯빛 새 별 — 반짝반짝 + 천천히 돈다 (한 바퀴 16초 · 2026-11-26 지정) */
+/* 무지갯빛 새 별 — 반짝반짝 + 살살 돈다 (한 바퀴 40초 · 2026-11-26 — 16초는 너무 빠르다고 해서) */
 .p05-prop[data-fx="twinkle"] img {
   animation:
-    p05-twinkle 1.6s ease-in-out infinite,
-    p05-spin 16s linear infinite;
+    p05-twinkle 2.4s ease-in-out infinite,
+    p05-spin 40s linear infinite;
 }
 
 @keyframes p05-spin {
@@ -818,6 +830,54 @@ img.p05-scene__art--pop {
   }
 }
 
+/* 가운데 마이크 (2026-11-26 A-04) — 둥실 떠 있다가, "띵!" 신호 · 녹음 중에는 빛나는 그림으로 바뀌며 두근두근.
+   인물보다 앞에 (내민 손에 가리지 않게 — 말풍선 · 게이지보다는 뒤) */
+.p05-prop[data-fx="mic"] {
+  z-index: 1;
+}
+
+.p05-prop[data-fx="mic"] img {
+  animation: p05-mic-float 2.6s ease-in-out infinite;
+}
+
+.p05-prop[data-fx="mic"] .p05-prop__glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.p05[data-mic="demo"] .p05-prop[data-fx="mic"] .p05-prop__glow,
+.p05[data-mic="live"] .p05-prop[data-fx="mic"] .p05-prop__glow {
+  opacity: 1;
+  filter: drop-shadow(0 0 16px rgb(255 214 64 / 0.85));
+}
+
+.p05[data-mic="demo"] .p05-prop[data-fx="mic"],
+.p05[data-mic="live"] .p05-prop[data-fx="mic"] {
+  animation: p05-mic-beat 0.9s ease-in-out infinite;
+}
+
+@keyframes p05-mic-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes p05-mic-beat {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.08;
+  }
+}
+
 /* 목소리 게이지 (2026-11-26) — 그림 위 오른쪽에 크게 덮는 세로 캡슐. ⚠️ 모양 · 색 임시 */
 .p05-vgauge {
   position: absolute;
@@ -827,6 +887,30 @@ img.p05-scene__art--pop {
   width: 84px;
   z-index: 2;
   animation: p05-vgauge-in 0.4s ease-out both;
+}
+
+/* 게이지 뒤 후광 — 은은하게 숨 쉬듯 밝아졌다 어두워진다 (2026-11-26 — 눈에 들어오게) */
+.p05-vgauge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 999px;
+  box-shadow:
+    0 0 16px 8px rgb(255 236 140),
+    0 0 44px 20px rgb(255 214 110 / 0.75),
+    0 0 90px 36px rgb(255 180 230 / 0.4);
+  animation: p05-vgauge-halo 3.2s ease-in-out infinite;
+}
+
+@keyframes p05-vgauge-halo {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .p05-vgauge__tube {
@@ -880,7 +964,10 @@ img.p05-scene__art--pop {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .p05-prop[data-fx="twinkle"] img {
+  .p05-prop[data-fx="twinkle"] img,
+  .p05-vgauge::before,
+  .p05-prop[data-fx="mic"] img,
+  .p05[data-mic] .p05-prop[data-fx="mic"] {
     animation: none;
   }
 }

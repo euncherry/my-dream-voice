@@ -56,8 +56,11 @@ export interface SceneProp {
   cx: number
   cy: number
   w: number
-  /** glow = 노란 빛 번짐 · twinkle = 반짝반짝(빛이 커졌다 작아졌다) */
-  fx?: 'glow' | 'twinkle'
+  /**
+   * glow = 노란 빛 번짐 · twinkle = 반짝반짝(빛이 커졌다 작아졌다)
+   * mic = 가운데 마이크 — 둥실 떠 있고, "띵!" 신호 · 녹음 중에는 `<그림>-glow`(빛나는 마이크)로 바뀌며 두근 (2026-11-26)
+   */
+  fx?: 'glow' | 'twinkle' | 'mic'
 }
 
 export interface JobScript {
@@ -131,8 +134,15 @@ const MOON_PROPS: readonly SceneProp[] = [
  * A-03부터 — 무지갯빛 새 별 · 커진 로켓 · 작아진 행성 (2026-11-26 사용자 지정).
  * 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타나고(겹치지 않게 둘은 뺌), 오른쪽 작은 별 · 행성은 커진 로켓에 가리지 않게 로켓 옆 빈 하늘로
  */
+/** A-04부터 두 아이가 살짝 멀어진다 (기본 여 0.36 · 남 0.595) — 그 사이 가운데가 마이크 자리 */
+const A04_CAST = { girl: 0.31, boy: 0.645 } as const
+
+/** 가운데 마이크 — 두 아이 사이, 내민 손 높이 (배경 그림 픽셀) */
+const MIC: SceneProp = { name: 'prop-mic', cx: 915, cy: 365, w: 175, fx: 'mic' }
+
 const ROCKET_PROPS: readonly SceneProp[] = [
-  { name: 'prop-star-rainbow', cx: 278, cy: 175, w: 150, fx: 'twinkle' },
+  // 2026-11-26 나타나는 애니메이션이 가운데 맞춤을 덮어쓰던 것을 고치면서, 보이던 자리 그대로 좌표만 고침 (278, 175 → 353, 247)
+  { name: 'prop-star-rainbow', cx: 353, cy: 247, w: 150, fx: 'twinkle' },
   { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1330, cy: 160, w: 55, fx: 'glow' },
   { name: 'prop-planet', cx: 1650, cy: 160, w: 160 },
   // 발끝 자리(배경 y 588)는 그대로 두고 키운다
@@ -199,8 +209,8 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '02': '같은 달 표면. 남자아이가 화면 밖 아이에게 별 모양 우주 대원 배지를 내민다. 여자아이는 박수',
       '03': '여자아이가 하늘의 무지갯빛 새 별을 가리킨다. 크레이터 너머에 세워 둔 로켓(몸통의 세로 "목소리 게이지"가 비어 있다)',
       '03-2': '두 아이가 화면 밖 아이를 바라보며 "네 목소리가 꼭 필요해!" 하고 부탁한다. 뒤로 로켓의 "목소리 게이지"가 비어 있다',
-      '04': '달 위에서 여자아이가 헬멧 옆의 반짝이는 무전 마이크를 가리키며 설명. 남자아이는 고개를 끄덕인다',
-      '05': '남자아이가 무전 마이크에 대고 엄지를 번쩍 들며 입을 크게 벌려 외친다',
+      '04': '두 아이가 양쪽에서 가운데에 뜬 마이크를 양손으로 소개한다. 띵! 하면 마이크가 반짝',
+      '05': '남자아이가 가운데 마이크 쪽으로 몸을 기울여 엄지를 번쩍 들며 입을 크게 벌려 외친다',
       '06': '달 위의 두 아이가 화면 쪽으로 몸을 기울이고 헬멧 옆에 손을 대고 귀 기울인다 (아이 차례)',
       '07': '뒤쪽 로켓의 "목소리 게이지"가 꽉 차고 창문에 불이 들어온다. 두 아이가 하이파이브',
       '08': '크레이터를 여러 개 지나 저 멀리 아주 작게 보이는 로켓, 발자국이 길게 이어진다. 남자아이가 손나팔, 여자아이는 망원경',
@@ -226,7 +236,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         bg: 'bg-moon',
         girl: 'girl-point',
         boy: 'boy-look',
-        // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 480, 301)에서 팔 방향 그대로 위쪽 왼쪽에 새 별
+        // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 480, 301)에서 팔 방향 위쪽 왼쪽에 새 별
         scale: { girl: 0.88 },
         props: ROCKET_PROPS,
         gauge: 0,
@@ -239,6 +249,16 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         boy: 'boy-ask',
         scale: { girl: 0.85, boy: 0.83 },
         props: ROCKET_PROPS,
+        gauge: 0,
+      },
+      // "마이크가 반짝이고, (띵!) 소리가 나면 그때 말하는 거야." — 두 아이가 살짝 멀어지고, 그 사이 가운데에 마이크가 나타난다.
+      // 둘이 양손으로 가운데 마이크를 "짜잔" 소개한다. 진짜 띵을 들려줄 때 마이크가 빛난다 (2026-11-26 사용자 지정)
+      '04': {
+        bg: 'bg-moon',
+        girl: 'girl-present',
+        boy: 'boy-present',
+        cast: A04_CAST,
+        props: [...ROCKET_PROPS, MIC],
         gauge: 0,
       },
     },

@@ -1093,11 +1093,22 @@ function Props({
             style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
           >
             <img src={url} alt="" draggable={false} />
+            {p.fx === 'mic' && <MicGlow job={job} name={p.img ?? p.name} />}
           </span>
         )
       })}
     </>
   )
+}
+
+/**
+ * 가운데 마이크의 빛나는 그림 — 보통 마이크와 같은 크기로 위에 겹쳐 두고, "띵!" 신호 · 녹음 중에만 보인다
+ * (.p05[data-mic=demo|live] — CSS). 그림이 없으면 CSS 빛만
+ */
+function MicGlow({ job, name }: { job: JobId; name: string }): ReactNode {
+  const url = layerUrl(job, `${name}-glow`)
+  if (!url) return null
+  return <img className="p05-prop__glow" src={url} alt="" draggable={false} />
 }
 
 /**
