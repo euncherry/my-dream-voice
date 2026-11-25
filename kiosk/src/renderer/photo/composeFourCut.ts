@@ -50,7 +50,7 @@ const FRAME_FILE: Record<JobId, string> = {
   astronaut: 'astronaut.png',
   singer: 'singer-test.png', // 2026-11-24 시험 — 새 틀(구름 칸). 원래 그림은 singer.png 그대로 있다
   creator: 'creator.png',
-  doctor: 'doctor.png',
+  doctor: 'doctor-test.png', // 2026-11-25 시험 인쇄 — 우주 그림 새 판(칸 둥근 네모 · 캐릭터 둘). 원래 그림은 doctor.png 그대로 있다
   roboticist: 'roboticist.png',
 }
 

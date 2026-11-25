@@ -80,6 +80,16 @@ export const FOURCUT = {
     ],
     /** 가수 — 2026-11-24 시험: 우주비행사와 같은 틀에 왼쪽 아래 칸만 구름 모양(구멍 152,630 · 764×553 — 같은 네모 안에 들어간다) */
     singer: NEW_FRAME_CELLS,
+    /**
+     * 의사 — 2026-11-25 시험 인쇄: 우주 그림 새 판(받은 그림 2000×1318 · 칸이 검정).
+     * 검정 칸을 뚫은 구멍(47,130 · 813,130 · 47,628 · 813,628 · 726×459 — 네 칸 같은 크기)에 둘레 3px
+     */
+    doctor: [
+      { x: 44, y: 127, width: 732, height: 465 },
+      { x: 810, y: 127, width: 732, height: 465 },
+      { x: 44, y: 625, width: 732, height: 465 },
+      { x: 810, y: 625, width: 732, height: 465 },
+    ],
   } as Readonly<Record<string, readonly Rect[]>>,
 } as const
 
