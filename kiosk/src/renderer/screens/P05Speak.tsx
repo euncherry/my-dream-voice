@@ -51,7 +51,7 @@ import {
 } from '@shared/constants'
 import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
-import { COMMON, SCRIPTS, lineScene, partnerOf, sceneId, type Kid, type LayeredScene, type Who } from '../p05/script'
+import { COMMON, SCRIPTS, lineScene, partnerOf, sceneId, type Kid, type LayeredScene, type SceneProp, type Who } from '../p05/script'
 import {
   DING_URL,
   layerUrl,
@@ -1004,9 +1004,90 @@ function LayeredArt({
         draggable={false}
         style={{ left: -panel.left * k, top: -panel.top * k, width: panel.width * k }}
       />
+      <Props job={job} props={def.props ?? NO_PROPS} panel={panel} k={k} />
       <Sprite url={layerUrl(job, def.girl)} cx={CAST_CX.girl} panelH={panelH} who="girl" />
       <Sprite url={layerUrl(job, def.boy)} cx={CAST_CX.boy} panelH={panelH} who="boy" />
     </div>
+  )
+}
+
+const NO_PROPS: readonly SceneProp[] = []
+
+type PropItem = { p: SceneProp; fade?: 'in' | 'out' }
+
+/**
+ * 소품(로켓 · 별 · 행성) — 배경 위 · 인물 뒤 (2026-11-26).
+ * 같은 배경에서 장면이 바뀌면: 같은 이름은 새 자리 · 크기로 스르르 옮겨 가고, 빠진 것은 사라지고, 새것은 나타난다.
+ */
+function Props({
+  job,
+  props,
+  panel,
+  k,
+}: {
+  job: JobId
+  props: readonly SceneProp[]
+  panel: ScenePanel
+  k: number
+}): ReactNode {
+  const [items, setItems] = useState<PropItem[]>(() => props.map((p) => ({ p })))
+
+  useEffect(() => {
+    setItems((prev) => {
+      const now = new Set(props.map((p) => p.name))
+      const shown = new Set(prev.filter((it) => it.fade !== 'out').map((it) => it.p.name))
+      const leaving = prev
+        .filter((it) => !now.has(it.p.name))
+        .map((it): PropItem => ({ ...it, fade: 'out' }))
+      return [
+        ...leaving,
+        ...props.map((p): PropItem => (shown.has(p.name) ? { p } : { p, fade: 'in' })),
+      ]
+    })
+  }, [props])
+
+  useEffect(() => {
+    if (!items.some((it) => it.fade === 'out')) return
+    const id = window.setTimeout(
+      () => setItems((its) => its.filter((it) => it.fade !== 'out')),
+      POSE_FADE_MS + 40,
+    )
+    return () => window.clearTimeout(id)
+  }, [items])
+
+  return (
+    <>
+      {items.map(({ p, fade }) => {
+        const url = layerUrl(job, p.img ?? p.name)
+        if (!url) return null
+        return (
+          <span
+            key={p.name}
+            className={`p05-prop${fade ? ` is-${fade}` : ''}`}
+            data-prop={p.name}
+            data-fx={p.fx}
+            style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
+          >
+            <img src={url} alt="" draggable={false} />
+            {p.gauge !== undefined && <RocketGauge level={p.gauge} />}
+          </span>
+        )
+      })}
+    </>
+  )
+}
+
+/**
+ * 로켓 목소리 게이지 — 로켓 문 자리(손잡이 왼쪽, 세로로 긴 둥근 칸)에 그린다. 아래에서부터 차오른다 (0 ~ 1).
+ * 받은 로켓 그림(2026-11-26)에 게이지 틀이 없어 앱이 그린다 — 자리는 styles/p05.css .p05-gauge (prop-rocket 그림 안 비율).
+ * ⚠️ 모양 · 색은 임시 — 디자인을 받으면 바꾼다. 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
+ */
+function RocketGauge({ level }: { level: number }): ReactNode {
+  const pct = Math.round(Math.min(1, Math.max(0, level)) * 100)
+  return (
+    <span className="p05-gauge" aria-hidden="true">
+      <span className="p05-gauge__fill" style={{ height: `${pct}%` }} />
+    </span>
   )
 }
 

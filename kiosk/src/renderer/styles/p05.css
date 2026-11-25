@@ -763,3 +763,84 @@ img.p05-scene__art--pop {
     opacity: 0;
   }
 }
+
+/* ── 소품 (2026-11-26) — 로켓 · 별 · 행성. 자리 · 폭은 P05Speak.tsx(Props)가 배경 픽셀에서 바꿔 준다 (가운데 기준) ── */
+.p05-prop {
+  position: absolute;
+  translate: -50% -50%;
+  transition:
+    left 0.32s ease,
+    top 0.32s ease,
+    width 0.32s ease;
+}
+
+.p05-prop img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.p05-prop.is-in {
+  animation: p05-sprite-in 0.32s ease-out both;
+}
+
+.p05-prop.is-out {
+  animation: p05-sprite-out 0.32s ease-in both;
+}
+
+/* 노란 별 — 예전 배경 그림처럼 노란 빛이 번진다 */
+.p05-prop[data-fx="glow"] img {
+  filter: drop-shadow(0 0 10px rgb(255 214 64 / 0.75));
+}
+
+/* 무지갯빛 새 별 — 반짝반짝 */
+.p05-prop[data-fx="twinkle"] img {
+  animation: p05-twinkle 1.6s ease-in-out infinite;
+}
+
+@keyframes p05-twinkle {
+  0%,
+  100% {
+    scale: 1;
+    filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.55));
+  }
+  50% {
+    scale: 1.08;
+    filter: drop-shadow(0 0 24px rgb(255 236 255 / 0.95));
+  }
+}
+
+/* 로켓 목소리 게이지 — prop-rocket 그림의 문 자리(손잡이 왼쪽). ⚠️ 모양 · 색 임시 */
+.p05-gauge {
+  position: absolute;
+  left: 20%;
+  top: 29%;
+  width: 13%;
+  height: 30%;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(
+      to top,
+      transparent 0 calc(25% - 2px),
+      rgb(255 255 255 / 0.8) calc(25% - 2px) 25%
+    ),
+    rgb(5 9 84 / 0.16);
+  box-shadow: inset 0 2px 5px rgb(5 9 84 / 0.3);
+  overflow: hidden;
+}
+
+.p05-gauge__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: linear-gradient(to top, #ff7a3d, #ffd84a);
+  transition: height 0.12s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p05-prop[data-fx="twinkle"] img {
+    animation: none;
+  }
+}

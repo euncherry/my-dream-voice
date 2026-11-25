@@ -234,7 +234,13 @@ export async function preloadLayers(job: JobId): Promise<void> {
   for (const [key, url] of LAYERS) {
     if (!key.startsWith(`${job}/`)) continue
     const name = key.slice(job.length + 1)
-    work.push((name.startsWith('bg') ? measurePanel(url) : measureSprite(url)).catch(() => undefined))
+    // 배경 = 판을 잼 · 인물 = 몸을 잼 · 소품(prop-) = 미리 풀어 두기만
+    const load = name.startsWith('bg')
+      ? measurePanel(url)
+      : name.startsWith('prop-')
+        ? loadImage(url)
+        : measureSprite(url)
+    work.push(load.catch(() => undefined))
   }
   await Promise.all(work)
 }

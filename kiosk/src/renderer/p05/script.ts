@@ -28,6 +28,26 @@ export interface LayeredScene {
   bg: string
   girl: string
   boy: string
+  /** 배경 위 · 인물 뒤에 놓는 소품 (2026-11-26 — 로켓 · 별 · 행성을 배경에서 빼고 따로 받음) */
+  props?: readonly SceneProp[]
+}
+
+/**
+ * 소품 한 개 — 그림 `layers/<직업>/<img 또는 name>.webp` (투명 여백을 잘라 둔 그림). name은 장면 사이에서 같은 소품을 알아보는 이름.
+ * 자리는 **배경 그림 픽셀**(bg-moon 1910 × 823) 기준: 가운데(cx · cy)와 폭(w). 높이는 그림 비율대로.
+ * 같은 배경의 다음 장면에도 같은 이름이 있으면 그 자리로 스르르 옮겨 가고(크기도), 없어지면 사라지고, 새로 생기면 나타난다.
+ */
+export interface SceneProp {
+  name: string
+  /** 그림 이름 (없으면 name) — 같은 그림을 여러 개 놓을 때 */
+  img?: string
+  cx: number
+  cy: number
+  w: number
+  /** glow = 노란 빛 번짐 · twinkle = 반짝반짝(빛이 커졌다 작아졌다) */
+  fx?: 'glow' | 'twinkle'
+  /** 로켓 목소리 게이지 — 문 자리에 그린다 (0 = 빈 채 ~ 1 = 꽉 참) */
+  gauge?: number
 }
 
 export interface JobScript {
@@ -87,6 +107,15 @@ export const COMMON = {
   /** 받아쓰기를 기다리는 동안 */
   listening: '잘 듣고 있어요',
 } as const
+
+/** 우주비행사 달 장면의 소품 — 2026-11-24 배경 그림에 있던 자리 (배경 1910 × 823 픽셀) */
+const MOON_PROPS: readonly SceneProp[] = [
+  { name: 'prop-star-yellow', cx: 248, cy: 218, w: 125, fx: 'glow' },
+  { name: 'prop-star-yellow-2', img: 'prop-star-yellow', cx: 373, cy: 308, w: 62, fx: 'glow' },
+  { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1444, cy: 240, w: 60, fx: 'glow' },
+  { name: 'prop-planet', cx: 1688, cy: 255, w: 250 },
+  { name: 'prop-rocket', cx: 1460, cy: 437, w: 213, gauge: 0 },
+]
 
 export const SCRIPTS: Record<JobId, JobScript> = {
   police: {
@@ -160,13 +189,30 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '13': '우주선 창밖으로 반짝이는 별들과 저 앞의 무지갯빛 새 별. 여자아이가 가리키며 외치고, 남자아이는 창에 붙어 신기해한다',
       '14': '알록달록한 새 별 위에 깃발을 꽂고 두 아이가 만세. 뒤로 착륙한 로켓',
     },
+    // 소품 자리 — 처음엔 2026-11-24 배경(로켓 · 별 · 행성이 그려져 있던 판)의 자리 그대로
     layered: {
       // 대사 없이 0.5초 — 달 위에서 둘이 마주 보고 이야기하는 중 (여자아이는 듣고, 남자아이는 손짓하며 말한다)
-      '00': { bg: 'bg-moon', girl: 'girl-idle', boy: 'boy-explain' },
+      '00': { bg: 'bg-moon', girl: 'girl-idle', boy: 'boy-explain', props: MOON_PROPS },
       // "안녕! 나는 우주 비행사야!" — 아이를 돌아보며 (엄지 척 · 허리에 손)
-      '01': { bg: 'bg-moon', girl: 'girl-thumbsup', boy: 'boy-hips' },
+      '01': { bg: 'bg-moon', girl: 'girl-thumbsup', boy: 'boy-hips', props: MOON_PROPS },
       // "나도 우주 비행사! 오늘 너는 우리 우주 대원이야!" — 남자아이가 별 배지를 내밀고, 여자아이는 박수
-      '02': { bg: 'bg-moon', girl: 'girl-clap', boy: 'boy-badge' },
+      '02': { bg: 'bg-moon', girl: 'girl-clap', boy: 'boy-badge', props: MOON_PROPS },
+      // "달 탐험 끝! 이제 새로운 별로 가자!" · "우주선은 … 목소리를 들어야 출발할 수 있어." —
+      // 여자아이가 하늘의 무지갯빛 새 별을 가리키고(왼쪽 위 노란 별 자리에 나타남), 남자아이는 로켓 쪽을 본다.
+      // 로켓이 조금 커지고 문에 빈 목소리 게이지
+      '03': {
+        bg: 'bg-moon',
+        girl: 'girl-point',
+        boy: 'boy-look',
+        props: [
+          { name: 'prop-star-rainbow', cx: 300, cy: 200, w: 160, fx: 'twinkle' },
+          // 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타난다 (겹치지 않게 둘은 뺌)
+          ...MOON_PROPS.filter(
+            (p) => !['prop-star-yellow', 'prop-star-yellow-2', 'prop-rocket'].includes(p.name),
+          ),
+          { name: 'prop-rocket', cx: 1505, cy: 418, w: 271, gauge: 0 },
+        ],
+      },
     },
   },
 
