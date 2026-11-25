@@ -22,18 +22,17 @@
  *   - 재촬영 (SPEC T-10 미결) · [뒤로] (촬영 중 비활성 — PAGE_SPEC §2-4)
  *   - 찍은 컷을 따로 크게 보여 주는 단계 (둘지는 디자인에서 정한다)
  *
- * 🎨 디자인 입힘 (2026-11-25 촬영 시안) — 왼쪽 흰 패널: [● 영상 녹화 중] · [카메라 미리보기] + 라이브뷰(네 귀퉁이 선) ·
- *   오른쪽 흰 패널: "두 번째 사진" · 2 / 4 · 네컷 미리보기 · "1 / 4 촬영 완료" · 보라 알약 "N초 뒤 찰칵!" · 아래 "다음 포즈로" 안내.
+ * 🎨 디자인 입힘 (2026-11-25 촬영 시안 2판) — 왼쪽 위 [📷 사진 촬영 중] (뒤로 대신) ·
+ *   왼쪽 흰 패널: 라이브뷰 + 그 위 [● 영상 녹화 중] · 아래 포즈 말풍선 ·
+ *   오른쪽 흰 패널: "선택한 프레임" · 직업 이름 · 네컷 미리보기 · 시간 원(숫자 + "N초 뒤에 찍어요") | N / 4 · "○ 번째 사진을 찍어요" ·
+ *   아래 "버튼을 누르지 않아도 자동으로 찍혀요".
+ *   시간 원: 0초에는 테두리가 없고, 7초 동안 12시 방향부터 시계 방향으로 선이 그려져 찍는 순간 한 바퀴가 된다 (2026-11-25 지정).
  *   배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/capture.css.
- *   시안과 다른 점:
- *     · 라이브뷰는 지금 찍는 사진 칸의 비율이라 시안(더 넓은 화면)보다 좁다 — 남는 좌우는 옅은 바탕
- *     · 알약 왼쪽의 손 그림은 그림 파일이 없어 카메라 그림으로 대신했다 (카운트다운이 7초라 손가락 수와도 안 맞는다)
- *     · [뒤로]는 자리만 두고 잠가 둔다 (촬영 중 비활성)
- * 포즈 가이드 아트는 시안에 없어 뺐다.
+ *   시안과 다른 점: 라이브뷰는 지금 찍는 사진 칸의 비율이라 시안(더 넓은 화면)보다 좁다 — 남는 좌우는 옅은 바탕.
+ *   ⚠️ 포즈 목록(POSES)은 임시다 — 시안에는 둘째 컷 "브이!"만 있다.
  */
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { BackButton } from '../components/BackButton'
 import { DevStrip, Screen } from '../components/Screen'
 import { Stage } from '../components/Stage'
 import { useSession } from '../store/session'
@@ -41,6 +40,7 @@ import { cellAspect, cellsFor, composeFourCut, composePlaceholderFourCut, frameA
 import { FramePreview } from '../photo/FramePreview'
 import { startLiveViewRecording, type LiveViewRecording } from '../photo/recordLiveView'
 import { CAPTURE_INTERVAL_SEC, CUT_COUNT, FOURCUT } from '@shared/constants'
+import { jobLabel } from '@shared/jobs'
 import type { CameraBackend, JobId } from '@shared/types'
 import skyUrl from '../assets/bg/sky.webp'
 import logoEnUrl from '../assets/brand/logo-en.png'
@@ -75,8 +75,16 @@ interface Run {
   timer: number
 }
 
-/** 오른쪽 제목 "○ 번째 사진" */
+/** "○ 번째 사진을 찍어요" */
 const ORDINAL = ['첫 번째', '두 번째', '세 번째', '네 번째'] as const
+
+/** 컷마다 포즈 안내 — ⚠️ 임시 (시안에는 둘째 컷 "브이!"만 있다) */
+const POSES = [
+  { icon: '😄', text: '활짝!' },
+  { icon: '✌️', text: '브이!' },
+  { icon: '👍', text: '최고!' },
+  { icon: '🙌', text: '만세!' },
+] as const
 
 /** "웃어" 밑에 깔리는 분홍 붓질 — P-03 · P-04 제목과 같은 그림 */
 function TitleMark(): ReactNode {
@@ -88,7 +96,19 @@ function TitleMark(): ReactNode {
 }
 
 /** 카메라 그림 (선) */
-function CameraIcon({ className }: { className?: string }): ReactNode {
+function CameraIcon({ className, solid }: { className?: string; solid?: boolean }): ReactNode {
+  if (solid) {
+    // 채운 카메라 (왼쪽 위 [사진 촬영 중])
+    return (
+      <svg className={className} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+        <path
+          fillRule="evenodd"
+          fill="currentColor"
+          d="M5 17a6 6 0 0 1 6-6h4.5l3.2-4.6A3 3 0 0 1 21.2 5h5.6a3 3 0 0 1 2.5 1.4L32.5 11H37a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H11a6 6 0 0 1-6-6ZM24 34a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17Zm0-4.5a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"
+        />
+      </svg>
+    )
+  }
   return (
     <svg className={className} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
       <path
@@ -101,6 +121,26 @@ function CameraIcon({ className }: { className?: string }): ReactNode {
       <circle cx="24" cy="26" r="7.5" fill="none" stroke="currentColor" strokeWidth="4.2" />
     </svg>
   )
+}
+
+/**
+ * 시간 원의 선 — 카운트다운 7초 동안 12시 방향부터 시계 방향으로 그려진다.
+ * 매 프레임 "카운트다운을 시작한 뒤 지난 시간"으로 선 길이를 정한다 — CSS 애니메이션은 화면이 바쁠 때 늦게 출발해
+ * 찍는 순간에 한 바퀴를 못 채웠다 (2026-11-25 확인). 이렇게 하면 늦게 붙거나 프레임이 밀려도 찍는 순간 한 바퀴다.
+ */
+function RingArc({ startedAt }: { startedAt: number }): ReactNode {
+  const ref = useRef<SVGCircleElement>(null)
+  useEffect(() => {
+    let raf = 0
+    const draw = (): void => {
+      const done = Math.min(1, Math.max(0, (performance.now() - startedAt) / (CAPTURE_INTERVAL_SEC * 1000)))
+      ref.current?.style.setProperty('stroke-dashoffset', String(100 - done * 100))
+      if (done < 1) raf = requestAnimationFrame(draw)
+    }
+    draw()
+    return () => cancelAnimationFrame(raf)
+  }, [startedAt])
+  return <circle ref={ref} className="p06-timer__arc" cx="110" cy="110" r="104" pathLength={100} />
 }
 
 /** 개발용 표시 — 촬영 장면 녹화 상태 */
@@ -177,6 +217,8 @@ export function P06Capture(): ReactNode {
   /** 4컷을 다 찍고 저장을 맡긴 영상 — 합성에서 실패해 다시 시도해도 그대로 쓴다 */
   const videoRef = useRef<Promise<string | undefined> | null>(null)
   const aliveRef = useRef(true)
+  /** 이번 컷 카운트다운을 시작한 시각 (performance.now) — 시간 원을 카운트다운과 맞춘다 */
+  const countStartRef = useRef(0)
 
   // 떠날 때 — 프레임 미리보기에 쓴 Blob URL 해제
   useEffect(() => {
@@ -251,6 +293,7 @@ export function P06Capture(): ReactNode {
           // 카운트다운 — 시작 시각 기준으로 눈금을 맞춰 오차가 쌓이지 않게 한다 (정확히 1초 간격)
           setPhase('countdown')
           const startedAt = performance.now()
+          countStartRef.current = startedAt
           for (let n = CAPTURE_INTERVAL_SEC; n > 0; n--) {
             setCount(n)
             await waitUntil(run, startedAt + (CAPTURE_INTERVAL_SEC - n + 1) * 1000)
@@ -399,9 +442,8 @@ export function P06Capture(): ReactNode {
     '--fy': liveCell.y / liveCell.width,
     '--fw': FOURCUT.width / liveCell.width,
   } as CSSProperties
-
-  /** 오른쪽 제목 — "두 번째 사진" · 다 찍으면 "다 찍었어요!" */
-  const sideTitle = phase === 'composing' ? '다 찍었어요!' : `${ORDINAL[cutNo - 1]} 사진`
+  const pose = POSES[cutNo - 1]!
+  /** 시간 원 — 카운트다운이 시작될 때부터 7초 동안 시계 방향으로 그려진다 (셔터 때는 다 그려진 채) */
 
   return (
     <Screen id="P-06" designed>
@@ -409,8 +451,11 @@ export function P06Capture(): ReactNode {
         <Stage background={skyUrl}>
           <img className="p06-logo" src={logoEnUrl} alt="MY DREAM VOICE" draggable={false} />
 
-          {/* 촬영 화면에는 돌아갈 곳이 없다 — 시안처럼 자리만 두고 잠가 둔다 (PAGE_SPEC §2-4 촬영 중 비활성) */}
-          <BackButton onClick={() => undefined} disabled />
+          {/* 왼쪽 위 — [뒤로] 대신 지금 하는 일 (촬영 중에는 돌아갈 곳이 없다 — PAGE_SPEC §2-4) */}
+          <span className="p06-badge">
+            <CameraIcon className="p06-badge__icon" solid />
+            사진 촬영 중
+          </span>
 
           <img className="p06-star" src={starYellowUrl} alt="" draggable={false} />
 
@@ -426,22 +471,10 @@ export function P06Capture(): ReactNode {
             </span>{' '}
             주세요!
           </h1>
-          <p className="p06-sub">{CAPTURE_INTERVAL_SEC}초마다 찰칵! 네 장을 자동으로 찍어요</p>
+          <p className="p06-sub">{CAPTURE_INTERVAL_SEC}초마다 찰칵! 네 장을 찍어요</p>
 
           {/* ── 왼쪽 — 카메라 미리보기 ── */}
           <section className="p06-panel p06-panel--live">
-            <div className="p06-head">
-              {/* 녹화가 실제로 돌 때만 */}
-              <span className="p06-rec" data-on={recState === 'recording'}>
-                <i className="p06-rec__dot" />
-                영상 녹화 중
-              </span>
-              <span className="p06-cam">
-                <CameraIcon className="p06-cam__icon" />
-                카메라 미리보기
-              </span>
-            </div>
-
             {/* 라이브뷰 비율 = 네컷 사진 칸의 비율 (계산값이라 변수로 넘긴다) — 남는 좌우는 옅은 바탕 */}
             <div
               className="p06-livebox"
@@ -476,13 +509,21 @@ export function P06Capture(): ReactNode {
                   />
                 )}
 
-                {/* 네 귀퉁이 맞춤 선 (시안) */}
-                <span className="p06-corners" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
+                {/* 녹화가 실제로 돌 때만 */}
+                <span className="p06-rec" data-on={recState === 'recording'}>
+                  <i className="p06-rec__dot" />
+                  영상 녹화 중
                 </span>
+
+                {/* 포즈 안내 — 컷마다 바뀐다 (⚠️ 포즈 목록은 임시) */}
+                {(phase === 'countdown' || phase === 'shutter') && (
+                  <span key={cutNo} className="p06-pose">
+                    <span className="p06-pose__icon" aria-hidden="true">
+                      {pose.icon}
+                    </span>
+                    {pose.text}
+                  </span>
+                )}
 
                 {/* 촬영 플래시 연출 — 컷마다 다시 돈다 */}
                 {phase === 'shutter' && <div key={done} className="p06-flash" />}
@@ -505,45 +546,70 @@ export function P06Capture(): ReactNode {
             </div>
           </section>
 
-          {/* ── 오른쪽 — 몇 번째 · 네컷 미리보기 · 카운트다운 ── */}
+          {/* ── 오른쪽 — 고른 프레임 · 시간 원 · 몇 번째 ── */}
           <aside className="p06-panel p06-panel--side">
-            <h2 className="p06-side-title">{sideTitle}</h2>
-            <p className="p06-progress">
-              {cutNo} / {CUT_COUNT}
-            </p>
+            <h2 className="p06-side-title">선택한 프레임</h2>
+            <p className="p06-job">{jobLabel(job)}</p>
 
             <div className="p06-frame">
               <FramePreview job={job} shots={frameShots} activeCell={activeCell} />
             </div>
 
-            <p className="p06-done">
-              {done} / {CUT_COUNT} 촬영 완료
-            </p>
-
-            {/* 카운트다운 — 라이브뷰를 가리지 않게 오른쪽에 (2026-11-24 지정) */}
-            <div className="p06-count" data-phase={phase} aria-live="off">
-              <span className="p06-count__icon" aria-hidden="true">
-                <CameraIcon />
-              </span>
-              <span className="p06-count__text">
-                {phase === 'countdown' ? (
-                  <>
-                    <em key={count} className="p06-count__num">{count}</em>초 뒤 찰칵!
-                  </>
-                ) : phase === 'shutter' ? (
-                  '찰칵!'
-                ) : phase === 'preparing' ? (
-                  '준비하고 있어요'
-                ) : phase === 'composing' ? (
-                  '사진을 만들고 있어요'
-                ) : (
-                  '잠깐만요!'
+            {/* 시간 원 — 0초에는 테두리가 없고, 7초 동안 12시 방향부터 시계 방향으로 그려져 찍는 순간 한 바퀴가 된다 */}
+            <div className="p06-timer" data-phase={phase}>
+              <svg className="p06-timer__ring" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
+                {phase === 'countdown' && <RingArc key={`count-${done}`} startedAt={countStartRef.current} />}
+                {phase === 'shutter' && (
+                  // 찍는 순간 — 다 그려진 원
+                  <circle className="p06-timer__arc p06-timer__arc--full" cx="110" cy="110" r="104" pathLength={100} />
                 )}
-              </span>
+              </svg>
+              {phase === 'countdown' ? (
+                <>
+                  <span key={count} className="p06-timer__num">
+                    {count}
+                  </span>
+                  <span className="p06-timer__text">{count}초 뒤에 찍어요</span>
+                </>
+              ) : (
+                <span className="p06-timer__word">
+                  {phase === 'shutter'
+                    ? '찰칵!'
+                    : phase === 'preparing'
+                      ? '준비 중'
+                      : phase === 'composing'
+                        ? '완성!'
+                        : '잠깐만요'}
+                </span>
+              )}
+            </div>
+
+            <i className="p06-divider" aria-hidden="true" />
+
+            <div className="p06-step">
+              <p className="p06-progress">
+                {cutNo} / {CUT_COUNT}
+              </p>
+              <p className="p06-step__main">
+                {phase === 'composing' ? (
+                  <>
+                    네 장을
+                    <br />
+                    다 찍었어요!
+                  </>
+                ) : (
+                  <>
+                    {ORDINAL[cutNo - 1]} 사진을
+                    <br />
+                    찍어요
+                  </>
+                )}
+              </p>
+              <p className="p06-step__sub">찍은 칸이 차례로 채워져요</p>
             </div>
           </aside>
 
-          <p className="p06-foot">사진이 찍히면 다음 포즈로 바꿔 주세요</p>
+          <p className="p06-foot">버튼을 누르지 않아도 자동으로 찍혀요</p>
         </Stage>
 
         {/* 개발용 — 손님 화면에는 없다 */}
