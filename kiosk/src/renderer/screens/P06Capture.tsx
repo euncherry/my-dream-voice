@@ -530,57 +530,59 @@ export function P06Capture(): ReactNode {
               <FramePreview job={job} shots={frameShots} activeCell={activeCell} />
             </div>
 
-            {/* 시간 원 — 0초에는 테두리가 없고, 7초 동안 12시 방향부터 시계 방향으로 그려져 찍는 순간 한 바퀴가 된다 */}
-            <div className="p06-timer" data-phase={phase}>
-              <svg className="p06-timer__ring" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
-                {phase === 'countdown' && <RingArc key={`count-${done}`} startedAt={countStartRef.current} />}
-                {phase === 'shutter' && (
-                  // 찍는 순간 — 다 그려진 원
-                  <circle className="p06-timer__arc p06-timer__arc--full" cx="110" cy="110" r="104" pathLength={100} />
-                )}
-              </svg>
-              {phase === 'countdown' ? (
-                <>
-                  <span key={count} className="p06-timer__num">
-                    {count}
-                  </span>
-                  <span className="p06-timer__text">{count}초 뒤에 찍어요</span>
-                </>
-              ) : (
-                <span className="p06-timer__word">
-                  {phase === 'shutter'
-                    ? '찰칵!'
-                    : phase === 'preparing'
-                      ? '준비 중'
-                      : phase === 'composing'
-                        ? '완성!'
-                        : '잠깐만요'}
-                </span>
-              )}
-            </div>
-
-            <i className="p06-divider" aria-hidden="true" />
-
-            <div className="p06-step">
-              <p className="p06-progress">
-                {cutNo} / {CUT_COUNT}
-              </p>
-              <p className="p06-step__main">
-                {phase === 'composing' ? (
+            {/* 아래 줄 — 시간 원 | N / 4 · "○ 번째 사진을 찍어요" (가운데 맞춰 고르게 놓는다) */}
+            <div className="p06-bottom">
+              {/* 시간 원 — 0초에는 테두리가 없고, 7초 동안 12시 방향부터 시계 방향으로 그려져 찍는 순간 한 바퀴가 된다 */}
+              <div className="p06-timer" data-phase={phase}>
+                <svg className="p06-timer__ring" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
+                  {phase === 'countdown' && <RingArc key={`count-${done}`} startedAt={countStartRef.current} />}
+                  {phase === 'shutter' && (
+                    // 찍는 순간 — 다 그려진 원
+                    <circle className="p06-timer__arc p06-timer__arc--full" cx="110" cy="110" r="104" pathLength={100} />
+                  )}
+                </svg>
+                {phase === 'countdown' ? (
                   <>
-                    네 장을
-                    <br />
-                    다 찍었어요!
+                    <span key={count} className="p06-timer__num">
+                      {count}
+                    </span>
+                    <span className="p06-timer__text">{count}초 뒤에 찍어요</span>
                   </>
                 ) : (
-                  <>
-                    {ORDINAL[cutNo - 1]} 사진을
-                    <br />
-                    찍어요
-                  </>
+                  <span className="p06-timer__word">
+                    {phase === 'shutter'
+                      ? '찰칵!'
+                      : phase === 'preparing'
+                        ? '준비 중'
+                        : phase === 'composing'
+                          ? '완성!'
+                          : '잠깐만요'}
+                  </span>
                 )}
-              </p>
-              <p className="p06-step__sub">찍은 칸이 차례로 채워져요</p>
+              </div>
+
+              <i className="p06-divider" aria-hidden="true" />
+
+              <div className="p06-step">
+                <p className="p06-progress">
+                  {cutNo} / {CUT_COUNT}
+                </p>
+                <p className="p06-step__main">
+                  {phase === 'composing' ? (
+                    <>
+                      네 장을
+                      <br />
+                      다 찍었어요!
+                    </>
+                  ) : (
+                    <>
+                      {ORDINAL[cutNo - 1]} 사진을
+                      <br />
+                      찍어요
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           </aside>
 

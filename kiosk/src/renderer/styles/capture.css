@@ -358,13 +358,24 @@
   box-shadow: inset 0 0 0 1cqw var(--d-coral);
 }
 
+/* 아래 줄 — 시간 원 | 세로 줄 | N / 4 · "○ 번째 사진을 찍어요". 미리보기 아래 남은 자리에서 세로 가운데 · 가로로 고르게 */
+.p06-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 446px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
 /* 시간 원 — 숫자(주황) + "N초 뒤에 찍어요". 선은 7초 동안 12시 방향부터 시계 방향으로 그려진다 */
 .p06-timer {
-  position: absolute;
-  left: 22px;
-  top: 444px;
-  width: 224px;
-  height: 224px;
+  position: relative;
+  flex: 0 0 auto;
+  width: 214px;
+  height: 214px;
   /* 글자 묶음을 조금 위로 — "N초 뒤에 찍어요"가 원 아래쪽 선에 닿지 않게 */
   padding-bottom: 14px;
   box-sizing: border-box;
@@ -439,20 +450,16 @@
 
 /* 가운데 세로 줄 */
 .p06-divider {
-  position: absolute;
-  left: 266px;
-  top: 474px;
+  flex: 0 0 auto;
   width: 2px;
-  height: 166px;
+  height: 150px;
   border-radius: 1px;
   background: #d8e0ea;
 }
 
 .p06-step {
-  position: absolute;
-  left: 272px;
-  top: 456px;
-  width: 300px;
+  flex: 0 0 auto;
+  width: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -477,22 +484,14 @@
 }
 
 .p06-step__main {
-  margin: 12px 0 0;
+  margin: 16px 0 0;
   font-family: var(--d-font-button);
   font-size: 37px;
   font-weight: 700;
-  line-height: 44px;
+  line-height: 46px;
+  white-space: nowrap;
   -webkit-text-stroke: 0.8px currentColor;
   paint-order: stroke fill;
-}
-
-.p06-step__sub {
-  margin: 12px 0 0;
-  font-family: var(--d-font-display);
-  font-size: 23px;
-  font-weight: 700;
-  line-height: 1.2;
-  white-space: nowrap;
 }
 
 /* ── 아래 안내 ── */
