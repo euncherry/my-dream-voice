@@ -793,9 +793,17 @@ img.p05-scene__art--pop {
   filter: drop-shadow(0 0 10px rgb(255 214 64 / 0.75));
 }
 
-/* 무지갯빛 새 별 — 반짝반짝 */
+/* 무지갯빛 새 별 — 반짝반짝 + 천천히 돈다 (한 바퀴 16초 · 2026-11-26 지정) */
 .p05-prop[data-fx="twinkle"] img {
-  animation: p05-twinkle 1.6s ease-in-out infinite;
+  animation:
+    p05-twinkle 1.6s ease-in-out infinite,
+    p05-spin 16s linear infinite;
+}
+
+@keyframes p05-spin {
+  to {
+    rotate: 360deg;
+  }
 }
 
 @keyframes p05-twinkle {
