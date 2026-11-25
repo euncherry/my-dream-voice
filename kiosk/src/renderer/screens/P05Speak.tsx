@@ -154,8 +154,9 @@ const OPENING_MS = 500
  * 레이어 장면의 인물 자리 — 판 기준 비율 (A-01 완성 그림에서 잰 값).
  *   CAST_CX: 헬멧 가운데의 가로 자리 · BODY_H: 헬멧 꼭대기 ~ 발끝 키 (판 높이 대비 — 1보다 커서 헬멧이 판 위로 튀어나온다)
  *   FEET: 발끝의 세로 자리 (판 높이 대비)
+ *   2026-11-26 두 아이 사이를 벌렸다 (36% · 59.5% → 30% · 68%) — 가운데는 마이크가 뜨는 자리 (docs/P05_SCENARIO.md A-04)
  */
-const CAST_CX = { girl: 0.36, boy: 0.595 } as const
+const CAST_CX = { girl: 0.3, boy: 0.68 } as const
 const BODY_H = 1.085
 const FEET = 0.965
 

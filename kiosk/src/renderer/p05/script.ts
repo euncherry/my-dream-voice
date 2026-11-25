@@ -127,7 +127,7 @@ const MOON_PROPS: readonly SceneProp[] = [
  * 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타나고(겹치지 않게 둘은 뺌), 오른쪽 작은 별 · 행성은 커진 로켓에 가리지 않게 로켓 옆 빈 하늘로
  */
 const ROCKET_PROPS: readonly SceneProp[] = [
-  { name: 'prop-star-rainbow', cx: 278, cy: 175, w: 150, fx: 'twinkle' },
+  { name: 'prop-star-rainbow', cx: 170, cy: 168, w: 150, fx: 'twinkle' },
   { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1330, cy: 160, w: 55, fx: 'glow' },
   { name: 'prop-planet', cx: 1650, cy: 160, w: 160 },
   // 발끝 자리(배경 y 588)는 그대로 두고 키운다
@@ -221,7 +221,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         bg: 'bg-moon',
         girl: 'girl-point',
         boy: 'boy-look',
-        // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 480, 301)에서 팔 방향 그대로 위쪽 왼쪽에 새 별
+        // 여자아이를 조금 작게 — 가리키는 손끝(배경 약 367, 301 — 11-26 두 아이 사이를 벌린 뒤)에서 팔 방향 그대로 위쪽 왼쪽에 새 별
         scale: { girl: 0.88 },
         props: ROCKET_PROPS,
         gauge: 0,
