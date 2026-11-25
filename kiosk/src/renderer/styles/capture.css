@@ -209,73 +209,6 @@
   height: auto;
 }
 
-/* [● 영상 녹화 중] — 라이브뷰 왼쪽 위의 흰 알약 (녹화가 실제로 돌 때만) */
-.p06-rec {
-  position: absolute;
-  left: 30px;
-  top: 28px;
-  z-index: 2;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 30px 0 22px;
-  border-radius: 32px;
-  background: rgb(255 255 255 / 0.94);
-  box-shadow: 0 3px 10px rgb(14 39 85 / 0.16);
-  font-family: var(--d-font-button);
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--d-navy);
-  -webkit-text-stroke: 0.7px currentColor;
-  paint-order: stroke fill;
-}
-
-.p06-rec[data-on='false'] {
-  visibility: hidden;
-}
-
-.p06-rec__dot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ff8a7a, #f2302a 60%);
-  box-shadow: 0 1px 3px rgb(200 30 20 / 0.4);
-  animation: p06-blink 1.4s ease-in-out infinite;
-}
-
-/* 포즈 말풍선 — 라이브뷰 아래 가운데 (컷마다 바뀐다) */
-.p06-pose {
-  position: absolute;
-  left: 50%;
-  bottom: 30px;
-  z-index: 2;
-  translate: -50% 0;
-  height: 88px;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  padding: 0 52px 0 40px;
-  border-radius: 44px;
-  background: rgb(255 251 236 / 0.96);
-  box-shadow: 0 4px 12px rgb(14 39 85 / 0.18);
-  font-family: var(--d-font-button);
-  font-size: 50px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--d-navy);
-  white-space: nowrap;
-  -webkit-text-stroke: 1px currentColor;
-  paint-order: stroke fill;
-  animation: p06-pop 0.35s ease-out;
-}
-
-.p06-pose__icon {
-  font-size: 54px;
-  -webkit-text-stroke: 0;
-}
-
 /* 촬영 플래시 연출 */
 .p06-flash {
   position: absolute;
@@ -432,6 +365,9 @@
   top: 444px;
   width: 224px;
   height: 224px;
+  /* 글자 묶음을 조금 위로 — "N초 뒤에 찍어요"가 원 아래쪽 선에 닿지 않게 */
+  padding-bottom: 14px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -609,16 +545,6 @@
   }
 }
 
-@keyframes p06-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
 /* 숫자가 바뀔 때마다 톡 */
 @keyframes p06-tick {
   0% {
@@ -658,8 +584,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .p06-star,
-  .p06-rec__dot,
-  .p06-pose,
   .p06-timer__num,
   .p06-timer__word,
   .p06-frame .frame__cell[data-active='true']::before {

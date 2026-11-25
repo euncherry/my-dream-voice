@@ -21,15 +21,15 @@
  *   - 분석 (촬영이 끝난 뒤 P-07에서 — 라이브뷰 · 카운트다운 보호)
  *   - 재촬영 (SPEC T-10 미결) · [뒤로] (촬영 중 비활성 — PAGE_SPEC §2-4)
  *   - 찍은 컷을 따로 크게 보여 주는 단계 (둘지는 디자인에서 정한다)
+ *   - 포즈 추천 · 포즈 가이드 (2026-11-25 — 하지 않기로)
  *
  * 🎨 디자인 입힘 (2026-11-25 촬영 시안 2판) — 왼쪽 위 [📷 사진 촬영 중] (뒤로 대신) ·
- *   왼쪽 흰 패널: 라이브뷰 + 그 위 [● 영상 녹화 중] · 아래 포즈 말풍선 ·
+ *   왼쪽 흰 패널: 라이브뷰만 (시안의 [● 영상 녹화 중] · 포즈 말풍선 "브이!"는 2026-11-25 뺐다 — 포즈 추천은 하지 않는다) ·
  *   오른쪽 흰 패널: "선택한 프레임" · 직업 이름 · 네컷 미리보기 · 시간 원(숫자 + "N초 뒤에 찍어요") | N / 4 · "○ 번째 사진을 찍어요" ·
  *   아래 "버튼을 누르지 않아도 자동으로 찍혀요".
  *   시간 원: 0초에는 테두리가 없고, 7초 동안 12시 방향부터 시계 방향으로 선이 그려져 찍는 순간 한 바퀴가 된다 (2026-11-25 지정).
  *   배치는 1920×1080 좌표 그대로다 (components/Stage.tsx) — 값은 styles/capture.css.
  *   시안과 다른 점: 라이브뷰는 지금 찍는 사진 칸의 비율이라 시안(더 넓은 화면)보다 좁다 — 남는 좌우는 옅은 바탕.
- *   ⚠️ 포즈 목록(POSES)은 임시다 — 시안에는 둘째 컷 "브이!"만 있다.
  */
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
@@ -77,14 +77,6 @@ interface Run {
 
 /** "○ 번째 사진을 찍어요" */
 const ORDINAL = ['첫 번째', '두 번째', '세 번째', '네 번째'] as const
-
-/** 컷마다 포즈 안내 — ⚠️ 임시 (시안에는 둘째 컷 "브이!"만 있다) */
-const POSES = [
-  { icon: '😄', text: '활짝!' },
-  { icon: '✌️', text: '브이!' },
-  { icon: '👍', text: '최고!' },
-  { icon: '🙌', text: '만세!' },
-] as const
 
 /** "웃어" 밑에 깔리는 분홍 붓질 — P-03 · P-04 제목과 같은 그림 */
 function TitleMark(): ReactNode {
@@ -442,7 +434,6 @@ export function P06Capture(): ReactNode {
     '--fy': liveCell.y / liveCell.width,
     '--fw': FOURCUT.width / liveCell.width,
   } as CSSProperties
-  const pose = POSES[cutNo - 1]!
   /** 시간 원 — 카운트다운이 시작될 때부터 7초 동안 시계 방향으로 그려진다 (셔터 때는 다 그려진 채) */
 
   return (
@@ -507,22 +498,6 @@ export function P06Capture(): ReactNode {
                     style={frameOver}
                     onError={() => setFrameArtOk(false)}
                   />
-                )}
-
-                {/* 녹화가 실제로 돌 때만 */}
-                <span className="p06-rec" data-on={recState === 'recording'}>
-                  <i className="p06-rec__dot" />
-                  영상 녹화 중
-                </span>
-
-                {/* 포즈 안내 — 컷마다 바뀐다 (⚠️ 포즈 목록은 임시) */}
-                {(phase === 'countdown' || phase === 'shutter') && (
-                  <span key={cutNo} className="p06-pose">
-                    <span className="p06-pose__icon" aria-hidden="true">
-                      {pose.icon}
-                    </span>
-                    {pose.text}
-                  </span>
                 )}
 
                 {/* 촬영 플래시 연출 — 컷마다 다시 돈다 */}
