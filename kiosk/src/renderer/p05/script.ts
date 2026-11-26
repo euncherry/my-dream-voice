@@ -97,9 +97,10 @@ export interface JobScript {
     mission: string | { text: string; scene?: string }[]
     /**
      * C · 짝꿍 — 목소리 게이지 소개 (게이지가 있는 직업만 · 2026-11-26 우주비행사).
-     * 진짜 띵을 들려준 뒤 · 시범 전에 장면 04-2에서 — 목소리 파일 이름 gauge
+     * 진짜 띵을 들려준 뒤 · 시범 전에 장면 04-2에서 — 목소리 파일 이름 gauge.
+     * 문장마다 자막을 나누면 목소리 파일도 gauge-1 · gauge-2 … (2026-11-26 우주비행사)
      */
-    gauge?: string
+    gauge?: string | readonly string[]
     /** E 크게 · 짝꿍 */
     loud: string
     /** E 작게 · 짝꿍 — 탓은 이야기 속 대상에게 · "내가 다시 해 볼게! 준비 완료!"로 끝난다 (아이에게 다시 시키지 않고 캐릭터가 시범) */
@@ -225,7 +226,8 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         { text: '우주선은 우리 우주 대원 목소리를 들어야 출발할 수 있어.', scene: '03' },
         { text: '네 목소리 신호가 꼭 필요해!', scene: '03-2' },
       ],
-      gauge: '저기 목소리 게이지 보이지? 네 목소리로 가득 채워 줘!',
+      // 2026-11-26 문장마다 자막을 나눔 (둘 다 A-04-2)
+      gauge: ['저기 목소리 게이지 보이지?', '네 목소리로 가득 채워 줘!'],
       loud: '좋아! 우주선까지 쭉~ 들렸어!',
       quiet: '좋아, 신호가 왔어! 그런데 우주선이 너~무 멀리 있나 봐. 내가 다시 해 볼게! 준비 완료!',
       silent: '어? 우주선이 아직 못 들었나 봐! 내가 다시 해 볼게! 준비 완료!',
@@ -307,6 +309,17 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         gaugeBox: ROCKET_GAUGE,
         micOn: true,
         gaugeShine: true,
+      },
+      // 아이 차례 (녹음 · "잘 듣고 있어요") — 목소리 게이지가 마이크 소리를 따라 차오른다 (2026-11-26).
+      // ⚠️ 임시 — A-06 그림(두 아이가 귀 기울이는 포즈)이 오기 전까지 A-04의 마이크 소개 포즈를 그대로 쓴다
+      '06': {
+        bg: 'bg-moon',
+        girl: 'girl-present',
+        boy: 'boy-present',
+        cast: A04_CAST,
+        props: [...still(ROCKET_PROPS), MIC],
+        gauge: 0,
+        gaugeBox: ROCKET_GAUGE,
       },
     },
   },

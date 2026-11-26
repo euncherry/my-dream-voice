@@ -29,7 +29,7 @@
  * ⚠️ 그림 · 목소리 파일이 없으면 임시 판(장면 번호 + 설명)과 자막만 — 파일을 넣으면 바뀐다 (assets/p05/README.md).
  */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { BackButton } from '../components/BackButton'
 import { DevStrip, Screen } from '../components/Screen'
 import { Stage } from '../components/Stage'
@@ -48,6 +48,8 @@ import {
   SUBTITLE_MIN_MS,
   SUBTITLE_MS_PER_CHAR,
   VOICE_LOUD_DB,
+  VOICE_MIN_MS,
+  VOICE_START_DB,
 } from '@shared/constants'
 import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
@@ -116,6 +118,11 @@ interface View {
   bar: Bar
   /** 개발용 — 흐름 확인 스크립트가 읽는다 (data-step) */
   step: string
+  /**
+   * 목소리 게이지 — 아이 차례에 마이크 소리를 따라 차오른 높이 (0 ~ 1 · 그 녹음의 최고치 유지).
+   * 없으면 장면에 정해 둔 높이(layered.gauge). 대사(say)가 나오면 다시 없앤다
+   */
+  gauge?: number
 }
 
 /** 개발용 — 다음 녹음의 목소리 크기를 정해 버린다 (마이크 없는 PC · 가짜 마이크로 갈래 확인) */
@@ -317,6 +324,47 @@ function SpeakFlow({
     drawWave()
   }
 
+  /**
+   * 목소리 게이지 — 지금 녹음의 상태. shown = 그려 둔 높이 · peak = 가장 큰 소리 ·
+   * run = 말소리가 이어진 시간 · voiced = 말을 시작했다 · at = 지난번 시각
+   */
+  const gaugeRef = useRef({ shown: 0, peak: FLOOR_DB, run: 0, voiced: false, at: 0 })
+
+  function resetGauge(): void {
+    gaugeRef.current = { shown: 0, peak: FLOOR_DB, run: 0, voiced: false, at: 0 }
+  }
+
+  /**
+   * 소리 크기 → 게이지 높이 (docs/P05_SCENARIO.md 목소리 게이지 · 2026-11-26).
+   * 빈칸 = 말소리 시작(VOICE_START_DB) · 꽉 참 = "크게"(VOICE_LOUD_DB) — 연습의 크게 · 작게 · 무음 반응과 같은 기준.
+   * 녹음기(voiceRecorder)처럼 말소리가 VOICE_MIN_MS 넘게 이어져야 "말을 시작했다"로 치고 그때부터 차오른다 —
+   * 짧은 딸깍 소리에 꽉 찼는데 반응은 "무음"이 되지 않게. 그 녹음에서 가장 컸던 높이 밑으로는 내려가지 않는다
+   */
+  function paintGauge(db: number): void {
+    const g = gaugeRef.current
+    const now = performance.now()
+    const dt = g.at ? now - g.at : 0
+    g.at = now
+    g.peak = Math.max(g.peak, db)
+    if (db >= VOICE_START_DB) {
+      g.run += dt
+      if (g.run >= VOICE_MIN_MS) g.voiced = true
+    } else {
+      g.run = 0
+    }
+    if (!g.voiced) return
+    const h = Math.min(1, Math.max(0, (g.peak - VOICE_START_DB) / (VOICE_LOUD_DB - VOICE_START_DB)))
+    // 2%씩 끊어서 다시 그린다 (20ms마다 그리지 않게) — 꽉 차는 순간은 바로
+    if (h < g.shown + GAUGE_STEP && !(h === 1 && g.shown < 1)) return
+    g.shown = h
+    setView((v) => ({ ...v, gauge: h }))
+  }
+
+  function onLevel(db: number): void {
+    paintLevel(db)
+    paintGauge(db)
+  }
+
   function resetWave(): void {
     waveRef.current = { bars: new Array<number>(WAVE_BARS).fill(0), peak: FLOOR_DB, at: 0 }
     drawWave()
@@ -365,7 +413,7 @@ function SpeakFlow({
 
     /** 캐릭터 대사 하나 — 장면 + 자막 + 목소리(없으면 자막 시간만) */
     async function say(scene: string, text: string, key: string, who: Who): Promise<void> {
-      set({ scene, subtitle: text, who, mic: 'wait', step: key })
+      set({ scene, subtitle: text, who, mic: 'wait', step: key, gauge: undefined })
       await playClip(voiceUrl(job, key), subtitleMs(text)).done
       check()
       await sleep(BEAT_GAP_MS)
@@ -396,7 +444,9 @@ function SpeakFlow({
     /** 아이 차례 — 반짝 + 띵 → 녹음 (조용해지면 저절로 끝). 마이크 없이 넘겼으면 null */
     async function childTurn(maxMs: number, step: string): Promise<RecordResult | null> {
       if (!(await ensureMic())) return null
-      set({ scene: '06', subtitle: null, mic: 'live', step: `${step}:ding` })
+      // 게이지는 비운 채로 — 녹음이 새로 시작될 때마다 비운다
+      resetGauge()
+      set({ scene: '06', subtitle: null, mic: 'live', step: `${step}:ding`, gauge: 0 })
       await playClip(DING_URL, 600).done
       check()
       await sleep(DING_TO_RECORD_MS)
@@ -409,7 +459,7 @@ function SpeakFlow({
       set({ step: `${step}:rec` })
       let result: RecordResult
       try {
-        result = await recorder.record({ maxMs, onLevel: paintLevel })
+        result = await recorder.record({ maxMs, onLevel })
       } finally {
         muteClips(false)
         resetWave()
@@ -590,8 +640,12 @@ function SpeakFlow({
     await playClip(DING_URL, 600).done
     check()
     await sleep(600)
-    // 목소리 게이지 소개 (게이지가 있는 직업만) — 짝꿍이 게이지를 가리킨다 · 마이크는 계속 빛난다 (진행 바는 그대로)
-    if (L.gauge) await say('04-2', L.gauge, 'gauge', PARTNER)
+    // 목소리 게이지 소개 (게이지가 있는 직업만) — 짝꿍 · 마이크는 계속 빛난다 (진행 바는 그대로).
+    // 문장마다 자막을 나눌 수 있다 — 목소리 파일 gauge-1 · gauge-2 …
+    const gauge = L.gauge === undefined ? [] : typeof L.gauge === 'string' ? [L.gauge] : L.gauge
+    for (const [i, text] of gauge.entries()) {
+      await say('04-2', text, gauge.length > 1 ? `gauge-${i + 1}` : 'gauge', PARTNER)
+    }
     set({ bar: { part: 'tutorial', done: 5 } })
     await say('05', COMMON.demo, 'demo', PARTNER)
 
@@ -741,7 +795,9 @@ function SpeakFlow({
               className="p05-frame"
               data-gauge={SCRIPTS[job].layered?.[view.scene]?.gauge !== undefined ? 'true' : undefined}
             >
-              <SceneFrame job={job} scene={view.scene} />
+              <LiveGauge.Provider value={view.gauge}>
+                <SceneFrame job={job} scene={view.scene} />
+              </LiveGauge.Provider>
               <StepBar bar={view.bar} />
               {view.subtitle && (
                 <SpeechBubble
@@ -853,6 +909,12 @@ function slideKey(job: JobId, scene: string): string {
   const bg = SCRIPTS[job].layered?.[scene]?.bg
   return bg ? `bg:${bg}` : `scene:${scene}`
 }
+
+/** 아이 차례에 마이크 소리를 따라 차오른 게이지 높이 — 레이어 장면의 게이지가 읽는다 (없으면 장면에 정해 둔 높이) */
+const LiveGauge = createContext<number | undefined>(undefined)
+
+/** 게이지를 다시 그리는 최소 높이 차 */
+const GAUGE_STEP = 0.02
 
 function SceneFrame({ job, scene }: { job: JobId; scene: string }): ReactNode {
   const [layers, setLayers] = useState([{ scene, key: slideKey(job, scene), n: 0 }])
@@ -1001,6 +1063,8 @@ function LayeredArt({
     }
   }, [bgUrl, panel])
 
+  const liveGauge = useContext(LiveGauge)
+
   const className = `p05-scene__art p05-scene__art--layered${motion ? ` is-${motion}` : ''}`
   if (!bgUrl || !panel) return <span className={className} data-scene={id} />
 
@@ -1032,7 +1096,7 @@ function LayeredArt({
       />
       {def.gauge !== undefined && (
         <VoiceGauge
-          level={def.gauge}
+          level={liveGauge ?? def.gauge}
           shine={def.gaugeShine}
           style={
             def.gaugeBox && {
