@@ -411,9 +411,12 @@ function SpeakFlow({
         timersRef.current.add(id)
       }).then(check)
 
-    /** 캐릭터 대사 하나 — 장면 + 자막 + 목소리(없으면 자막 시간만) */
-    async function say(scene: string, text: string, key: string, who: Who): Promise<void> {
-      set({ scene, subtitle: text, who, mic: 'wait', step: key, gauge: undefined })
+    /**
+     * 캐릭터 대사 하나 — 장면 + 자막 + 목소리(없으면 자막 시간만).
+     * keepGauge: 목소리 게이지를 아이가 방금 채운 만큼 그대로 둔다 (작게 반응 A-08 — 2026-11-27). 아니면 장면에 정한 값으로
+     */
+    async function say(scene: string, text: string, key: string, who: Who, keepGauge = false): Promise<void> {
+      set({ scene, subtitle: text, who, mic: 'wait', step: key, ...(keepGauge ? {} : { gauge: undefined }) })
       await playClip(voiceUrl(job, key), subtitleMs(text)).done
       check()
       await sleep(BEAT_GAP_MS)
@@ -658,7 +661,7 @@ function SpeakFlow({
     const voice = await practice()
     set({ bar: { part: 'tutorial', done: 7 } })
     if (voice === 'loud') await say('07', L.loud, 'loud', PARTNER)
-    else if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER)
+    else if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER, true)
     else await say('09', L.silent, 'silent', LEAD)
     set({ big: null })
 
