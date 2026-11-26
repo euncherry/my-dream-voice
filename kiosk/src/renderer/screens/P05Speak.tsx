@@ -590,6 +590,8 @@ function SpeakFlow({
     await playClip(DING_URL, 600).done
     check()
     await sleep(600)
+    // 목소리 게이지 소개 (게이지가 있는 직업만) — 짝꿍이 게이지를 가리킨다 · 마이크는 계속 빛난다 (진행 바는 그대로)
+    if (L.gauge) await say('04-2', L.gauge, 'gauge', PARTNER)
     set({ bar: { part: 'tutorial', done: 5 } })
     await say('05', COMMON.demo, 'demo', PARTNER)
 
@@ -1005,7 +1007,7 @@ function LayeredArt({
   const k = FRAME_W / (panel.right - panel.left)
   const panelH = (panel.bottom - panel.top) * k
   return (
-    <div className={className} data-scene={id}>
+    <div className={className} data-scene={id} data-mic-on={def.micOn ? 'true' : undefined}>
       <img
         className="p05-layer-bg"
         src={bgUrl}
@@ -1029,7 +1031,7 @@ function LayeredArt({
         who="boy"
       />
       {def.gauge !== undefined && (
-        <VoiceGauge level={def.gauge} />
+        <VoiceGauge level={def.gauge} shine={def.gaugeShine} />
       )}
     </div>
   )
@@ -1090,6 +1092,7 @@ function Props({
             className={`p05-prop${fade ? ` is-${fade}` : ''}`}
             data-prop={p.name}
             data-fx={p.fx}
+            data-still={p.still ? 'true' : undefined}
             style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
           >
             <img src={url} alt="" draggable={false} />
@@ -1116,10 +1119,10 @@ function MicGlow({ job, name }: { job: JobId; name: string }): ReactNode {
  * 아래에서부터 차오른다 (0 ~ 1). 모양은 별빛 유리관 + 오른쪽 눈금 5단계 (2026-11-26 사용자가 시안 중 고름 — p05.css).
  * 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
  */
-function VoiceGauge({ level }: { level: number }): ReactNode {
+function VoiceGauge({ level, shine }: { level: number; shine?: boolean }): ReactNode {
   const pct = Math.round(Math.min(1, Math.max(0, level)) * 100)
   return (
-    <span className="p05-vgauge" aria-hidden="true">
+    <span className="p05-vgauge" data-shine={shine ? 'true' : undefined} aria-hidden="true">
       <span className="p05-vgauge__tube">
         <span className="p05-vgauge__track">
           <span className="p05-vgauge__fill" style={{ height: `${pct}%` }} />

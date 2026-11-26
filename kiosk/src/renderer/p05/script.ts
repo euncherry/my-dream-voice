@@ -42,6 +42,10 @@ export interface LayeredScene {
    * A-04부터 두 아이가 살짝 멀어져 가운데에 마이크 자리를 연다 (2026-11-26 사용자 지정 — 그 전 장면은 그대로)
    */
   cast?: { girl?: number; boy?: number }
+  /** 가운데 마이크가 대사 내내 빛난다 ("띵!" 신호 · 녹음 때와 같은 빛 — 2026-11-26 A-04-2) */
+  micOn?: boolean
+  /** 목소리 게이지가 반짝반짝 — 후광이 빨리 숨 쉬고 둘레에 별빛이 반짝 (게이지를 가리키는 장면 — 2026-11-26 A-04-2) */
+  gaugeShine?: boolean
 }
 
 /**
@@ -61,6 +65,8 @@ export interface SceneProp {
    * mic = 가운데 마이크 — 둥실 떠 있고, "띵!" 신호 · 녹음 중에는 `<그림>-glow`(빛나는 마이크)로 바뀌며 두근 (2026-11-26)
    */
   fx?: 'glow' | 'twinkle' | 'mic'
+  /** 돌기를 멈춘다 — 그 자리 그 각도에서 (반짝임은 그대로 · 2026-11-26 새 별은 가리키는 A-03이 끝나면 그만 돈다) */
+  still?: boolean
 }
 
 export interface JobScript {
@@ -82,6 +88,11 @@ export interface JobScript {
      * 목소리 파일 이름: 하나면 mission · 나누면 mission-1 · mission-2 …
      */
     mission: string | { text: string; scene?: string }[]
+    /**
+     * C · 짝꿍 — 목소리 게이지 소개 (게이지가 있는 직업만 · 2026-11-26 우주비행사).
+     * 진짜 띵을 들려준 뒤 · 시범 전에 장면 04-2에서 — 목소리 파일 이름 gauge
+     */
+    gauge?: string
     /** E 크게 · 짝꿍 */
     loud: string
     /** E 작게 · 짝꿍 — 탓은 이야기 속 대상에게 · "내가 다시 해 볼게! 준비 완료!"로 끝난다 (아이에게 다시 시키지 않고 캐릭터가 시범) */
@@ -140,6 +151,10 @@ const A04_CAST = { girl: 0.31, boy: 0.645 } as const
 /** 가운데 마이크 — 두 아이 사이, 내민 손 높이 (배경 그림 픽셀) */
 const MIC: SceneProp = { name: 'prop-mic', cx: 915, cy: 365, w: 175, fx: 'mic' }
 
+/** A-03-2부터 — 새 별은 그만 돈다 (가리키는 A-03이 끝나면 · 2026-11-26 사용자 지정) */
+const still = (props: readonly SceneProp[]): SceneProp[] =>
+  props.map((p) => (p.fx === 'twinkle' ? { ...p, still: true } : p))
+
 const ROCKET_PROPS: readonly SceneProp[] = [
   // 2026-11-26 나타나는 애니메이션이 가운데 맞춤을 덮어쓰던 것을 고치면서, 보이던 자리 그대로 좌표만 고침 (278, 175 → 353, 247)
   { name: 'prop-star-rainbow', cx: 353, cy: 247, w: 150, fx: 'twinkle' },
@@ -197,6 +212,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         { text: '우주선은 우리 우주 대원 목소리를 들어야 출발할 수 있어.', scene: '03' },
         { text: '네 목소리 신호가 꼭 필요해!', scene: '03-2' },
       ],
+      gauge: '저기 목소리 게이지 보이지? 네 목소리로 가득 채워 줘!',
       loud: '좋아! 우주선까지 쭉~ 들렸어!',
       quiet: '좋아, 신호가 왔어! 그런데 우주선이 너~무 멀리 있나 봐. 내가 다시 해 볼게! 준비 완료!',
       silent: '어? 우주선이 아직 못 들었나 봐! 내가 다시 해 볼게! 준비 완료!',
@@ -210,6 +226,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '03': '여자아이가 하늘의 무지갯빛 새 별을 가리킨다. 크레이터 너머에 세워 둔 로켓(몸통의 세로 "목소리 게이지"가 비어 있다)',
       '03-2': '두 아이가 화면 밖 아이를 바라보며 "네 목소리가 꼭 필요해!" 하고 부탁한다. 뒤로 로켓의 "목소리 게이지"가 비어 있다',
       '04': '두 아이가 양쪽에서 가운데에 뜬 마이크를 양손으로 소개한다. 띵! 하면 마이크가 반짝',
+      '04-2': '남자아이가 오른쪽 목소리 게이지를 손가락으로 가리키고, 여자아이는 양손으로 게이지 쪽을 안내한다. 가운데 마이크는 계속 빛나고 게이지가 반짝반짝',
       '05': '남자아이가 가운데 마이크 쪽으로 몸을 기울여 엄지를 번쩍 들며 입을 크게 벌려 외친다',
       '06': '달 위의 두 아이가 화면 쪽으로 몸을 기울이고 헬멧 옆에 손을 대고 귀 기울인다 (아이 차례)',
       '07': '뒤쪽 로켓의 "목소리 게이지"가 꽉 차고 창문에 불이 들어온다. 두 아이가 하이파이브',
@@ -248,7 +265,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         girl: 'girl-ask',
         boy: 'boy-ask',
         scale: { girl: 0.85, boy: 0.83 },
-        props: ROCKET_PROPS,
+        props: still(ROCKET_PROPS),
         gauge: 0,
       },
       // "마이크가 반짝이고, (띵!) 소리가 나면 그때 말하는 거야." — 두 아이가 살짝 멀어지고, 그 사이 가운데에 마이크가 나타난다.
@@ -258,8 +275,20 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         girl: 'girl-present',
         boy: 'boy-present',
         cast: A04_CAST,
-        props: [...ROCKET_PROPS, MIC],
+        props: [...still(ROCKET_PROPS), MIC],
         gauge: 0,
+      },
+      // "저기 목소리 게이지 보이지? 네 목소리로 가득 채워 줘!" — 남자아이가 게이지를 손가락으로 가리키고, 여자아이는 양손으로 게이지 쪽을 안내.
+      // 가운데 마이크는 대사 내내 빛나고, 게이지는 반짝반짝 (2026-11-26 사용자 지정)
+      '04-2': {
+        bg: 'bg-moon',
+        girl: 'girl-guide',
+        boy: 'boy-point',
+        cast: A04_CAST,
+        props: [...still(ROCKET_PROPS), MIC],
+        gauge: 0,
+        micOn: true,
+        gaugeShine: true,
       },
     },
   },
