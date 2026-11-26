@@ -1094,6 +1094,7 @@ function LayeredArt({
         panelH={panelH}
         who="boy"
       />
+      {def.burst && <Burst job={job} burst={def.burst} panel={panel} k={k} />}
       {def.gauge !== undefined && (
         <VoiceGauge
           level={liveGauge ?? def.gauge}
@@ -1115,6 +1116,77 @@ function LayeredArt({
 }
 
 const NO_PROPS: readonly SceneProp[] = []
+
+/** 하이파이브 선 — 손끝에서 바깥으로 뻗는 방향 (위가 0° · 2026-11-27 A-07 시안처럼 부채꼴 셋) */
+const BURST_RAYS = [-30, 0, 30] as const
+
+/** 하이파이브 별 — 손끝에서의 방향 · 거리 · 크기(효과 폭 대비) · 튀어나오는 순서. 가운데 큰 별이 먼저 땽! */
+const BURST_STARS = [
+  { a: 0, r: 0.45, s: 0.28, delay: 0 },
+  { a: -38, r: 0.37, s: 0.16, delay: 0.09 },
+  { a: 38, r: 0.37, s: 0.16, delay: 0.18 },
+] as const
+
+/**
+ * 하이파이브 효과 (2026-11-27 A-07) — 마주친 손끝(아래 가운데)에서 금빛 선 세 개가 뽀오옹 뻗고, 이어서 별이 땽! 튀어나와 반짝인다.
+ * 인물 앞에 놓인다. 선은 SVG로 그리고(앱이 그림), 별은 그림 `prop-sparkle` (없으면 선만). 타이밍은 p05.css
+ */
+function Burst({
+  job,
+  burst,
+  panel,
+  k,
+}: {
+  job: JobId
+  burst: NonNullable<LayeredScene['burst']>
+  panel: ScenePanel
+  k: number
+}): ReactNode {
+  const star = layerUrl(job, 'prop-sparkle')
+  const w = burst.w * k
+  return (
+    <span
+      className="p05-burst"
+      style={{ left: (burst.cx - panel.left) * k, top: (burst.cy - panel.top) * k, width: w, height: w }}
+    >
+      {/* 가로 100 · 손끝이 (0, 0) — 선은 손끝 가까이(9)에서 바깥(25)으로 그려지며 뻗는다 */}
+      <svg className="p05-burst__rays" viewBox="-50 -100 100 100" aria-hidden="true">
+        {BURST_RAYS.map((a, i) => (
+          <line
+            key={a}
+            className="p05-burst__ray"
+            x1={0}
+            y1={-9}
+            x2={0}
+            y2={-25}
+            pathLength={1}
+            transform={`rotate(${a})`}
+            style={{ animationDelay: `${0.3 + i * 0.05}s, ${1.1 + i * 0.2}s` }}
+          />
+        ))}
+      </svg>
+      {star &&
+        BURST_STARS.map((s, i) => {
+          const rad = (s.a * Math.PI) / 180
+          return (
+            <img
+              key={i}
+              className="p05-burst__star"
+              src={star}
+              alt=""
+              draggable={false}
+              style={{
+                left: `${50 + 100 * s.r * Math.sin(rad)}%`,
+                top: `${100 - 100 * s.r * Math.cos(rad)}%`,
+                width: `${100 * s.s}%`,
+                animationDelay: `${0.62 + s.delay}s, ${1.3 + s.delay * 2}s`,
+              }}
+            />
+          )
+        })}
+    </span>
+  )
+}
 
 type PropItem = { p: SceneProp; fade?: 'in' | 'out' }
 
