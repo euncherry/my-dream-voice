@@ -82,13 +82,16 @@
   width: 900px;
 }
 
+/* 창 비율이 16:9가 아니어서 도화지 밖에 띠가 남으면, 그만큼 바깥 · 아래로 밀어 창 바닥 · 양 끝에 붙인다 (2026-11-27 — Stage.tsx) */
 .p06-cloud--l {
   left: -80px;
+  translate: calc(-1 * var(--stage-gap-x, 0px)) var(--stage-gap-y, 0px);
 }
 
 .p06-cloud--r {
   left: 1100px;
   scale: -1 1;
+  translate: var(--stage-gap-x, 0px) var(--stage-gap-y, 0px);
 }
 
 /* ── 제목 "카메라를 보고 웃어 주세요!" — "웃어" 밑에 분홍 붓질 ── */
