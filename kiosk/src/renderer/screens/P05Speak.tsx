@@ -1106,6 +1106,7 @@ function Props({
             data-prop={p.name}
             data-fx={p.fx}
             data-still={p.still ? 'true' : undefined}
+            data-shine={p.shine ? 'true' : undefined}
             style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
           >
             <img src={url} alt="" draggable={false} />

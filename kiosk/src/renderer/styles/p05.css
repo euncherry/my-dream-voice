@@ -817,6 +817,53 @@ img.p05-scene__art--pop {
   animation-play-state: running, paused;
 }
 
+/* 반짝이는 소품 (2026-11-26 A-04-2 로켓) — 게이지와 같은 금빛: 빛 번짐이 빨리 숨 쉬고, 둘레에 별빛 두 개가 번갈아 반짝 */
+.p05-prop[data-shine] img {
+  animation: p05-prop-shine 1.2s ease-in-out infinite;
+}
+
+.p05-prop[data-shine]::before,
+.p05-prop[data-shine]::after {
+  content: "✦";
+  position: absolute;
+  z-index: 1;
+  font-size: 70px;
+  line-height: 1;
+  color: #ffe45c;
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px #fff,
+    0 0 20px rgb(255 214 64),
+    0 0 36px rgb(255 170 60);
+  pointer-events: none;
+  animation: p05-vgauge-spark 1.6s ease-in-out infinite;
+}
+
+/* 별빛 자리 — 코끝 왼쪽 하늘 · 몸통 왼쪽 (오른쪽은 게이지 별빛 자리라 피한다) */
+.p05-prop[data-shine]::before {
+  left: 2%;
+  top: 0;
+  animation-delay: 0.4s;
+}
+
+.p05-prop[data-shine]::after {
+  left: -12%;
+  top: 34%;
+  font-size: 54px;
+  animation-delay: 1.2s;
+}
+
+@keyframes p05-prop-shine {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgb(255 250 210)) drop-shadow(0 0 14px rgb(255 230 120 / 0.8))
+      drop-shadow(0 0 30px rgb(255 190 90 / 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 20px rgb(255 230 120)) drop-shadow(0 0 48px rgb(255 180 90 / 0.95));
+  }
+}
+
 @keyframes p05-spin {
   to {
     rotate: 360deg;
@@ -1099,6 +1146,9 @@ img.p05-scene__art--pop {
 
 @media (prefers-reduced-motion: reduce) {
   .p05-prop[data-fx="twinkle"] img,
+  .p05-prop[data-shine] img,
+  .p05-prop[data-shine]::before,
+  .p05-prop[data-shine]::after,
   .p05-vgauge::before,
   .p05-vgauge[data-shine] .p05-vgauge__tube,
   .p05-vgauge[data-shine]::after,
