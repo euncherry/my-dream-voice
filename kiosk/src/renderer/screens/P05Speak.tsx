@@ -661,7 +661,13 @@ function SpeakFlow({
     const voice = await practice()
     set({ bar: { part: 'tutorial', done: 7 } })
     if (voice === 'loud') await say('07', L.loud, 'loud', PARTNER)
-    else if (voice === 'quiet') await say('08', L.quiet, 'quiet', PARTNER, true)
+    else if (voice === 'quiet') {
+      // 문장마다 자막을 나눌 수 있다 — 목소리 파일 quiet-1 · quiet-2 … (2026-11-27 우주비행사)
+      const quiet = typeof L.quiet === 'string' ? [L.quiet] : L.quiet
+      for (const [i, text] of quiet.entries()) {
+        await say('08', text, quiet.length > 1 ? `quiet-${i + 1}` : 'quiet', PARTNER, true)
+      }
+    }
     else await say('09', L.silent, 'silent', LEAD)
     set({ big: null })
 
