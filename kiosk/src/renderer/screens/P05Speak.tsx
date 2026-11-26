@@ -668,7 +668,13 @@ function SpeakFlow({
         await say('08', text, quiet.length > 1 ? `quiet-${i + 1}` : 'quiet', PARTNER, true)
       }
     }
-    else await say('09', L.silent, 'silent', LEAD)
+    else {
+      // 문장마다 자막을 나눌 수 있다 — 목소리 파일 silent-1 · silent-2 … (2026-11-27 우주비행사)
+      const silent = typeof L.silent === 'string' ? [L.silent] : L.silent
+      for (const [i, text] of silent.entries()) {
+        await say('09', text, silent.length > 1 ? `silent-${i + 1}` : 'silent', LEAD, true)
+      }
+    }
     set({ big: null })
 
     // ── F1 · G · F2 — 문장 2개 ──
