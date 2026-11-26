@@ -49,7 +49,7 @@ import {
   SUBTITLE_MS_PER_CHAR,
   VOICE_LOUD_DB,
 } from '@shared/constants'
-import { scenarioFor } from '@shared/jobs'
+import { jobLabel, scenarioFor } from '@shared/jobs'
 import type { AgeGroup, JobId, MockSttOutcome, SpeechLine, SpeechPart, SttRequest } from '@shared/types'
 import { COMMON, SCRIPTS, lineScene, partnerOf, sceneId, type Kid, type LayeredScene, type SceneProp, type Who } from '../p05/script'
 import {
@@ -734,6 +734,7 @@ function SpeakFlow({
           <p className="p05-sub">먼저 듣고, 따라 말해 봐요</p>
 
           <section className="p05-card" data-big={view.big ? 'true' : 'false'}>
+            <span className="p05-chip">{jobLabel(job)}</span>
             <ProgressDots progress={view.progress} />
 
             <div

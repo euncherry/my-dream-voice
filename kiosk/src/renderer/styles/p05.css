@@ -108,6 +108,28 @@
     0 10px 34px rgb(var(--d-glow) / 0.28);
 }
 
+/* 직업 이름 — 옅은 보라 알약 */
+.p05-chip {
+  position: absolute;
+  z-index: 2;
+  left: 67px;
+  top: 12px;
+  height: 64px;
+  min-width: 289px;
+  padding: 0 34px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 32px;
+  background: var(--d-blob-purple);
+  font-family: var(--d-font-button);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--d-navy);
+  white-space: nowrap;
+}
+
 /* 진행 — 점 2개 + "문장 1 / 2" */
 .p05-progress {
   position: absolute;

@@ -146,10 +146,10 @@ const MOON_PROPS: readonly SceneProp[] = [
  * 큰 노란 별 · 그 옆 작은 별 자리에 새 별이 나타나고(겹치지 않게 둘은 뺌), 오른쪽 작은 별 · 행성은 커진 로켓에 가리지 않게 로켓 옆 빈 하늘로
  */
 /** A-04부터 두 아이가 살짝 멀어진다 (기본 여 0.36 · 남 0.595) — 그 사이 가운데가 마이크 자리 */
-const A04_CAST = { girl: 0.22, boy: 0.555 } as const
+const A04_CAST = { girl: 0.31, boy: 0.645 } as const
 
 /** 가운데 마이크 — 두 아이 사이, 내민 손 높이 (배경 그림 픽셀) */
-const MIC: SceneProp = { name: 'prop-mic', cx: 745, cy: 365, w: 175, fx: 'mic' }
+const MIC: SceneProp = { name: 'prop-mic', cx: 915, cy: 365, w: 175, fx: 'mic' }
 
 /** A-03-2부터 — 새 별은 그만 돈다 (가리키는 A-03이 끝나면 · 2026-11-26 사용자 지정) */
 const still = (props: readonly SceneProp[]): SceneProp[] =>
@@ -162,15 +162,6 @@ const ROCKET_PROPS: readonly SceneProp[] = [
   { name: 'prop-planet', cx: 1650, cy: 160, w: 160 },
   // 발끝 자리(배경 y 588)는 그대로 두고 키운다
   { name: 'prop-rocket', cx: 1505, cy: 381, w: 330 },
-]
-
-/**
- * A-04부터 — 두 아이 · 마이크가 왼쪽으로 옮겨 가 로켓을 가리지 않는다 (2026-11-26 사용자 지정).
- * 새 별은 여자아이 헬멧에 겹치지 않게 왼쪽 위 하늘로 스르르 옮겨 간다
- */
-const A04_PROPS: readonly SceneProp[] = [
-  ...still(ROCKET_PROPS).map((p) => (p.name === 'prop-star-rainbow' ? { ...p, cx: 170, cy: 200, w: 135 } : p)),
-  MIC,
 ]
 
 export const SCRIPTS: Record<JobId, JobScript> = {
@@ -284,7 +275,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         girl: 'girl-present',
         boy: 'boy-present',
         cast: A04_CAST,
-        props: A04_PROPS,
+        props: [...still(ROCKET_PROPS), MIC],
         gauge: 0,
       },
       // "저기 목소리 게이지 보이지? 네 목소리로 가득 채워 줘!" — 남자아이가 게이지를 손가락으로 가리키고, 여자아이는 두 손을 모으고 기대에 찬 얼굴로 게이지 쪽을 본다.
@@ -294,7 +285,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         girl: 'girl-clasp',
         boy: 'boy-point',
         cast: A04_CAST,
-        props: A04_PROPS,
+        props: [...still(ROCKET_PROPS), MIC],
         gauge: 0,
         micOn: true,
         gaugeShine: true,
