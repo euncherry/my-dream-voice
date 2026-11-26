@@ -316,7 +316,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         gaugeShine: true,
       },
       // "내가 먼저 해 볼게! 준비 완료!" — 남자아이가 가운데 마이크 쪽으로 몸을 기울여 손나팔로 외치고, 여자아이는 두 주먹을 쥐고 응원한다 (2026-11-26 그림).
-      // 캐릭터가 마이크에 대고 말하니 마이크는 대사 내내 빛난다
+      // 마이크는 빛나지 않는다 (2026-11-27 사용자 지정 — 빛은 "띵!" 신호 · 아이 차례에만)
       '05': {
         bg: 'bg-moon',
         girl: 'girl-cheer',
@@ -325,7 +325,6 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         props: [...still(ROCKET_PROPS), MIC],
         gauge: 0,
         gaugeBox: ROCKET_GAUGE,
-        micOn: true,
       },
       // "좋아! 우주선까지 쭉~ 들렸어!" (크게 말했을 때) — 두 아이가 가운데서 하이파이브. 마주친 손끝에서 선이 뽀오옹, 별이 땽! (2026-11-27 그림 · 사용자 지정)
       // 로켓 옆 목소리 게이지는 꽉 찬 채 로켓과 함께 반짝 · 마이크는 하이파이브 자리라 빠진다
