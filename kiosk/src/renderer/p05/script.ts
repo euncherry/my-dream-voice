@@ -35,6 +35,11 @@ export interface LayeredScene {
    * 2026-11-26: 로켓 문 속 작은 게이지 → 로켓과 따로, 눈에 띄게 크게 (사용자 지정)
    */
   gauge?: number
+  /**
+   * 게이지 자리 — 배경 그림 픽셀(소품과 같은 기준): 가운데 x · 폭 · 위 · 아래.
+   * 없으면 그림 오른쪽 끝에 판 높이만큼 (CSS 기본). 2026-11-26 — 로켓 옆에 로켓과 같은 길이로 붙여 "로켓에 차는 게이지"로 보이게
+   */
+  gaugeBox?: { cx: number; w: number; top: number; bottom: number }
   /** 이 장면에서만 인물 키를 바꿀 때 (기본 1 — 발끝은 그대로, 헬멧 가운데 기준) */
   scale?: { girl?: number; boy?: number }
   /**
@@ -155,6 +160,12 @@ const MIC: SceneProp = { name: 'prop-mic', cx: 915, cy: 365, w: 175, fx: 'mic' }
 const still = (props: readonly SceneProp[]): SceneProp[] =>
   props.map((p) => (p.fx === 'twinkle' ? { ...p, still: true } : p))
 
+/**
+ * 목소리 게이지 — 로켓 바로 오른쪽에, 로켓과 같은 높이(코끝 ~ 발끝)로 붙인다 (2026-11-26 사용자 지정 — 로켓에 차는 게이지로 보이게).
+ * 로켓 그림 557 × 700 · 폭 330 → 높이 415 → 배경 y 174 ~ 588 · 오른쪽 끝 x 1670
+ */
+const ROCKET_GAUGE = { cx: 1735, w: 104, top: 174, bottom: 588 } as const
+
 const ROCKET_PROPS: readonly SceneProp[] = [
   // 2026-11-26 나타나는 애니메이션이 가운데 맞춤을 덮어쓰던 것을 고치면서, 보이던 자리 그대로 좌표만 고침 (278, 175 → 353, 247)
   { name: 'prop-star-rainbow', cx: 353, cy: 247, w: 150, fx: 'twinkle' },
@@ -257,6 +268,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         scale: { girl: 0.88 },
         props: ROCKET_PROPS,
         gauge: 0,
+        gaugeBox: ROCKET_GAUGE,
       },
       // "네 목소리 신호가 꼭 필요해!" — 두 아이가 무릎을 꿇고 화면 밖 아이에게 손을 내밀며 부탁한다. 뒤로 로켓 · 빈 게이지 (A-03과 같은 소품)
       // 무릎 꿇은 그림은 몸 높이가 서 있는 그림과 달라, 헬멧 크기가 앞 장면과 같도록 키를 줄인다 (헬멧 폭 ÷ 몸 높이로 잼)
@@ -267,6 +279,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         scale: { girl: 0.85, boy: 0.83 },
         props: still(ROCKET_PROPS),
         gauge: 0,
+        gaugeBox: ROCKET_GAUGE,
       },
       // "마이크가 반짝이고, (띵!) 소리가 나면 그때 말하는 거야." — 두 아이가 살짝 멀어지고, 그 사이 가운데에 마이크가 나타난다.
       // 둘이 양손으로 가운데 마이크를 "짜잔" 소개한다. 진짜 띵을 들려줄 때 마이크가 빛난다 (2026-11-26 사용자 지정)
@@ -277,6 +290,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         cast: A04_CAST,
         props: [...still(ROCKET_PROPS), MIC],
         gauge: 0,
+        gaugeBox: ROCKET_GAUGE,
       },
       // "저기 목소리 게이지 보이지? 네 목소리로 가득 채워 줘!" — 남자아이가 게이지를 손가락으로 가리키고, 여자아이는 두 손을 모으고 기대에 찬 얼굴로 게이지 쪽을 본다.
       // 가운데 마이크는 대사 내내 빛나고, 게이지는 반짝반짝 (2026-11-26 사용자 지정)
@@ -287,6 +301,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         cast: A04_CAST,
         props: [...still(ROCKET_PROPS), MIC],
         gauge: 0,
+        gaugeBox: ROCKET_GAUGE,
         micOn: true,
         gaugeShine: true,
       },

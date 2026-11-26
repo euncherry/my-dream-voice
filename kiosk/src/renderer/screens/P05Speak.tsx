@@ -29,7 +29,7 @@
  * ⚠️ 그림 · 목소리 파일이 없으면 임시 판(장면 번호 + 설명)과 자막만 — 파일을 넣으면 바뀐다 (assets/p05/README.md).
  */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { BackButton } from '../components/BackButton'
 import { DevStrip, Screen } from '../components/Screen'
 import { Stage } from '../components/Stage'
@@ -1031,7 +1031,20 @@ function LayeredArt({
         who="boy"
       />
       {def.gauge !== undefined && (
-        <VoiceGauge level={def.gauge} shine={def.gaugeShine} />
+        <VoiceGauge
+          level={def.gauge}
+          shine={def.gaugeShine}
+          style={
+            def.gaugeBox && {
+              left: (def.gaugeBox.cx - def.gaugeBox.w / 2 - panel.left) * k,
+              top: (def.gaugeBox.top - panel.top) * k,
+              width: def.gaugeBox.w * k,
+              height: (def.gaugeBox.bottom - def.gaugeBox.top) * k,
+              right: 'auto',
+              bottom: 'auto',
+            }
+          }
+        />
       )}
     </div>
   )
@@ -1119,10 +1132,19 @@ function MicGlow({ job, name }: { job: JobId; name: string }): ReactNode {
  * 아래에서부터 차오른다 (0 ~ 1). 모양은 별빛 유리관 + 오른쪽 눈금 5단계 (2026-11-26 사용자가 시안 중 고름 — p05.css).
  * 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
  */
-function VoiceGauge({ level, shine }: { level: number; shine?: boolean }): ReactNode {
+function VoiceGauge({
+  level,
+  shine,
+  style,
+}: {
+  level: number
+  shine?: boolean
+  /** 자리 (장면의 gaugeBox — 없으면 CSS 기본: 그림 오른쪽 끝) */
+  style?: CSSProperties | undefined
+}): ReactNode {
   const pct = Math.round(Math.min(1, Math.max(0, level)) * 100)
   return (
-    <span className="p05-vgauge" data-shine={shine ? 'true' : undefined} aria-hidden="true">
+    <span className="p05-vgauge" data-shine={shine ? 'true' : undefined} style={style} aria-hidden="true">
       <span className="p05-vgauge__tube">
         <span className="p05-vgauge__track">
           <span className="p05-vgauge__fill" style={{ height: `${pct}%` }} />
