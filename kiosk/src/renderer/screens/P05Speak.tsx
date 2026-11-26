@@ -1096,14 +1096,14 @@ function LayeredArt({
       />
       <Props job={job} props={def.props ?? NO_PROPS} panel={panel} k={k} />
       <Sprite
-        url={layerUrl(job, def.girl)}
+        url={def.girl && layerUrl(job, def.girl)}
         cx={def.cast?.girl ?? CAST_CX.girl}
         scale={def.scale?.girl ?? 1}
         panelH={panelH}
         who="girl"
       />
       <Sprite
-        url={layerUrl(job, def.boy)}
+        url={def.boy && layerUrl(job, def.boy)}
         cx={def.cast?.boy ?? CAST_CX.boy}
         scale={def.scale?.boy ?? 1}
         panelH={panelH}
@@ -1324,7 +1324,14 @@ function Sprite({
   const [poses, setPoses] = useState(() => (url ? [{ url, scale, n: 0 }] : []))
 
   useEffect(() => {
-    if (!url) return
+    if (!url) {
+      // 이 장면에는 이 아이가 없다 — 보이던 포즈가 스르르 사라진다 (빈 포즈로 바꾼다 · 2026-11-27 A-10)
+      setPoses((ps) => {
+        const last = ps[ps.length - 1]
+        return !last || !last.url ? ps : [last, { url: '', scale, n: last.n + 1 }]
+      })
+      return
+    }
     setPoses((ps) => {
       const last = ps[ps.length - 1]
       if (last?.url === url) return last.scale === scale ? ps : [...ps.slice(0, -1), { ...last, scale }]
@@ -1340,17 +1347,19 @@ function Sprite({
 
   return (
     <>
-      {poses.map((pose, i) => (
-        <SpritePose
-          key={pose.n}
-          url={pose.url}
-          cx={cx}
-          scale={pose.scale}
-          panelH={panelH}
-          who={who}
-          fade={poses.length > 1 ? (i === 0 ? 'out' : 'in') : undefined}
-        />
-      ))}
+      {poses.map((pose, i) =>
+        !pose.url ? null : (
+          <SpritePose
+            key={pose.n}
+            url={pose.url}
+            cx={cx}
+            scale={pose.scale}
+            panelH={panelH}
+            who={who}
+            fade={poses.length > 1 ? (i === 0 ? 'out' : 'in') : undefined}
+          />
+        ),
+      )}
     </>
   )
 }

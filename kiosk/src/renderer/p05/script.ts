@@ -26,8 +26,9 @@ export type Who = Kid | 'both'
  */
 export interface LayeredScene {
   bg: string
-  girl: string
-  boy: string
+  /** 판 위에 서는 인물 포즈 — 없으면 그 아이는 판에서 사라진다 (2026-11-27 A-10 — 두 아이가 조종석 창 그림 안에 있다) */
+  girl?: string
+  boy?: string
   /** 배경 위 · 인물 뒤에 놓는 소품 (2026-11-26 — 로켓 · 별 · 행성을 배경에서 빼고 따로 받음) */
   props?: readonly SceneProp[]
   /**
@@ -186,6 +187,12 @@ const ROCKET_GAUGE = { cx: 1735, w: 104, top: 174, bottom: 588 } as const
  */
 const ROCKET_FAR: SceneProp = { name: 'prop-rocket', cx: 1130, cy: 215, w: 72 }
 
+/**
+ * A-10 조종석 — 로켓 안 두 아이(남자아이 엄지 척 · 여자아이가 발사 레버를 잡고 창밖을 가리킴)를 그린 둥근 창 그림을
+ * 판 왼쪽에 크게 띄운다 (2026-11-27 시안 — 위로 판 밖까지 살짝 튀어나온다). 자리 · 크기는 시안 그림의 창 테두리를 재서 맞춤
+ */
+const COCKPIT: SceneProp = { name: 'prop-cockpit', cx: 685, cy: 412, w: 1314 }
+
 const ROCKET_PROPS: readonly SceneProp[] = [
   // 2026-11-26 나타나는 애니메이션이 가운데 맞춤을 덮어쓰던 것을 고치면서, 보이던 자리 그대로 좌표만 고침 (278, 175 → 353, 247)
   { name: 'prop-star-rainbow', cx: 353, cy: 247, w: 150, fx: 'twinkle' },
@@ -266,7 +273,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '07': '두 아이가 가운데서 하이파이브 — 여자아이는 한 발을 들고 뛰어오르듯, 남자아이는 다른 손 주먹. 마주친 손끝에서 금빛 선이 뽀오옹 뻗고 별이 땽! 튀어나온다. 로켓 옆 "목소리 게이지"가 꽉 차서 반짝',
       '08': '로켓이 저 멀리 하늘로 날아가 아주 작게 보인다. 여자아이가 윙크하며 망원경으로 로켓을 보고, 남자아이는 한쪽 무릎을 꿇고 주먹을 쥔 채 덜 찬 목소리 게이지를 올려다본다',
       '09': '로켓의 "목소리 게이지"가 빈 채. 두 아이가 가운데 마이크 쪽으로 몸을 기울여 두 손을 입가에 모으고 웃으며 크게 외칠 준비',
-      '10': '로켓 조종석에 올라탄 두 아이가 발사 레버를 함께 잡고, 여자아이가 앞을 가리키며 외친다. 창밖에 보랏빛 달',
+      '10': '달 위 판 왼쪽에 크게 뜬 둥근 창 — 로켓 조종석에 앉은 두 아이. 남자아이는 엄지 척, 여자아이는 발사 레버를 잡고 둥근 창밖을 가리키며 외친다. 오른쪽에 로켓과 빈 목소리 게이지',
       '11': '조종석 계기판 앞에서 남자아이가 손가락 하나 "한 번 더"',
       '12': '로켓이 불꽃을 뿜으며 보랏빛 달을 떠나 날아오른다. 둥근 창문 안에 웃는 두 아이',
       '13': '우주선 창밖으로 반짝이는 별들과 저 앞의 무지갯빛 새 별. 여자아이가 가리키며 외치고, 남자아이는 창에 붙어 신기해한다',
@@ -379,6 +386,22 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         boy: 'boy-shout',
         cast: A04_CAST,
         props: [...still(ROCKET_PROPS), MIC],
+        gauge: 0,
+        gaugeBox: ROCKET_GAUGE,
+      },
+      // "첫 번째 신호! 잘 듣고 똑같이 말해 줘." → 문장 ① — 로켓 조종석 (2026-11-27 시안).
+      // 판 왼쪽에 둥근 창 그림(조종석 안의 두 아이)이 크게 뜨고, 오른쪽에는 로켓 · 빈 목소리 게이지가 그대로 있다.
+      // 두 아이는 창 그림 안에 있어 판 위의 인물은 사라진다 · 새 별은 창에 가려 빠지고, 시안처럼 작은 노란 별 둘
+      '10': {
+        bg: 'bg-moon',
+        // 말풍선 꼬리가 창 안의 아이를 가리키게 (판 폭 대비 · 헬멧 가운데)
+        cast: { girl: 0.45, boy: 0.24 },
+        props: [
+          ...still(ROCKET_PROPS).filter((p) => p.name !== 'prop-star-rainbow'),
+          { name: 'prop-star-yellow-4', img: 'prop-star-yellow', cx: 70, cy: 282, w: 48, fx: 'glow' },
+          { name: 'prop-star-yellow-5', img: 'prop-star-yellow', cx: 1866, cy: 296, w: 50, fx: 'glow' },
+          COCKPIT,
+        ],
         gauge: 0,
         gaugeBox: ROCKET_GAUGE,
       },
