@@ -817,7 +817,7 @@ img.p05-scene__art--pop {
   animation-play-state: running, paused;
 }
 
-/* 반짝이는 소품 (2026-11-26 A-04-2 로켓) — 게이지와 같은 금빛: 빛 번짐이 빨리 숨 쉬고, 둘레에 별빛 두 개가 번갈아 반짝 */
+/* 반짝이는 소품 (2026-11-26 A-04-2 로켓 · 같은 날 빛을 더 세게) — 게이지와 같은 금빛: 빛 번짐이 빨리 숨 쉬고, 둘레에 별빛 두 개가 번갈아 반짝 */
 .p05-prop[data-shine] img {
   animation: p05-prop-shine 1.2s ease-in-out infinite;
 }
@@ -856,11 +856,11 @@ img.p05-scene__art--pop {
 @keyframes p05-prop-shine {
   0%,
   100% {
-    filter: drop-shadow(0 0 4px rgb(255 250 210)) drop-shadow(0 0 14px rgb(255 230 120 / 0.8))
-      drop-shadow(0 0 30px rgb(255 190 90 / 0.5));
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 18px rgb(255 232 120))
+      drop-shadow(0 0 40px rgb(255 190 80 / 0.85));
   }
   50% {
-    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 20px rgb(255 230 120)) drop-shadow(0 0 48px rgb(255 180 90 / 0.95));
+    filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 28px rgb(255 236 130)) drop-shadow(0 0 64px rgb(255 175 70));
   }
 }
 
