@@ -151,8 +151,8 @@ class Stopped extends Error {}
 /** 자막이 이 글자 수(띄어쓰기 빼고)보다 길면 글자를 조금 줄여 두 줄 안에 넣는다 (styles/p05.css data-long) */
 const SUBTITLE_LONG_CHARS = 36
 
-/** 장면 그림 칸의 폭 (styles/p05.css .p05-frame) */
-const FRAME_W = 1338
+/** 장면 그림 칸의 폭 (styles/p05.css .p05-frame — 2026-11-27 1338 → 1526) */
+const FRAME_W = 1526
 
 /** 대사 없는 첫 장면 '00'을 보여 주는 시간 (2026-11-24 지정 — "0.5초 뒤 원래 장면으로") */
 const OPENING_MS = 500

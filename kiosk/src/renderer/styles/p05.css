@@ -23,12 +23,13 @@
   pointer-events: none;
 }
 
-/* ── 위쪽 영문 로고 · 별 (P-04와 같은 자리) ── */
+/* ── 위쪽 영문 로고 · 별 ──
+   2026-11-27 카드를 키우려고 로고를 줄이고 위로 올림 (P-04와 같던 자리 434px · top -28 → 340px · 가운데 맞춤 left = (1920 − 폭) ÷ 2) */
 .p05-logo {
   position: absolute;
-  left: 743px;
-  top: -28px;
-  width: 434px;
+  left: 790px;
+  top: -27px;
+  width: 340px;
 }
 
 .p05-star {
@@ -42,20 +43,21 @@
     d-star-sway 6.6s ease-in-out -4.2s infinite;
 }
 
-/* ── 제목 (직업마다 — 예: "우주로 출발해 볼까요?") · 강조 낱말 밑에 분홍 붓질 ── */
+/* ── 제목 (직업마다 — 예: "우주로 출발해 볼까요?") · 강조 낱말 밑에 분홍 붓질 ──
+   2026-11-27 카드를 키우려고 줄임 (94 → 80px · 붓질도 같은 비율로) */
 .p05-title {
   position: absolute;
   left: 0;
-  top: 90px;
+  top: 50px;
   width: 1920px;
   margin: 0;
   text-align: center;
   font-family: var(--d-font-button);
-  font-size: 94px;
+  font-size: 80px;
   font-weight: 700;
-  line-height: 112px;
+  line-height: 96px;
   color: var(--d-navy);
-  -webkit-text-stroke: 2px currentColor;
+  -webkit-text-stroke: 1.7px currentColor;
   paint-order: stroke fill;
 }
 
@@ -70,17 +72,17 @@
 
 .p05-title__mark {
   position: absolute;
-  left: -30px;
-  top: 67px;
-  width: 228px;
-  height: 52px;
+  left: -26px;
+  top: 57px;
+  width: 194px;
+  height: 44px;
   fill: var(--d-blob-pink);
 }
 
 .p05-sub {
   position: absolute;
   left: 0;
-  top: 207px;
+  top: 147px;
   width: 1920px;
   margin: 0;
   text-align: center;
@@ -95,12 +97,13 @@
    가운데 흰 카드 — 직업 이름 · 진행 점 · 장면 그림 · 자막 · 큰 글씨
    ──────────────────────────────────────────────── */
 
+/* 2026-11-27 카드 · 그림을 키움 (1422 × 642 → 1610 × 706 · 그림 칸 폭 1338 → 1526) — 로고 · 제목을 줄이고 위아래 여백을 줄인 만큼 */
 .p05-card {
   position: absolute;
-  left: 249px;
-  top: 265px;
-  width: 1422px;
-  height: 642px;
+  left: 155px;
+  top: 206px;
+  width: 1610px;
+  height: 706px;
   border-radius: 46px;
   background: #fff;
   box-shadow:
@@ -165,32 +168,33 @@
 
 /* ── 장면 그림 칸 (가로로 긴 3.1 : 1) — 그림은 칸을 꽉 채우고 비율이 다르면 위아래가 조금 잘린다 ── */
 /*
- * 그림 칸 높이 — 따라 말할 말(큰 글씨)이 없을 때는 카드 아래까지 꽉 차고(512px · 양옆과 같은 42px 여백),
- * 따라 말할 말이 나오면 시안 높이(430px)로 줄어 그 아래에 큰 글씨가 들어간다 (2026-11-23 지정)
+ * 그림 칸 높이 — 따라 말할 말(큰 글씨)이 없을 때는 카드 아래까지 꽉 차고(2.6 : 1),
+ * 따라 말할 말이 나오면 시안 비율(3.1 : 1)로 줄어 그 아래에 큰 글씨가 들어간다 (2026-11-23 지정).
+ * 2026-11-27 카드를 키우며 1338 × 512 / 430 → 1526 × 584 / 491 (비율 그대로 · 폭은 P05Speak.tsx FRAME_W와 같이)
  */
 .p05-frame {
   position: absolute;
   left: 42px;
-  top: 88px;
-  width: 1338px;
-  height: 512px;
+  top: 84px;
+  width: 1526px;
+  height: 584px;
   z-index: 1;
   isolation: isolate;
   transition: height 0.45s cubic-bezier(0.3, 0.7, 0.3, 1);
 }
 
 .p05-card[data-big='true'] .p05-frame {
-  height: 430px;
+  height: 491px;
 }
 
 /*
- * 그림이 보이는 자리 = 그림 칸 + 칸 위쪽 120px (튀어나오는 그림의 머리 · 로켓 끝 — 시안처럼 흰 카드 안까지).
+ * 그림이 보이는 자리 = 그림 칸 + 칸 위쪽 138px (2026-11-27 그림을 키우며 120 → 138) (튀어나오는 그림의 머리 · 로켓 끝 — 시안처럼 흰 카드 안까지).
  * 양옆과 아래는 칸에서 자른다 (아래 모서리는 둥글게) — 넘어가는 그림이 칸 밖으로 새지 않게.
  */
 .p05-scene {
   position: absolute;
   inset: 0;
-  clip-path: inset(-120px 0 0 0 round 0 0 30px 30px);
+  clip-path: inset(-138px 0 0 0 round 0 0 30px 30px);
 }
 
 .p05-scene__art {
@@ -404,7 +408,8 @@ img.p05-scene__art--pop {
   position: absolute;
   left: 40px;
   right: 40px;
-  top: 518px;
+  /* 그림 칸(줄어든 높이) 바로 아래 — 84 + 491 */
+  top: 575px;
   height: 112px;
   margin: 0;
   display: flex;
@@ -443,7 +448,7 @@ img.p05-scene__art--pop {
 .p05-mic {
   position: absolute;
   left: 634px;
-  top: 926px;
+  top: 928px;
   width: 652px;
   height: 122px;
   padding: 0 24px 0 70px;
