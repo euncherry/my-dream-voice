@@ -830,129 +830,190 @@ img.p05-scene__art--pop {
   animation: p05-sprite-out 0.16s ease-in both;
 }
 
-/* ── 로켓 발사 (2026-11-27 A-12) — 덜덜 떨다가 불꽃을 뿜으며 위로 날아올라 작아지며 사라진다. 연기는 땅에 남아 퍼진다 ──
-   분사구 = 로켓 그림 기준 가로 40% · 세로 86% */
-.p05-launch__lift {
-  position: relative;
-  display: block;
-  animation: p05-launch 1.8s linear 0.2s both;
+/* ── 로켓 발사 (2026-11-27 A-12 시안) — 판 가운데 큰 로켓 · 창 안에 두 아이 ──
+   상자 = 로켓 그림(1100 × 1249) 크기 · 가운데 맞춤. 0.1초 톡 나타남 → 0.4초 덜덜 → 0.5초 불꽃 · 연기 → 0.85초부터 날아간다 */
+.p05-launch {
+  position: absolute;
+  z-index: 1;
+  aspect-ratio: 1100 / 1249;
+  translate: -50% -50%;
+  animation: p05-window-in 0.42s cubic-bezier(0.3, 1.35, 0.5, 1) 0.1s both;
 }
 
-@keyframes p05-launch {
+.p05-launch img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.p05-launch__lift {
+  position: absolute;
+  inset: 0;
+  animation: p05-launch-lift 2.3s linear 0.4s both;
+}
+
+@keyframes p05-launch-lift {
   0% {
     transform: none;
   }
   4% {
-    transform: translate(-3px, 1px);
+    transform: translate(-1.2%, 0.4%);
   }
   8% {
-    transform: translate(3px, -1px);
+    transform: translate(1.2%, -0.4%);
   }
   12% {
-    transform: translate(-3px, 0);
+    transform: translate(-1.2%, 0);
   }
   16% {
-    transform: translate(2px, 1px);
+    transform: translate(1%, 0.4%);
   }
   20% {
-    transform: translate(-1px, 0);
-  }
-  /* 여기서부터 점점 빨라지며 날아오른다 */
-  24% {
     transform: none;
     opacity: 1;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.75, 0.45);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.8, 0.5);
   }
-  80% {
+  82% {
     opacity: 1;
   }
   100% {
-    transform: translate(14%, -95%) scale(0.5);
+    transform: translateY(-135%);
     opacity: 0;
   }
 }
 
-/* 불꽃 — 로켓 뒤(분사구 아래)에서 길쭉하게 일렁인다 */
-.p05-launch__flame {
+/* 창 안 — 어두운 보라 (창 유리가 투명해서 그 뒤에 깐다) */
+.p05-launch__inside {
   position: absolute;
-  z-index: -1;
-  left: 40%;
-  top: 82%;
-  width: 30%;
-  aspect-ratio: 1 / 2.6;
-  translate: -50% 0;
-  transform-origin: 50% 0;
-  border-radius: 50% 50% 50% 50% / 28% 28% 72% 72%;
-  background: radial-gradient(
-    ellipse 60% 75% at 50% 22%,
-    #fff 0 14%,
-    #ffe45c 32%,
-    #ff9a3c 58%,
-    rgb(255 80 60 / 0) 78%
-  );
-  filter: drop-shadow(0 0 14px rgb(255 170 60 / 0.9));
-  animation:
-    p05-flame-on 0.25s ease-out 0.1s both,
-    p05-flame-flicker 0.09s ease-in-out 0.35s infinite alternate;
-}
-
-@keyframes p05-flame-on {
-  from {
-    opacity: 0;
-    transform: scale(0.3, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes p05-flame-flicker {
-  from {
-    transform: scale(1, 1);
-  }
-  to {
-    transform: scale(0.9, 1.2);
-  }
-}
-
-/* 연기 — 분사구 아래에서 뭉게뭉게 퍼지다 옅어진다 (땅에 남는다) */
-.p05-launch__smoke {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 90%;
-  height: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.p05-launch__smoke i {
-  position: absolute;
-  left: 40%;
-  top: 0;
-  aspect-ratio: 1;
+  left: 50.3%;
+  top: 51.2%;
+  width: 58%;
+  height: 46%;
   translate: -50% -50%;
   border-radius: 50%;
-  background: radial-gradient(circle at 42% 38%, #fff 0, #f4effd 42%, rgb(228 218 248 / 0.85) 60%, rgb(228 218 248 / 0) 72%);
-  opacity: 0;
-  animation: p05-smoke 2.2s ease-out both;
+  background: radial-gradient(circle at 50% 30%, #a59ec4 0, #6c5f9e 55%, #43377a 100%);
 }
 
-@keyframes p05-smoke {
+/* 두 아이 — 창보다 조금 크게, 가장자리는 로켓 몸통에 가린다 · 신나서 들썩 */
+.p05-launch__kids {
+  left: 50.3%;
+  top: 33%;
+  width: 60%;
+  translate: -50% 0;
+  animation: p05-launch-kids 0.32s ease-in-out infinite alternate;
+}
+
+@keyframes p05-launch-kids {
+  to {
+    transform: translateY(-2.5%);
+  }
+}
+
+.p05-launch__rocket {
+  inset: 0;
+  width: 100%;
+}
+
+/* 불꽃 — 분사구 아래 · 로켓 뒤. 두 장을 번갈아 보이며 일렁인다 */
+.p05-launch__flame {
+  left: 50.3%;
+  top: 93%;
+  width: 36%;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  filter: drop-shadow(0 0 18px rgb(255 170 60 / 0.85));
+  animation:
+    p05-launch-flame-on 0.3s ease-out 0.5s both,
+    p05-launch-flame-a 0.16s steps(1) 0.8s infinite;
+}
+
+.p05-launch__flame--b {
+  animation:
+    p05-launch-flame-on 0.3s ease-out 0.5s both,
+    p05-launch-flame-b 0.16s steps(1) 0.8s infinite;
+}
+
+@keyframes p05-launch-flame-on {
+  from {
+    opacity: 0;
+    transform: scale(0.4, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes p05-launch-flame-a {
+  0% {
+    opacity: 1;
+    transform: scale(1, 1.05);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(0.95, 1.15);
+  }
+}
+
+@keyframes p05-launch-flame-b {
   0% {
     opacity: 0;
-    transform: scale(0.25);
+    transform: scale(1.05, 1.1);
   }
-  14% {
+  50% {
+    opacity: 1;
+    transform: scale(1, 1.2);
+  }
+}
+
+/* 땅 — 연기 구름(발밑을 덮는다) · 연기 덩어리 넷이 양옆으로. 땅 자리 = 로켓 상자 높이의 133% (배경 y ≈ 793) */
+.p05-launch__ground {
+  position: absolute;
+  left: 50.3%;
+  top: 133%;
+  width: 0;
+  height: 0;
+}
+
+.p05-launch__smoke {
+  left: 0;
+  bottom: 0;
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  animation: p05-launch-smoke 0.8s cubic-bezier(0.2, 0.9, 0.3, 1) 0.55s both;
+}
+
+@keyframes p05-launch-smoke {
+  from {
+    opacity: 0;
+    transform: scale(0.3, 0.15);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.p05-launch__puff {
+  left: 0;
+  bottom: 0;
+  translate: -50% 0;
+  opacity: 0;
+  animation: p05-launch-puff 1.6s ease-out both;
+}
+
+@keyframes p05-launch-puff {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  20% {
     opacity: 0.95;
   }
-  65% {
-    opacity: 0.85;
-  }
   100% {
-    opacity: 0;
-    transform: translate(var(--tx), var(--ty)) scale(1.5);
+    opacity: 0.9;
+    transform: translate(var(--tx), var(--ty)) scale(1);
   }
 }
 
@@ -1432,11 +1493,14 @@ img.p05-scene__art--pop {
   }
 }
 
-/* 움직임 줄이기 — 로켓은 제자리, 불꽃 · 연기만 잠깐 (2026-11-27 A-12) */
+/* 움직임 줄이기 — 발사 움직임을 바로 끝 모습으로 (2026-11-27 A-12) */
 @media (prefers-reduced-motion: reduce) {
+  .p05-launch,
   .p05-launch__lift,
+  .p05-launch__kids,
   .p05-launch__flame,
-  .p05-launch__smoke i {
+  .p05-launch__smoke,
+  .p05-launch__puff {
     animation-duration: 0.01s !important;
     animation-iteration-count: 1 !important;
   }

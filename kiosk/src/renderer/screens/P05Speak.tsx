@@ -157,6 +157,9 @@ const FRAME_W = 1526
 /** 대사 없는 첫 장면 '00'을 보여 주는 시간 (2026-11-24 지정 — "0.5초 뒤 원래 장면으로") */
 const OPENING_MS = 500
 
+/** 로켓 발사 장면(A-12)을 붙잡아 두는 최소 시간 — 덜덜 · 불꽃 · 날아가 사라질 때까지 (styles/p05.css p05-launch-lift: 0.4초 + 2.3초) */
+const LAUNCH_HOLD_MS = 2900
+
 /**
  * 레이어 장면의 인물 자리 — 판 기준 비율 (A-01 완성 그림에서 잰 값).
  *   CAST_CX: 헬멧 가운데의 가로 자리 · BODY_H: 헬멧 꼭대기 ~ 발끝 키 (판 높이 대비 — 1보다 커서 헬멧이 판 위로 튀어나온다)
@@ -696,7 +699,14 @@ function SpeakFlow({
     for (const turn of [0, 1] as const) {
       if (turn === 1) {
         set({ bar: { part: 'story', done: 3 } })
+        const bridgeAt = performance.now()
         await say('12', L.bridge, 'bridge', PARTNER)
+        // 로켓 발사 장면이면 로켓이 다 날아갈 때까지 기다린다 (2026-11-27 A-12 — 대사가 짧아 날아가는 중에 넘어갔다)
+        if (SCRIPTS[job].layered?.['12']?.launch) {
+          const left = LAUNCH_HOLD_MS - (performance.now() - bridgeAt)
+          if (left > 0) await sleep(left)
+          check()
+        }
       }
 
       const line = scenario.turns[turn].line
@@ -1137,6 +1147,7 @@ function LayeredArt({
         who="boy"
       />
       {def.burst && <Burst job={job} burst={def.burst} panel={panel} k={k} />}
+      {def.launch && <Launch job={job} launch={def.launch} panel={panel} k={k} />}
       {def.gauge !== undefined && (
         <VoiceGauge
           level={liveGauge ?? def.gauge}
@@ -1173,6 +1184,76 @@ const BURST_STARS = [
  * 하이파이브 효과 (2026-11-27 A-07) — 마주친 손끝(아래 가운데)에서 금빛 선 세 개가 뽀오옹 뻗고, 이어서 별이 땽! 튀어나와 반짝인다.
  * 인물 앞에 놓인다. 선은 SVG로 그리고(앱이 그림), 별은 그림 `prop-sparkle` (없으면 선만). 타이밍은 p05.css
  */
+/** 발사 연기 덩어리 — 발밑 가운데에서 양옆으로 퍼진다 (x · y: 퍼지는 거리 · 로켓 폭 대비 / s: 크기 · 로켓 폭 대비 / d: 나오는 때 초) */
+const LAUNCH_PUFFS = [
+  { x: -0.95, y: -0.06, s: 0.62, d: 0.55 },
+  { x: 0.95, y: -0.04, s: 0.58, d: 0.62 },
+  { x: -1.45, y: 0.04, s: 0.46, d: 0.75 },
+  { x: 1.42, y: 0.06, s: 0.5, d: 0.82 },
+] as const
+
+/**
+ * 로켓 발사 (2026-11-27 A-12) — 판 가운데 큰 로켓. 둥근 창은 투명해서 그 뒤의 창 안(어두운 보라) · 두 아이가 보인다.
+ * 덜덜 → 불꽃(두 장을 번갈아 일렁임) · 발밑 연기 → 위로 날아간다. 연기는 땅에 남는다. 타이밍은 p05.css
+ * 자리는 로켓 그림(prop-launch-rocket 1100 × 1249) 기준 %: 창 가운데 50.3% · 51.2% · 분사구 아래 끝 97%
+ */
+function Launch({
+  job,
+  launch,
+  panel,
+  k,
+}: {
+  job: JobId
+  launch: NonNullable<LayeredScene['launch']>
+  panel: ScenePanel
+  k: number
+}): ReactNode {
+  const rocket = layerUrl(job, 'prop-launch-rocket')
+  if (!rocket) return null
+  const kids = layerUrl(job, 'prop-launch-kids')
+  const flame1 = layerUrl(job, 'prop-launch-flame-1')
+  const flame2 = layerUrl(job, 'prop-launch-flame-2')
+  const smoke = layerUrl(job, 'prop-launch-smoke')
+  const puff = layerUrl(job, 'prop-launch-puff')
+  const w = launch.w * k
+  return (
+    <span
+      className="p05-launch"
+      style={{ left: (launch.cx - panel.left) * k, top: (launch.cy - panel.top) * k, width: w }}
+    >
+      <span className="p05-launch__lift">
+        {flame1 && <img className="p05-launch__flame" src={flame1} alt="" draggable={false} />}
+        {flame2 && <img className="p05-launch__flame p05-launch__flame--b" src={flame2} alt="" draggable={false} />}
+        <span className="p05-launch__inside" aria-hidden="true" />
+        {kids && <img className="p05-launch__kids" src={kids} alt="" draggable={false} />}
+        <img className="p05-launch__rocket" src={rocket} alt="" draggable={false} />
+      </span>
+      {/* 연기는 땅에 남는다 — 로켓 앞(발밑을 덮는다) */}
+      <span className="p05-launch__ground" aria-hidden="true">
+        {smoke && <img className="p05-launch__smoke" src={smoke} alt="" draggable={false} style={{ width: w * 1.8 }} />}
+        {puff &&
+          LAUNCH_PUFFS.map((f, i) => (
+            <img
+              key={i}
+              className="p05-launch__puff"
+              src={puff}
+              alt=""
+              draggable={false}
+              style={
+                {
+                  width: w * f.s,
+                  '--tx': `${(f.x / f.s) * 100}%`,
+                  '--ty': `${(f.y / f.s) * 100}%`,
+                  animationDelay: `${f.d}s`,
+                } as CSSProperties
+              }
+            />
+          ))}
+      </span>
+    </span>
+  )
+}
+
 function Burst({
   job,
   burst,
@@ -1229,21 +1310,6 @@ function Burst({
     </span>
   )
 }
-
-/**
- * 로켓 발사 연기 (2026-11-27 A-12) — 분사구 아래에서 양옆 · 위로 뭉게뭉게 퍼진다.
- *   s: 크기(로켓 폭 대비) · tx · ty: 퍼져 나가는 거리(제 크기 대비 %) · d: 나오는 순서(초)
- */
-const LAUNCH_SMOKE = [
-  { s: 0.68, tx: -50, ty: -35, d: 0.22 },
-  { s: 0.62, tx: 55, ty: -40, d: 0.28 },
-  { s: 0.56, tx: -140, ty: -12, d: 0.12 },
-  { s: 0.6, tx: 135, ty: -18, d: 0.16 },
-  { s: 0.48, tx: -230, ty: 0, d: 0.32 },
-  { s: 0.5, tx: 225, ty: -4, d: 0.36 },
-  { s: 0.4, tx: -310, ty: 8, d: 0.44 },
-  { s: 0.42, tx: 300, ty: 4, d: 0.48 },
-] as const
 
 /** swap · stay = 창 그림끼리 바뀔 때 — 새 그림은 스르르 겹쳐 나타나고(swap), 앞 그림은 그 밑에 그대로 있다가 빠진다(stay) */
 type PropItem = { p: SceneProp; fade?: 'in' | 'out' | 'swap' | 'stay' }
@@ -1309,35 +1375,9 @@ function Props({
             data-fx={p.fx}
             data-still={p.still ? 'true' : undefined}
             data-shine={p.shine ? 'true' : undefined}
-            data-launch={p.launch ? 'true' : undefined}
             style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
           >
-            {p.launch ? (
-              <>
-                {/* 연기는 땅에 남고, 로켓 · 불꽃만 날아오른다 */}
-                <span className="p05-launch__smoke" aria-hidden="true">
-                  {LAUNCH_SMOKE.map((s, i) => (
-                    <i
-                      key={i}
-                      style={
-                        {
-                          width: `${s.s * 100}%`,
-                          '--tx': `${s.tx}%`,
-                          '--ty': `${s.ty}%`,
-                          animationDelay: `${s.d}s`,
-                        } as CSSProperties
-                      }
-                    />
-                  ))}
-                </span>
-                <span className="p05-launch__lift">
-                  <span className="p05-launch__flame" aria-hidden="true" />
-                  <img src={url} alt="" draggable={false} />
-                </span>
-              </>
-            ) : (
-              <img src={url} alt="" draggable={false} />
-            )}
+            <img src={url} alt="" draggable={false} />
             {p.fx === 'mic' && <MicGlow job={job} name={p.img ?? p.name} />}
           </span>
         )
