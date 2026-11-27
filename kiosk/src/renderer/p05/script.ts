@@ -74,8 +74,10 @@ export interface SceneProp {
   /**
    * glow = 노란 빛 번짐 · twinkle = 반짝반짝(빛이 커졌다 작아졌다)
    * mic = 가운데 마이크 — 둥실 떠 있고, "띵!" 신호 · 녹음 중에는 `<그림>-glow`(빛나는 마이크)로 바뀌며 두근 (2026-11-26)
+   * window = 큰 창 그림(A-10 조종석) — 인물보다 앞에 놓이고, 판 위 인물이 먼저 빨리 사라진 뒤 톡 튀어나온다.
+   *   창 그림끼리 바뀔 때는(A-10 → A-11) 앞 그림 위로 새 그림이 겹쳐 스르르 (2026-11-27 — 겹쳐 바뀌며 뒤의 두 아이가 비쳐 보이던 것을 고침)
    */
-  fx?: 'glow' | 'twinkle' | 'mic'
+  fx?: 'glow' | 'twinkle' | 'mic' | 'window'
   /** 돌기를 멈춘다 — 그 자리 그 각도에서 (반짝임은 그대로 · 2026-11-26 새 별은 가리키는 A-03이 끝나면 그만 돈다) */
   still?: boolean
   /** 반짝반짝 빛난다 — 금빛 빛 번짐이 숨 쉬고 둘레에 별빛이 번갈아 (2026-11-26 A-04-2 로켓 — 게이지와 같이) */
@@ -191,10 +193,10 @@ const ROCKET_FAR: SceneProp = { name: 'prop-rocket', cx: 1130, cy: 215, w: 72 }
  * A-10 조종석 — 로켓 안 두 아이(남자아이 엄지 척 · 여자아이가 발사 레버를 잡고 창밖을 가리킴)를 그린 둥근 창 그림을
  * 판 왼쪽에 크게 띄운다 (2026-11-27 시안 — 위로 판 밖까지 살짝 튀어나온다). 자리 · 크기는 시안 그림의 창 테두리를 재서 맞춤
  */
-const COCKPIT: SceneProp = { name: 'prop-cockpit', cx: 685, cy: 412, w: 1314 }
+const COCKPIT: SceneProp = { name: 'prop-cockpit', cx: 685, cy: 412, w: 1314, fx: 'window' }
 
 /** A-11 다시 말하기 — 같은 조종석 창, 남자아이가 손가락 하나 "한 번 더" (2026-11-27 그림 — 창 테두리가 A-10 그림과 같은 자리라 스르르 바뀐다) */
-const COCKPIT_RETRY: SceneProp = { name: 'prop-cockpit-retry', cx: 685, cy: 412, w: 1313 }
+const COCKPIT_RETRY: SceneProp = { name: 'prop-cockpit-retry', cx: 685, cy: 412, w: 1313, fx: 'window' }
 
 /** A-10 · A-11 조종석 장면의 소품 — 로켓 · 행성 · 노란 별은 앞 장면 자리 그대로, 새 별은 창에 가려 빠지고 시안처럼 작은 노란 별 둘 */
 const COCKPIT_PROPS = (cockpit: SceneProp): SceneProp[] => [

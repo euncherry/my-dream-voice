@@ -750,6 +750,15 @@ img.p05-scene__art--pop {
   animation: p05-sprite-out 0.32s ease-in both;
 }
 
+/* 창 그림 장면(A-10)으로 갈 때 — 창이 튀어나오기 전에 빨리 사라진다 · 돌아올 때는 창이 빠진 뒤에 나타난다 (2026-11-27) */
+.p05-sprite.is-gone {
+  animation: p05-sprite-out 0.12s ease-in both;
+}
+
+.p05-sprite.is-back {
+  animation: p05-sprite-in 0.32s ease-out 0.16s both;
+}
+
 @keyframes p05-sprite-in {
   from {
     opacity: 0;
@@ -804,6 +813,49 @@ img.p05-scene__art--pop {
 
 .p05-prop.is-out {
   animation: p05-sprite-out 0.32s ease-in both;
+}
+
+/* 큰 창 그림 (2026-11-27 A-10 조종석) — 인물보다 앞. 판 위 인물이 빨리 사라진 뒤 톡 튀어나오고, 나갈 때는 빨리 빠진다 */
+.p05-prop[data-fx="window"] {
+  z-index: 1;
+}
+
+.p05-prop[data-fx="window"].is-in {
+  animation: p05-window-in 0.42s cubic-bezier(0.3, 1.35, 0.5, 1) 0.16s both;
+}
+
+/* 빠질 때는 새로 나타나는 마이크 · 인물보다 앞에서 (창 너머로 비쳐 보이지 않게) */
+.p05-prop[data-fx="window"].is-out {
+  z-index: 2;
+  animation: p05-sprite-out 0.16s ease-in both;
+}
+
+/* 창 그림끼리 바뀔 때 (A-10 → A-11) — 새 그림이 앞 그림 위로 스르르 · 앞 그림은 밑에 그대로 */
+.p05-prop.is-swap {
+  animation: p05-sprite-in-fade 0.32s ease-out both;
+}
+
+@keyframes p05-window-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes p05-sprite-in-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 노란 별 — 예전 배경 그림처럼 노란 빛이 번진다 */

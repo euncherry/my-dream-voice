@@ -1230,7 +1230,8 @@ function Burst({
   )
 }
 
-type PropItem = { p: SceneProp; fade?: 'in' | 'out' }
+/** swap · stay = 창 그림끼리 바뀔 때 — 새 그림은 스르르 겹쳐 나타나고(swap), 앞 그림은 그 밑에 그대로 있다가 빠진다(stay) */
+type PropItem = { p: SceneProp; fade?: 'in' | 'out' | 'swap' | 'stay' }
 
 /**
  * 소품(로켓 · 별 · 행성) — 배경 위 · 인물 뒤 (2026-11-26).
@@ -1252,21 +1253,29 @@ function Props({
   useEffect(() => {
     setItems((prev) => {
       const now = new Set(props.map((p) => p.name))
-      const shown = new Set(prev.filter((it) => it.fade !== 'out').map((it) => it.p.name))
-      const leaving = prev
-        .filter((it) => !now.has(it.p.name))
-        .map((it): PropItem => ({ ...it, fade: 'out' }))
+      const gone = (it: PropItem) => it.fade === 'out' || it.fade === 'stay'
+      const shown = new Set(prev.filter((it) => !gone(it)).map((it) => it.p.name))
+      const leavingRaw = prev.filter((it) => !gone(it) && !now.has(it.p.name))
+      // 창 그림이 창 그림으로 바뀐다 (A-10 → A-11)
+      const windowSwap =
+        leavingRaw.some((it) => it.p.fx === 'window') &&
+        props.some((p) => p.fx === 'window' && !shown.has(p.name))
+      const leaving = leavingRaw.map(
+        (it): PropItem => ({ ...it, fade: windowSwap && it.p.fx === 'window' ? 'stay' : 'out' }),
+      )
       return [
         ...leaving,
-        ...props.map((p): PropItem => (shown.has(p.name) ? { p } : { p, fade: 'in' })),
+        ...props.map((p): PropItem =>
+          shown.has(p.name) ? { p } : { p, fade: windowSwap && p.fx === 'window' ? 'swap' : 'in' },
+        ),
       ]
     })
   }, [props])
 
   useEffect(() => {
-    if (!items.some((it) => it.fade === 'out')) return
+    if (!items.some((it) => it.fade === 'out' || it.fade === 'stay')) return
     const id = window.setTimeout(
-      () => setItems((its) => its.filter((it) => it.fade !== 'out')),
+      () => setItems((its) => its.filter((it) => it.fade !== 'out' && it.fade !== 'stay')),
       POSE_FADE_MS + 40,
     )
     return () => window.clearTimeout(id)
@@ -1383,7 +1392,19 @@ function Sprite({
             scale={pose.scale}
             panelH={panelH}
             who={who}
-            fade={poses.length > 1 ? (i === 0 ? 'out' : 'in') : undefined}
+            fade={
+              poses.length < 2
+                ? undefined
+                : i === 0
+                  ? // 다음 장면에 이 아이가 없다(창 그림 장면) — 창이 나오기 전에 빨리 사라진다
+                    poses[1]!.url
+                    ? 'out'
+                    : 'gone'
+                  : // 창 그림 장면에서 돌아온다 — 창이 빠진 뒤에 나타난다
+                    poses[0]!.url
+                    ? 'in'
+                    : 'back'
+            }
           />
         ),
       )}
@@ -1404,7 +1425,7 @@ function SpritePose({
   scale: number
   panelH: number
   who: 'girl' | 'boy'
-  fade?: 'in' | 'out'
+  fade?: 'in' | 'out' | 'gone' | 'back'
 }): ReactNode {
   const [box, setBox] = useState<SpriteBox | undefined>(() => spriteOf(url))
 
