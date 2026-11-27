@@ -313,9 +313,9 @@ img.p05-scene__art--pop {
 .p05-subtitle {
   position: absolute;
   left: 50%;
-  /* 아래 진행 바 위에 */
-  bottom: 42px;
-  z-index: 2;
+  /* 아래 진행 바와 겹치게 내려 그림을 덜 가린다 (2026-11-27 사용자 지정 — 전에는 진행 바 위 42px) · 진행 바보다 앞에 */
+  bottom: 4px;
+  z-index: 3;
   translate: -50% 0;
   width: max-content;
   max-width: 1240px;
