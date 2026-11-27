@@ -195,8 +195,8 @@ const ROCKET_FAR: SceneProp = { name: 'prop-rocket', cx: 1130, cy: 215, w: 72 }
  */
 const COCKPIT: SceneProp = { name: 'prop-cockpit', cx: 685, cy: 412, w: 1314, fx: 'window' }
 
-/** A-11 다시 말하기 — 같은 조종석 창, 남자아이가 손가락 하나 "한 번 더" (2026-11-27 그림 — 창 테두리가 A-10 그림과 같은 자리라 스르르 바뀐다) */
-const COCKPIT_RETRY: SceneProp = { name: 'prop-cockpit-retry', cx: 685, cy: 412, w: 1313, fx: 'window' }
+/** A-11 다시 말하기 — 같은 조종석 창, 남자아이가 손가락 하나 "한 번 더" (2026-11-27 그림 · 같은 날 헬멧 없는 그림으로 바꿈 — 창 테두리를 재서 A-10 창과 같은 자리 · 크기로 맞춤) */
+const COCKPIT_RETRY: SceneProp = { name: 'prop-cockpit-retry', cx: 693, cy: 415, w: 1333, fx: 'window' }
 
 /** A-10 · A-11 조종석 장면의 소품 — 로켓 · 행성 · 노란 별은 앞 장면 자리 그대로, 새 별은 창에 가려 빠지고 시안처럼 작은 노란 별 둘 */
 const COCKPIT_PROPS = (cockpit: SceneProp): SceneProp[] => [
