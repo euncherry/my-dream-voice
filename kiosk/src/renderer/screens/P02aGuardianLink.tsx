@@ -538,9 +538,8 @@ export function P02aGuardianLink(): ReactNode {
                   >
                     <span className="p02a-pill__label">고치기</span>
                   </button>
-                  <button type="button" className="p02a-pill" onClick={handleSend}>
+                  <button type="button" className="p02a-pill p02a-pill--blue" onClick={handleSend}>
                     <span className="p02a-pill__label">맞아요</span>
-                    <PillArrow />
                   </button>
                 </div>
               )}
@@ -577,9 +576,8 @@ export function P02aGuardianLink(): ReactNode {
             {!offerPhotoOnly && <PillArrow />}
           </button>
           {offerPhotoOnly && (
-            <button type="button" className="p02a-pill" onClick={handlePhotoOnly}>
+            <button type="button" className="p02a-pill p02a-pill--blue" onClick={handlePhotoOnly}>
               <span className="p02a-pill__label">사진만 찍기</span>
-              <PillArrow />
             </button>
           )}
         </div>
