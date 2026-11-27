@@ -157,8 +157,6 @@ const FRAME_W = 1526
 /** 대사 없는 첫 장면 '00'을 보여 주는 시간 (2026-11-24 지정 — "0.5초 뒤 원래 장면으로") */
 const OPENING_MS = 500
 
-/** 로켓 발사 장면(A-12)을 붙잡아 두는 최소 시간 — 덜덜 · 불꽃 · 날아가 사라질 때까지 (styles/p05.css p05-launch-lift: 0.4초 + 2.3초) */
-const LAUNCH_HOLD_MS = 2900
 
 /**
  * 레이어 장면의 인물 자리 — 판 기준 비율 (A-01 완성 그림에서 잰 값).
@@ -426,9 +424,19 @@ function SpeakFlow({
      * keepGauge: 목소리 게이지를 아이가 방금 채운 만큼 그대로 둔다 (작게 반응 A-08 — 2026-11-27). 아니면 장면에 정한 값으로
      */
     async function say(scene: string, text: string, key: string, who: Who, keepGauge = false): Promise<void> {
+      const startedAt = performance.now()
       set({ scene, subtitle: text, who, mic: 'wait', step: key, ...(keepGauge ? {} : { gauge: undefined }) })
       await playClip(voiceUrl(job, key), subtitleMs(text)).done
       check()
+      // 대사보다 긴 움직임이 있는 장면 — 그 움직임이 끝날 때까지 머문다 (LayeredScene.hold — A-12 발사 · A-07-2 새 별)
+      const hold = SCRIPTS[job].layered?.[scene]?.hold
+      if (hold) {
+        const left = hold - (performance.now() - startedAt)
+        if (left > 0) {
+          await sleep(left)
+          check()
+        }
+      }
       // 개발용 [일시정지] — 이 대사 장면 그대로 멈춰 선다
       while (pausedRef.current) {
         await new Promise<void>((resolve) => {
@@ -437,6 +445,14 @@ function SpeakFlow({
         check()
       }
       await sleep(BEAT_GAP_MS)
+    }
+
+    /**
+     * 문장 ②에서만 다른 그림을 쓰는 장면 — `<장면>-2`가 있으면 그것 (2026-11-27 우주비행사: 발사한 뒤라 달이 아니라 우주에서).
+     * 06-2 아이 차례 · 11-2 다시 말하기 · 07-2 통과 반응
+     */
+    function turnScene(scene: string, turn: number): string {
+      return turn === 1 && SCRIPTS[job].layered?.[`${scene}-2`] ? `${scene}-2` : scene
     }
 
     /** 마이크를 연다 — 못 열면 M-02 + [다시 시도]. 개발용 [녹음 없이 넘기기]면 false */
@@ -462,11 +478,11 @@ function SpeakFlow({
     }
 
     /** 아이 차례 — 반짝 + 띵 → 녹음 (조용해지면 저절로 끝). 마이크 없이 넘겼으면 null */
-    async function childTurn(maxMs: number, step: string): Promise<RecordResult | null> {
+    async function childTurn(maxMs: number, step: string, scene = '06'): Promise<RecordResult | null> {
       if (!(await ensureMic())) return null
       // 게이지는 비운 채로 — 녹음이 새로 시작될 때마다 비운다
       resetGauge()
-      set({ scene: '06', subtitle: null, mic: 'live', step: `${step}:ding`, gauge: 0 })
+      set({ scene, subtitle: null, mic: 'live', step: `${step}:ding`, gauge: 0 })
       await playClip(DING_URL, 600).done
       check()
       await sleep(DING_TO_RECORD_MS)
@@ -583,7 +599,7 @@ function SpeakFlow({
 
     /** 문장(또는 어절) 녹음 한 번 — 띵 → 녹음 → "잘 듣고 있어요". 마이크 없이 넘겼으면 null */
     async function attempt(at: At, maxMs: number): Promise<Attempt | null> {
-      const r = await childTurn(maxMs, `line${at.turn + 1}-${at.part + 1}`)
+      const r = await childTurn(maxMs, `line${at.turn + 1}-${at.part + 1}`, turnScene('06', at.turn))
       if (!r) {
         busyRef.current = false
         return null
@@ -699,14 +715,8 @@ function SpeakFlow({
     for (const turn of [0, 1] as const) {
       if (turn === 1) {
         set({ bar: { part: 'story', done: 3 } })
-        const bridgeAt = performance.now()
+        // 로켓 발사 장면이면 로켓이 다 날아갈 때까지 머문다 (LayeredScene.hold)
         await say('12', L.bridge, 'bridge', PARTNER)
-        // 로켓 발사 장면이면 로켓이 다 날아갈 때까지 기다린다 (2026-11-27 A-12 — 대사가 짧아 날아가는 중에 넘어갔다)
-        if (SCRIPTS[job].layered?.['12']?.launch) {
-          const left = LAUNCH_HOLD_MS - (performance.now() - bridgeAt)
-          if (left > 0) await sleep(left)
-          check()
-        }
       }
 
       const line = scenario.turns[turn].line
@@ -729,8 +739,8 @@ function SpeakFlow({
 
         // 첫 녹음이 통과하지 못했으면 다시 말하기 — 구간마다 1번만. 무음도 통과 못 함이다
         if (first && !passes(first)) {
-          await say('11', L.retry, 'retry', PARTNER)
-          await say('11', COMMON.retryLead, 'retry-lead', LEAD)
+          await say(turnScene('11', turn), L.retry, 'retry', PARTNER)
+          await say(turnScene('11', turn), COMMON.retryLead, 'retry-lead', LEAD)
           await say(demoScene, text, key, LEAD)
           const second = await attempt(at, RECORD_MAX_LINE_MS)
           if (second) attemptsRef.current.push(second)
@@ -740,7 +750,7 @@ function SpeakFlow({
 
       const n = cheer++ % COMMON.cheers.length
       set({ bar: { part: 'story', done: turn === 0 ? 2 : 5 } })
-      await say('07', COMMON.cheers[n]!, `cheer${n + 1}`, PARTNER)
+      await say(turnScene('07', turn), COMMON.cheers[n]!, `cheer${n + 1}`, PARTNER)
       set({ big: null })
     }
 
@@ -1131,6 +1141,7 @@ function LayeredArt({
         draggable={false}
         style={{ left: -panel.left * k, top: -panel.top * k, width: panel.width * k }}
       />
+      {def.flight && <Flight job={job} flight={def.flight} bgUrl={bgUrl} panel={panel} k={k} />}
       <Props job={job} props={def.props ?? NO_PROPS} panel={panel} k={k} />
       <Sprite
         url={def.girl && layerUrl(job, def.girl)}
@@ -1251,6 +1262,93 @@ function Launch({
           ))}
       </span>
     </span>
+  )
+}
+
+/** 새 별이 다가와 멈추는 자리 · 크기 (배경 그림 픽셀 — 오른쪽 끝 하늘) */
+const FLIGHT_STAR = { cx: 1740, cy: 255, w: 190 } as const
+
+/**
+ * 우주 비행 (2026-11-27 A-13) — 별 배경(prop-space-tile)을 세 장 이어 붙여 왼쪽으로 끝없이 흘려보내고, 그 앞에 눕힌 로켓을 띄운다.
+ *   · 별 배경은 배경 판 모양대로 자른다 (배경 그림을 마스크로 — 둥근 모서리가 딱 맞는다)
+ *   · 로켓은 발사 장면의 그림을 90° 눕힌 것 — 창 안의 두 아이만 다시 똑바로 세운다 · 불꽃은 뒤(왼쪽)로
+ *   · star면 오른쪽 끝에서 무지갯빛 새 별이 다가와 멈춘다
+ * 같은 배경(bg-space)의 장면끼리는 이 컴포넌트가 그대로 남아 별이 끊기지 않고 흐른다
+ */
+function Flight({
+  job,
+  flight,
+  bgUrl,
+  panel,
+  k,
+}: {
+  job: JobId
+  flight: NonNullable<LayeredScene['flight']>
+  bgUrl: string
+  panel: ScenePanel
+  k: number
+}): ReactNode {
+  const tile = layerUrl(job, 'prop-space-tile')
+  const rocket = layerUrl(job, 'prop-launch-rocket')
+  const kids = layerUrl(job, 'prop-launch-kids')
+  const flame1 = layerUrl(job, 'prop-launch-flame-1')
+  const flame2 = layerUrl(job, 'prop-launch-flame-2')
+  const star = layerUrl(job, 'prop-star-rainbow')
+  const mask = `url("${bgUrl}")`
+  const { ship } = flight
+  return (
+    <>
+      {tile && (
+        <span
+          className="p05-flight__sky"
+          aria-hidden="true"
+          style={{
+            left: -panel.left * k,
+            top: -panel.top * k,
+            width: panel.width * k,
+            height: panel.height * k,
+            maskImage: mask,
+            WebkitMaskImage: mask,
+          }}
+        >
+          <span className="p05-flight__stars" style={{ top: panel.top * k, height: (panel.bottom - panel.top) * k }}>
+            <img src={tile} alt="" draggable={false} />
+            <img src={tile} alt="" draggable={false} />
+            <img src={tile} alt="" draggable={false} />
+          </span>
+        </span>
+      )}
+      {flight.star && star && (
+        <span
+          className="p05-flight__star"
+          aria-hidden="true"
+          style={{
+            left: (FLIGHT_STAR.cx - panel.left) * k,
+            top: (FLIGHT_STAR.cy - panel.top) * k,
+            width: FLIGHT_STAR.w * k,
+          }}
+        >
+          <img src={star} alt="" draggable={false} />
+        </span>
+      )}
+      {ship && rocket && (
+        <span
+          className="p05-flight__ship"
+          style={{ left: (ship.cx - panel.left) * k, top: (ship.cy - panel.top) * k, width: ship.w * k }}
+        >
+          <span className="p05-flight__bob">
+            {/* 세로로 선 로켓을 통째로 90° 눕힌다 — 안의 자리는 발사 장면과 같은 % */}
+            <span className="p05-flight__turn">
+              {flame1 && <img className="p05-flight__flame" src={flame1} alt="" draggable={false} />}
+              {flame2 && <img className="p05-flight__flame p05-flight__flame--b" src={flame2} alt="" draggable={false} />}
+              <span className="p05-launch__inside" aria-hidden="true" />
+              {kids && <img className="p05-flight__kids" src={kids} alt="" draggable={false} />}
+              <img className="p05-flight__rocket" src={rocket} alt="" draggable={false} />
+            </span>
+          </span>
+        </span>
+      )}
+    </>
   )
 }
 

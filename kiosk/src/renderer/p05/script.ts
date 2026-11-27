@@ -62,6 +62,15 @@ export interface LayeredScene {
    * 로켓 자리(가운데 cx · cy)와 폭(w)은 배경 그림 픽셀. 그림: prop-launch-rocket(창이 투명한 로켓) · -kids · -flame-1 · -flame-2 · -smoke · -puff
    */
   launch?: { cx: number; cy: number; w: number }
+  /**
+   * 우주 비행 (2026-11-27 A-13) — 별 배경이 왼쪽으로 끝없이 흘러가고(그림 prop-space-tile을 이어 붙여 되풀이), 그 앞을 눕힌 로켓이 날아간다.
+   *   ship: 눕힌 로켓의 자리(가운데 cx · cy)와 길이(w) — 배경 그림 픽셀 · 없으면 별 배경만 흐른다
+   *   star: 오른쪽 끝에서 무지갯빛 새 별이 다가온다 (도착 직전)
+   * 로켓 그림은 발사 장면과 같은 것(prop-launch-rocket · -kids · -flame-1 · -2)을 눕혀 쓴다 — 창 안의 두 아이는 똑바로
+   */
+  flight?: { ship?: { cx: number; cy: number; w: number }; star?: boolean }
+  /** 이 장면의 대사는 적어도 이만큼(밀리초) 머문다 — 대사보다 긴 움직임이 끝날 때까지 (A-12 발사 · A-07-2 새 별) */
+  hold?: number
 }
 
 /**
@@ -204,6 +213,12 @@ const COCKPIT: SceneProp = { name: 'prop-cockpit', cx: 685, cy: 412, w: 1314, fx
 const COCKPIT_RETRY: SceneProp = { name: 'prop-cockpit-retry', cx: 693, cy: 415, w: 1333, fx: 'window' }
 
 /** A-10 · A-11 조종석 장면의 소품 — 로켓 · 행성 · 노란 별은 앞 장면 자리 그대로, 새 별은 창에 가려 빠지고 시안처럼 작은 노란 별 둘 */
+/** A-13부터 — 우주를 나는 눕힌 로켓의 자리 · 길이 (배경 그림 픽셀 · 큰 글씨가 나와 그림 칸이 줄어도 다 보이고 말풍선에 덜 가리는 높이) */
+const FLIGHT_SHIP = { cx: 900, cy: 330, w: 520 } as const
+
+/** 우주 비행 장면에서 말풍선 꼬리가 가리킬 자리 — 로켓 창 안의 두 아이 (남자아이 왼쪽 · 여자아이 오른쪽) */
+const FLIGHT_CAST = { girl: 0.5, boy: 0.445 } as const
+
 const COCKPIT_PROPS = (cockpit: SceneProp): SceneProp[] => [
   ...still(ROCKET_PROPS).filter((p) => p.name !== 'prop-star-rainbow'),
   { name: 'prop-star-yellow-4', img: 'prop-star-yellow', cx: 70, cy: 282, w: 48, fx: 'glow' },
@@ -294,7 +309,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '10': '달 위 판 왼쪽에 크게 뜬 둥근 창 — 로켓 조종석에 앉은 두 아이. 남자아이는 엄지 척, 여자아이는 발사 레버를 잡고 둥근 창밖을 가리키며 외친다. 오른쪽에 로켓과 빈 목소리 게이지',
       '11': 'A-10과 같은 조종석 창 — 남자아이가 손가락 하나를 세우고 "한 번 더", 여자아이는 발사 레버를 잡은 채 남자아이를 보며 웃는다. 목소리 게이지는 그리지 않는다',
       '12': '판 가운데 큰 로켓 — 둥근 창 안에 웃는 두 아이. 로켓이 덜덜 떨다가 불꽃을 뿜고 발밑에 연기가 뭉게뭉게 퍼지며 위로 날아간다',
-      '13': '우주선 창밖으로 반짝이는 별들과 저 앞의 무지갯빛 새 별. 여자아이가 가리키며 외치고, 남자아이는 창에 붙어 신기해한다',
+      '13': '별이 가득한 우주 — 별들이 뒤로 끝없이 흘러가고, 눕힌 로켓이 불꽃을 뿜으며 날아간다. 둥근 창 안에 웃는 두 아이. 문장을 따라 말하고 나면 오른쪽 끝에서 무지갯빛 새 별이 다가온다',
       '14': '알록달록한 새 별 위에 깃발을 꽂고 두 아이가 만세. 뒤로 착륙한 로켓',
     },
     // 소품 자리 — 처음엔 2026-11-24 배경(로켓 · 별 · 행성이 그려져 있던 판)의 자리 그대로
@@ -434,7 +449,19 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         cast: { girl: 0.53, boy: 0.47 },
         props: still(ROCKET_PROPS).filter((p) => p.name !== 'prop-rocket' && p.name !== 'prop-star-rainbow'),
         launch: { cx: 956, cy: 322, w: 500 },
+        // 대사가 짧아도 로켓이 다 날아갈 때까지 (styles/p05.css p05-launch-lift: 0.4초 + 2.3초)
+        hold: 2900,
       },
+      // "두 번째 신호! 잘 듣고 똑같이 말해 줘." → 문장 ② — 우주를 나는 로켓 (2026-11-27 사용자 지정).
+      // 별 배경이 왼쪽으로 끝없이 흘러가고, 눕힌 로켓이 불꽃을 뿜으며 날아간다 (창 안의 두 아이는 똑바로 · 들썩)
+      '13': { bg: 'bg-space', cast: FLIGHT_CAST, flight: { ship: FLIGHT_SHIP } },
+      // 문장 ②의 아이 차례 (녹음) — 달로 돌아가지 않고 그대로 우주를 난다 (가운데 마이크 · 게이지는 달에 두고 왔다)
+      '06-2': { bg: 'bg-space', cast: FLIGHT_CAST, flight: { ship: FLIGHT_SHIP } },
+      // 문장 ②의 다시 말하기 — 별이 흘러가는 우주 위에 조종석 창 (A-11 그림).
+      // 로켓은 그대로 날고 있고 창이 그 위를 덮는다 (로켓을 빼면 창이 사라질 때 로켓이 왼쪽에서 또 날아 들어온다)
+      '11-2': { bg: 'bg-space', cast: { girl: 0.45, boy: 0.24 }, flight: { ship: FLIGHT_SHIP }, props: [COCKPIT_RETRY] },
+      // 문장 ②의 통과 반응("멋져!" 등) — 오른쪽 끝에서 무지갯빛 새 별이 다가온다 → 다음이 A-14 도착
+      '07-2': { bg: 'bg-space', cast: FLIGHT_CAST, flight: { ship: FLIGHT_SHIP, star: true }, hold: 2400 },
       // 아이 차례 (녹음 · "잘 듣고 있어요") — 두 아이가 가운데 마이크 쪽으로 몸을 기울이고 바깥쪽 손을 헬멧 옆에 대고 귀 기울인다 (2026-11-27 그림).
       // 목소리 게이지가 마이크 소리를 따라 차오른다 (2026-11-26)
       '06': {

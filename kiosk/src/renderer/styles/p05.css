@@ -1017,6 +1017,156 @@ img.p05-scene__art--pop {
   }
 }
 
+/* ── 우주 비행 (2026-11-27 A-13) — 별 배경이 왼쪽으로 끝없이 흐르고, 눕힌 로켓이 날아간다 ── */
+
+/* 별 배경 — 배경 그림 상자에 맞추고 그 그림을 마스크로 써서 판 모양(둥근 모서리)대로 자른다 */
+.p05-flight__sky {
+  position: absolute;
+  overflow: hidden;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* 같은 그림 세 장을 이어 붙인 띠 — 한 장 폭만큼 흐르고 처음으로 (이음매가 없어 끊기지 않는다) */
+.p05-flight__stars {
+  position: absolute;
+  left: 0;
+  display: flex;
+  width: max-content;
+  animation: p05-flight-scroll 4.6s linear infinite;
+  will-change: transform;
+}
+
+.p05-flight__stars img {
+  flex: none;
+  width: auto;
+  height: 100%;
+  max-width: none;
+  /* 그림 사이에 실금이 비치지 않게 1px 겹친다 */
+  margin-right: -1px;
+}
+
+@keyframes p05-flight-scroll {
+  to {
+    transform: translateX(calc(-100% / 3));
+  }
+}
+
+/* 눕힌 로켓 — 상자 = 눕힌 로켓 크기(길이 1249 : 높이 1100) · 가운데 맞춤. 왼쪽에서 슝 날아 들어와 둥실둥실 */
+.p05-flight__ship {
+  position: absolute;
+  z-index: 1;
+  aspect-ratio: 1249 / 1100;
+  translate: -50% -50%;
+  animation: p05-flight-in 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) 0.25s both;
+}
+
+@keyframes p05-flight-in {
+  from {
+    transform: translateX(-260%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.p05-flight__bob {
+  position: absolute;
+  inset: 0;
+  animation: p05-flight-bob 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes p05-flight-bob {
+  from {
+    transform: translate(-1.5%, 2.5%) rotate(1.5deg);
+  }
+  to {
+    transform: translate(1.5%, -2.5%) rotate(-1.5deg);
+  }
+}
+
+/* 세로로 선 로켓(1100 × 1249)을 상자 가운데에서 90° 눕힌다 — 코끝이 오른쪽 · 분사구가 왼쪽 */
+.p05-flight__turn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% * 1100 / 1249);
+  aspect-ratio: 1100 / 1249;
+  translate: -50% -50%;
+  rotate: 90deg;
+}
+
+.p05-flight__turn img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.p05-flight__rocket {
+  inset: 0;
+  width: 100%;
+}
+
+/* 두 아이 — 창 가운데에 놓고 다시 똑바로 세운다(−90°) · 신나서 들썩 (창 밖으로 나간 어깨는 로켓 몸통이 가린다).
+   눕힌 상자에서는 left가 화면의 세로 — 그림 아래 끝(잘린 가슴께)이 창 아래 테두리 뒤로 숨게 내려 둔다 (59.5%) */
+.p05-flight__kids {
+  left: 59.5%;
+  top: 51.2%;
+  width: 56%;
+  translate: -50% -50%;
+  rotate: -90deg;
+  animation: p05-launch-kids 0.32s ease-in-out infinite alternate;
+}
+
+/* 불꽃 — 분사구에서 뒤(왼쪽)로 길게 · 두 장을 번갈아 일렁 */
+.p05-flight__flame {
+  left: 50.3%;
+  top: 93%;
+  width: 34%;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  filter: drop-shadow(0 0 16px rgb(255 170 60 / 0.85));
+  animation: p05-launch-flame-a 0.16s steps(1) infinite;
+}
+
+.p05-flight__flame--b {
+  animation-name: p05-launch-flame-b;
+}
+
+/* 무지갯빛 새 별 — 오른쪽 끝 밖에서 커지며 다가와 멈추고 반짝인다 */
+.p05-flight__star {
+  position: absolute;
+  z-index: 1;
+  translate: -50% -50%;
+  animation: p05-flight-star 1.5s cubic-bezier(0.2, 0.8, 0.3, 1) 0.3s both;
+}
+
+.p05-flight__star img {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation:
+    p05-twinkle 1.6s ease-in-out infinite,
+    p05-spin 40s linear infinite;
+}
+
+@keyframes p05-flight-star {
+  from {
+    opacity: 0;
+    transform: translateX(260%) scale(0.35);
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* 창 그림끼리 바뀔 때 (A-10 → A-11) — 새 그림이 앞 그림 위로 스르르 · 앞 그림은 밑에 그대로 */
 .p05-prop.is-swap {
   animation: p05-sprite-in-fade 0.32s ease-out both;
@@ -1500,7 +1650,13 @@ img.p05-scene__art--pop {
   .p05-launch__kids,
   .p05-launch__flame,
   .p05-launch__smoke,
-  .p05-launch__puff {
+  .p05-launch__puff,
+  .p05-flight__stars,
+  .p05-flight__ship,
+  .p05-flight__bob,
+  .p05-flight__kids,
+  .p05-flight__flame,
+  .p05-flight__star {
     animation-duration: 0.01s !important;
     animation-iteration-count: 1 !important;
   }
