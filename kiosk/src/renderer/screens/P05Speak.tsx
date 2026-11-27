@@ -1433,7 +1433,8 @@ function Props({
 }): ReactNode {
   const [items, setItems] = useState<PropItem[]>(() => props.map((p) => ({ p })))
 
-  useEffect(() => {
+  // 그리기 전에 바꾼다 — 한 프레임이라도 앞 장면의 인물 · 소품이 새 자막과 같이 보이지 않게 (2026-11-27)
+  useLayoutEffect(() => {
     setItems((prev) => {
       const now = new Set(props.map((p) => p.name))
       const gone = (it: PropItem) => it.fade === 'out' || it.fade === 'stay'
@@ -1542,7 +1543,8 @@ function Sprite({
 }): ReactNode {
   const [poses, setPoses] = useState(() => (url ? [{ url, scale, n: 0 }] : []))
 
-  useEffect(() => {
+  // 그리기 전에 바꾼다 — 한 프레임이라도 앞 장면의 인물 · 소품이 새 자막과 같이 보이지 않게 (2026-11-27)
+  useLayoutEffect(() => {
     if (!url) {
       // 이 장면에는 이 아이가 없다 — 보이던 포즈가 스르르 사라진다 (빈 포즈로 바꾼다 · 2026-11-27 A-10)
       setPoses((ps) => {
