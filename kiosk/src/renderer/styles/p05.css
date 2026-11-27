@@ -79,17 +79,18 @@
   fill: var(--d-blob-pink);
 }
 
+/* 2026-11-27 줄이고(45 → 36px) 위아래로 띄움 — 제목 · 카드 사이에서 숨 쉴 자리 */
 .p05-sub {
   position: absolute;
   left: 0;
-  top: 147px;
+  top: 150px;
   width: 1920px;
   margin: 0;
   text-align: center;
   font-family: var(--d-font-display);
-  font-size: 45px;
+  font-size: 36px;
   font-weight: 800;
-  line-height: 58px;
+  line-height: 44px;
   color: var(--d-navy);
 }
 
@@ -101,7 +102,7 @@
 .p05-card {
   position: absolute;
   left: 155px;
-  top: 206px;
+  top: 214px;
   width: 1610px;
   height: 706px;
   border-radius: 46px;
@@ -448,7 +449,7 @@ img.p05-scene__art--pop {
 .p05-mic {
   position: absolute;
   left: 634px;
-  top: 928px;
+  top: 935px;
   width: 652px;
   height: 122px;
   padding: 0 24px 0 70px;
