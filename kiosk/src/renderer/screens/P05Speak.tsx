@@ -282,6 +282,13 @@ function SpeakFlow({
   if (!recorderRef.current) recorderRef.current = new VoiceRecorder()
   /** 지금 돌고 있는 흐름 — 화면을 떠나면 alive = false */
   const runRef = useRef<{ alive: boolean } | null>(null)
+  /**
+   * 개발용 [일시정지] — 디자인 확인용 (2026-11-27). 지금 대사가 끝나면 그 장면 · 자막 그대로 멈춰 서고, [계속]을 누르면 다음으로 간다.
+   * 녹음 · 받아쓰기 중에 누르면 그것이 끝난 뒤 다음 대사에서 멈춘다
+   */
+  const pausedRef = useRef(false)
+  const resumeRef = useRef<(() => void) | null>(null)
+  const [paused, setPaused] = useState(false)
   const timersRef = useRef(new Set<number>())
   /** 녹음 중 · 받아쓰기 중 — [뒤로]를 받지 않는다 */
   const busyRef = useRef(false)
@@ -419,6 +426,13 @@ function SpeakFlow({
       set({ scene, subtitle: text, who, mic: 'wait', step: key, ...(keepGauge ? {} : { gauge: undefined }) })
       await playClip(voiceUrl(job, key), subtitleMs(text)).done
       check()
+      // 개발용 [일시정지] — 이 대사 장면 그대로 멈춰 선다
+      while (pausedRef.current) {
+        await new Promise<void>((resolve) => {
+          resumeRef.current = resolve
+        })
+        check()
+      }
       await sleep(BEAT_GAP_MS)
     }
 
@@ -835,6 +849,19 @@ function SpeakFlow({
         {/* 개발용 — 손님 화면에는 없다. ⚠️ 인식률 · 받아쓴 글자 · 목소리 크기 숫자는 여기에도 띄우지 않는다 */}
         <div className="p05-dev">
           <DevStrip label={`P-05 · ${view.step}`}>
+            <button
+              className={`btn btn--sm${paused ? ' btn--primary' : ''}`}
+              onClick={() => {
+                pausedRef.current = !pausedRef.current
+                setPaused(pausedRef.current)
+                if (!pausedRef.current) {
+                  resumeRef.current?.()
+                  resumeRef.current = null
+                }
+              }}
+            >
+              {paused ? '▶ 계속' : '⏸ 일시정지'}
+            </button>
             <span>목소리:</span>
             {(['auto', 'loud', 'quiet', 'silent'] as const).map((v) => (
               <button
