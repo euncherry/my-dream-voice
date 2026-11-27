@@ -193,6 +193,17 @@ const ROCKET_FAR: SceneProp = { name: 'prop-rocket', cx: 1130, cy: 215, w: 72 }
  */
 const COCKPIT: SceneProp = { name: 'prop-cockpit', cx: 685, cy: 412, w: 1314 }
 
+/** A-11 다시 말하기 — 같은 조종석 창, 남자아이가 손가락 하나 "한 번 더" (2026-11-27 그림 — 창 테두리가 A-10 그림과 같은 자리라 스르르 바뀐다) */
+const COCKPIT_RETRY: SceneProp = { name: 'prop-cockpit-retry', cx: 685, cy: 412, w: 1313 }
+
+/** A-10 · A-11 조종석 장면의 소품 — 로켓 · 행성 · 노란 별은 앞 장면 자리 그대로, 새 별은 창에 가려 빠지고 시안처럼 작은 노란 별 둘 */
+const COCKPIT_PROPS = (cockpit: SceneProp): SceneProp[] => [
+  ...still(ROCKET_PROPS).filter((p) => p.name !== 'prop-star-rainbow'),
+  { name: 'prop-star-yellow-4', img: 'prop-star-yellow', cx: 70, cy: 282, w: 48, fx: 'glow' },
+  { name: 'prop-star-yellow-5', img: 'prop-star-yellow', cx: 1866, cy: 296, w: 50, fx: 'glow' },
+  cockpit,
+]
+
 const ROCKET_PROPS: readonly SceneProp[] = [
   // 2026-11-26 나타나는 애니메이션이 가운데 맞춤을 덮어쓰던 것을 고치면서, 보이던 자리 그대로 좌표만 고침 (278, 175 → 353, 247)
   { name: 'prop-star-rainbow', cx: 353, cy: 247, w: 150, fx: 'twinkle' },
@@ -274,7 +285,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '08': '로켓이 저 멀리 하늘로 날아가 아주 작게 보인다. 여자아이가 윙크하며 망원경으로 로켓을 보고, 남자아이는 한쪽 무릎을 꿇고 주먹을 쥔 채 덜 찬 목소리 게이지를 올려다본다',
       '09': '로켓의 "목소리 게이지"가 빈 채. 두 아이가 가운데 마이크 쪽으로 몸을 기울여 두 손을 입가에 모으고 웃으며 크게 외칠 준비',
       '10': '달 위 판 왼쪽에 크게 뜬 둥근 창 — 로켓 조종석에 앉은 두 아이. 남자아이는 엄지 척, 여자아이는 발사 레버를 잡고 둥근 창밖을 가리키며 외친다. 오른쪽에 로켓과 빈 목소리 게이지',
-      '11': '조종석 계기판 앞에서 남자아이가 손가락 하나 "한 번 더"',
+      '11': 'A-10과 같은 조종석 창 — 남자아이가 손가락 하나를 세우고 "한 번 더", 여자아이는 발사 레버를 잡은 채 남자아이를 보며 웃는다. 목소리 게이지는 그리지 않는다',
       '12': '로켓이 불꽃을 뿜으며 보랏빛 달을 떠나 날아오른다. 둥근 창문 안에 웃는 두 아이',
       '13': '우주선 창밖으로 반짝이는 별들과 저 앞의 무지갯빛 새 별. 여자아이가 가리키며 외치고, 남자아이는 창에 붙어 신기해한다',
       '14': '알록달록한 새 별 위에 깃발을 꽂고 두 아이가 만세. 뒤로 착륙한 로켓',
@@ -396,14 +407,17 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         bg: 'bg-moon',
         // 말풍선 꼬리가 창 안의 아이를 가리키게 (판 폭 대비 · 헬멧 가운데)
         cast: { girl: 0.45, boy: 0.24 },
-        props: [
-          ...still(ROCKET_PROPS).filter((p) => p.name !== 'prop-star-rainbow'),
-          { name: 'prop-star-yellow-4', img: 'prop-star-yellow', cx: 70, cy: 282, w: 48, fx: 'glow' },
-          { name: 'prop-star-yellow-5', img: 'prop-star-yellow', cx: 1866, cy: 296, w: 50, fx: 'glow' },
-          COCKPIT,
-        ],
+        props: COCKPIT_PROPS(COCKPIT),
         gauge: 0,
         gaugeBox: ROCKET_GAUGE,
+      },
+      // "멋진 목소리! 우주선이 한 번 더 듣고 싶대." → "다시 한 번, 잘 듣고 똑같이!" (다시 말하기) —
+      // 같은 조종석 창에서 남자아이가 손가락 하나 "한 번 더" (2026-11-27 그림).
+      // 목소리 게이지는 그리지 않는다 — 다시 말하기는 크기가 아니라 받아쓰기로 정하므로 게이지로 보여 주면 "작았다"로 읽힌다
+      '11': {
+        bg: 'bg-moon',
+        cast: { girl: 0.45, boy: 0.24 },
+        props: COCKPIT_PROPS(COCKPIT_RETRY),
       },
       // 아이 차례 (녹음 · "잘 듣고 있어요") — 두 아이가 가운데 마이크 쪽으로 몸을 기울이고 바깥쪽 손을 헬멧 옆에 대고 귀 기울인다 (2026-11-27 그림).
       // 목소리 게이지가 마이크 소리를 따라 차오른다 (2026-11-26)
