@@ -1230,6 +1230,21 @@ function Burst({
   )
 }
 
+/**
+ * 로켓 발사 연기 (2026-11-27 A-12) — 분사구 아래에서 양옆 · 위로 뭉게뭉게 퍼진다.
+ *   s: 크기(로켓 폭 대비) · tx · ty: 퍼져 나가는 거리(제 크기 대비 %) · d: 나오는 순서(초)
+ */
+const LAUNCH_SMOKE = [
+  { s: 0.68, tx: -50, ty: -35, d: 0.22 },
+  { s: 0.62, tx: 55, ty: -40, d: 0.28 },
+  { s: 0.56, tx: -140, ty: -12, d: 0.12 },
+  { s: 0.6, tx: 135, ty: -18, d: 0.16 },
+  { s: 0.48, tx: -230, ty: 0, d: 0.32 },
+  { s: 0.5, tx: 225, ty: -4, d: 0.36 },
+  { s: 0.4, tx: -310, ty: 8, d: 0.44 },
+  { s: 0.42, tx: 300, ty: 4, d: 0.48 },
+] as const
+
 /** swap · stay = 창 그림끼리 바뀔 때 — 새 그림은 스르르 겹쳐 나타나고(swap), 앞 그림은 그 밑에 그대로 있다가 빠진다(stay) */
 type PropItem = { p: SceneProp; fade?: 'in' | 'out' | 'swap' | 'stay' }
 
@@ -1294,9 +1309,35 @@ function Props({
             data-fx={p.fx}
             data-still={p.still ? 'true' : undefined}
             data-shine={p.shine ? 'true' : undefined}
+            data-launch={p.launch ? 'true' : undefined}
             style={{ left: (p.cx - panel.left) * k, top: (p.cy - panel.top) * k, width: p.w * k }}
           >
-            <img src={url} alt="" draggable={false} />
+            {p.launch ? (
+              <>
+                {/* 연기는 땅에 남고, 로켓 · 불꽃만 날아오른다 */}
+                <span className="p05-launch__smoke" aria-hidden="true">
+                  {LAUNCH_SMOKE.map((s, i) => (
+                    <i
+                      key={i}
+                      style={
+                        {
+                          width: `${s.s * 100}%`,
+                          '--tx': `${s.tx}%`,
+                          '--ty': `${s.ty}%`,
+                          animationDelay: `${s.d}s`,
+                        } as CSSProperties
+                      }
+                    />
+                  ))}
+                </span>
+                <span className="p05-launch__lift">
+                  <span className="p05-launch__flame" aria-hidden="true" />
+                  <img src={url} alt="" draggable={false} />
+                </span>
+              </>
+            ) : (
+              <img src={url} alt="" draggable={false} />
+            )}
             {p.fx === 'mic' && <MicGlow job={job} name={p.img ?? p.name} />}
           </span>
         )

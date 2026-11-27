@@ -830,6 +830,132 @@ img.p05-scene__art--pop {
   animation: p05-sprite-out 0.16s ease-in both;
 }
 
+/* ── 로켓 발사 (2026-11-27 A-12) — 덜덜 떨다가 불꽃을 뿜으며 위로 날아올라 작아지며 사라진다. 연기는 땅에 남아 퍼진다 ──
+   분사구 = 로켓 그림 기준 가로 40% · 세로 86% */
+.p05-launch__lift {
+  position: relative;
+  display: block;
+  animation: p05-launch 1.8s linear 0.2s both;
+}
+
+@keyframes p05-launch {
+  0% {
+    transform: none;
+  }
+  4% {
+    transform: translate(-3px, 1px);
+  }
+  8% {
+    transform: translate(3px, -1px);
+  }
+  12% {
+    transform: translate(-3px, 0);
+  }
+  16% {
+    transform: translate(2px, 1px);
+  }
+  20% {
+    transform: translate(-1px, 0);
+  }
+  /* 여기서부터 점점 빨라지며 날아오른다 */
+  24% {
+    transform: none;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.75, 0.45);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(14%, -95%) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* 불꽃 — 로켓 뒤(분사구 아래)에서 길쭉하게 일렁인다 */
+.p05-launch__flame {
+  position: absolute;
+  z-index: -1;
+  left: 40%;
+  top: 82%;
+  width: 30%;
+  aspect-ratio: 1 / 2.6;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  border-radius: 50% 50% 50% 50% / 28% 28% 72% 72%;
+  background: radial-gradient(
+    ellipse 60% 75% at 50% 22%,
+    #fff 0 14%,
+    #ffe45c 32%,
+    #ff9a3c 58%,
+    rgb(255 80 60 / 0) 78%
+  );
+  filter: drop-shadow(0 0 14px rgb(255 170 60 / 0.9));
+  animation:
+    p05-flame-on 0.25s ease-out 0.1s both,
+    p05-flame-flicker 0.09s ease-in-out 0.35s infinite alternate;
+}
+
+@keyframes p05-flame-on {
+  from {
+    opacity: 0;
+    transform: scale(0.3, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes p05-flame-flicker {
+  from {
+    transform: scale(1, 1);
+  }
+  to {
+    transform: scale(0.9, 1.2);
+  }
+}
+
+/* 연기 — 분사구 아래에서 뭉게뭉게 퍼지다 옅어진다 (땅에 남는다) */
+.p05-launch__smoke {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 90%;
+  height: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.p05-launch__smoke i {
+  position: absolute;
+  left: 40%;
+  top: 0;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 38%, #fff 0, #f4effd 42%, rgb(228 218 248 / 0.85) 60%, rgb(228 218 248 / 0) 72%);
+  opacity: 0;
+  animation: p05-smoke 2.2s ease-out both;
+}
+
+@keyframes p05-smoke {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  14% {
+    opacity: 0.95;
+  }
+  65% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(1.5);
+  }
+}
+
 /* 창 그림끼리 바뀔 때 (A-10 → A-11) — 새 그림이 앞 그림 위로 스르르 · 앞 그림은 밑에 그대로 */
 .p05-prop.is-swap {
   animation: p05-sprite-in-fade 0.32s ease-out both;
@@ -1303,5 +1429,15 @@ img.p05-scene__art--pop {
   .p05-prop[data-fx="mic"] img,
   .p05[data-mic] .p05-prop[data-fx="mic"] {
     animation: none;
+  }
+}
+
+/* 움직임 줄이기 — 로켓은 제자리, 불꽃 · 연기만 잠깐 (2026-11-27 A-12) */
+@media (prefers-reduced-motion: reduce) {
+  .p05-launch__lift,
+  .p05-launch__flame,
+  .p05-launch__smoke i {
+    animation-duration: 0.01s !important;
+    animation-iteration-count: 1 !important;
   }
 }
