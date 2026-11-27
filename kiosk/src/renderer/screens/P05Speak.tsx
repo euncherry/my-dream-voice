@@ -756,7 +756,11 @@ function SpeakFlow({
 
     // ── I — 마무리 → P-06 ──
     set({ bar: { part: 'story', done: 6 } })
-    await say('14', L.outro, 'outro', 'both')
+    // 문장마다 자막을 나눌 수 있다 — 목소리 파일 outro-1 · outro-2 … (2026-11-27 우주비행사)
+    const outro = typeof L.outro === 'string' ? [L.outro] : L.outro
+    for (const [i, text] of outro.entries()) {
+      await say('14', text, outro.length > 1 ? `outro-${i + 1}` : 'outro', 'both')
+    }
     set({ step: 'leaving' })
     next()
   }

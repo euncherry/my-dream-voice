@@ -213,6 +213,11 @@ img.p05-scene__art {
   object-position: center 42%;
 }
 
+/* A-14 (2026-11-27 받은 그림 16 : 9) — 칸(2.6 : 1)보다 훨씬 높아 위아래 32%가 잘린다. 헬멧 꼭대기가 보이게 위쪽을 기준으로 */
+img.p05-scene__art[data-scene='A-14'] {
+  object-position: center 14%;
+}
+
 /* 튀어나오는 그림 — 투명 바탕 위의 판을 칸에 맞춘다 (자리 · 크기는 P05Speak.tsx가 그림을 재서 준다) */
 img.p05-scene__art--pop {
   right: auto;
