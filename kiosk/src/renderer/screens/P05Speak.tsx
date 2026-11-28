@@ -1608,7 +1608,9 @@ function Sprite({
   panelH: number
   who: 'girl' | 'boy'
 }): ReactNode {
-  const [poses, setPoses] = useState(() => (url ? [{ url, scale, n: 0 }] : []))
+  // 포즈마다 자기 자리(cx) · 키(scale)를 들고 있다 — 사라지는 앞 포즈는 서 있던 그 자리에서 사라진다
+  // (2026-11-29 — 자리가 바뀌는 장면으로 넘어갈 때 앞 포즈가 새 자리로 툭 옮겨 간 뒤 사라지던 것을 고침 · 경찰관 P-02 → P-03)
+  const [poses, setPoses] = useState(() => (url ? [{ url, scale, cx, n: 0 }] : []))
 
   // 그리기 전에 바꾼다 — 한 프레임이라도 앞 장면의 인물 · 소품이 새 자막과 같이 보이지 않게 (2026-11-27)
   useLayoutEffect(() => {
@@ -1616,16 +1618,18 @@ function Sprite({
       // 이 장면에는 이 아이가 없다 — 보이던 포즈가 스르르 사라진다 (빈 포즈로 바꾼다 · 2026-11-27 A-10)
       setPoses((ps) => {
         const last = ps[ps.length - 1]
-        return !last || !last.url ? ps : [last, { url: '', scale, n: last.n + 1 }]
+        return !last || !last.url ? ps : [last, { url: '', scale, cx, n: last.n + 1 }]
       })
       return
     }
     setPoses((ps) => {
       const last = ps[ps.length - 1]
-      if (last?.url === url) return last.scale === scale ? ps : [...ps.slice(0, -1), { ...last, scale }]
-      return last ? [last, { url, scale, n: last.n + 1 }] : [{ url, scale, n: 0 }]
+      // 같은 그림이면 자리 · 키만 그 자리에서 바꾼다
+      if (last?.url === url)
+        return last.scale === scale && last.cx === cx ? ps : [...ps.slice(0, -1), { ...last, scale, cx }]
+      return last ? [last, { url, scale, cx, n: last.n + 1 }] : [{ url, scale, cx, n: 0 }]
     })
-  }, [url, scale])
+  }, [url, scale, cx])
 
   useEffect(() => {
     if (poses.length < 2) return
@@ -1640,7 +1644,7 @@ function Sprite({
           <SpritePose
             key={pose.n}
             url={pose.url}
-            cx={cx}
+            cx={pose.cx}
             scale={pose.scale}
             panelH={panelH}
             who={who}
