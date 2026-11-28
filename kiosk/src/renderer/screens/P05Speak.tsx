@@ -761,7 +761,8 @@ function SpeakFlow({
     // 문장마다 자막을 나눌 수 있다 — 목소리 파일 outro-1 · outro-2 … (2026-11-27 우주비행사)
     const outro = typeof L.outro === 'string' ? [L.outro] : L.outro
     for (const [i, text] of outro.entries()) {
-      await say('14', text, outro.length > 1 ? `outro-${i + 1}` : 'outro', 'both')
+      // 나눈 자막은 첫 문장만 둘이 같이, 그다음은 이끔 혼자 (2026-11-28 사용자 지정 — 우주비행사 "이제 … 사진을 찍으러 가자!"는 여자아이만)
+      await say('14', text, outro.length > 1 ? `outro-${i + 1}` : 'outro', i === 0 ? 'both' : LEAD)
     }
     set({ step: 'leaving' })
     next()
