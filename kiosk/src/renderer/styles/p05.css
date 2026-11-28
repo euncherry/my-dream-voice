@@ -174,9 +174,11 @@
  * 2026-11-27 카드를 키우며 1338 × 512 / 430 → 1526 × 584 / 491 (비율 그대로 · 폭은 P05Speak.tsx FRAME_W와 같이)
  */
 .p05-frame {
+  /* 흰 카드 위 끝 ~ 그림 칸 위 끝 (발사 로켓을 카드 위 끝에서 자를 때도 쓴다 — .p05-launch) */
+  --frame-top: 84px;
   position: absolute;
   left: 42px;
-  top: 84px;
+  top: var(--frame-top);
   width: 1526px;
   height: 584px;
   z-index: 1;
@@ -838,12 +840,16 @@ img.p05-scene__art--pop {
 }
 
 /* ── 로켓 발사 (2026-11-27 A-12 시안) — 판 가운데 큰 로켓 · 창 안에 두 아이 ──
-   상자 = 로켓 그림(1100 × 1249) 크기 · 가운데 맞춤. 바로 톡 나타남 → 0.4초 덜덜 → 0.5초 불꽃 · 연기 → 0.85초부터 날아간다 */
+   상자 = 로켓 그림(1100 × 1249) 크기 · 가운데 맞춤. 바로 톡 나타남 → 0.4초 덜덜 → 0.5초 불꽃 · 연기 → 0.85초부터 날아간다.
+   로켓은 흰 카드 위 끝에서 잘린다 (2026-11-28) — 그림 칸은 칸 위 138px까지 보여 주는데(.p05-scene), 그 선이 카드 밖
+   "먼저 듣고, 따라 말해 봐요" 글자 줄 한가운데라 로켓이 글자를 덮은 채 뚝 잘렸다. 카드 위 끝 = 상자 위 끝에서 (--launch-top + --frame-top) 위.
+   양옆 · 아래는 열어 둔다 (연기는 그림 칸이 자른다) */
 .p05-launch {
   position: absolute;
   z-index: 1;
   aspect-ratio: 1100 / 1249;
   translate: -50% -50%;
+  clip-path: inset(calc(-1 * (var(--launch-top, 0px) + var(--frame-top, 84px))) -9999px -9999px -9999px);
   animation: p05-window-in 0.36s cubic-bezier(0.3, 1.35, 0.5, 1) both;
 }
 
@@ -878,15 +884,11 @@ img.p05-scene__art--pop {
   }
   20% {
     transform: none;
-    opacity: 1;
     animation-timing-function: cubic-bezier(0.45, 0, 0.8, 0.5);
   }
-  82% {
-    opacity: 1;
-  }
+  /* 불꽃 끝(상자 높이의 161% 아래)까지 카드 위 끝 너머로 다 빠져나간다 — 흐려지며 사라지지 않고 날아가서 사라진다 (2026-11-28 · 전에는 -135% + 흐려짐) */
   100% {
-    transform: translateY(-135%);
-    opacity: 0;
+    transform: translateY(-180%);
   }
 }
 
@@ -905,13 +907,15 @@ img.p05-scene__art--pop {
   background: radial-gradient(73% 76.1% at 50.3% 37.4%, #a59ec4 0, #6c5f9e 55%, #43377a 100%);
 }
 
-/* 두 아이 — 창보다 조금 크게, 가장자리는 로켓 몸통에 가린다 · 신나서 들썩 */
+/* 두 아이 — 창보다 조금 크게, 가장자리는 로켓 몸통에 가린다 · 신나서 들썩.
+   들썩임은 로켓이 떠오르기 전(0.86초)까지만 — 위아래 두 번 하고 제자리에 멈춘다 (2026-11-28 · 날아가는 동안에도 창 안에서 따로 움직여 삐걱거려 보였다).
+   우주 비행(.p05-flight__kids)은 계속 들썩인다 */
 .p05-launch__kids {
   left: 50.3%;
   top: 33%;
   width: 60%;
   translate: -50% 0;
-  animation: p05-launch-kids 0.32s ease-in-out infinite alternate;
+  animation: p05-launch-kids 0.215s ease-in-out 4 alternate;
 }
 
 @keyframes p05-launch-kids {

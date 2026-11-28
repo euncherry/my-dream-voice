@@ -422,10 +422,18 @@ function SpeakFlow({
     /**
      * 캐릭터 대사 하나 — 장면 + 자막 + 목소리(없으면 자막 시간만).
      * keepGauge: 목소리 게이지를 아이가 방금 채운 만큼 그대로 둔다 (작게 반응 A-08 — 2026-11-27). 아니면 장면에 정한 값으로
+     * mic: 대사 동안의 마이크 모습 — 보통은 'wait'(먼저 들어 봐요). 'demo'면 띵 때처럼 빛나는 채로 말한다 (2026-11-28 "이렇게 되면 말하면 돼!")
      */
-    async function say(scene: string, text: string, key: string, who: Who, keepGauge = false): Promise<void> {
+    async function say(
+      scene: string,
+      text: string,
+      key: string,
+      who: Who,
+      keepGauge = false,
+      mic: MicState = 'wait',
+    ): Promise<void> {
       const startedAt = performance.now()
-      set({ scene, subtitle: text, who, mic: 'wait', step: key, ...(keepGauge ? {} : { gauge: undefined }) })
+      set({ scene, subtitle: text, who, mic, step: key, ...(keepGauge ? {} : { gauge: undefined }) })
       await playClip(voiceUrl(job, key), subtitleMs(text)).done
       check()
       // 대사보다 긴 움직임이 있는 장면 — 그 움직임이 끝날 때까지 머문다 (LayeredScene.hold — A-12 발사 · A-07-2 새 별)
@@ -678,7 +686,9 @@ function SpeakFlow({
     set({ mic: 'demo', step: 'signal:ding' })
     await playClip(DING_URL, 600).done
     check()
-    await sleep(600)
+    await sleep(300)
+    // 띵이 울리고 마이크가 빛나는 바로 그 모습을 가리켜 한 번 더 — 마이크는 빛나는 채로 (2026-11-28 사용자 지정)
+    await say('04', COMMON.signalGo, 'signal-go', LEAD, false, 'demo')
     // 목소리 게이지 소개 (게이지가 있는 직업만) — 짝꿍 · 마이크는 계속 빛난다 (진행 바는 그대로).
     // 문장마다 자막을 나눌 수 있다 — 목소리 파일 gauge-1 · gauge-2 …
     const gauge = L.gauge === undefined ? [] : typeof L.gauge === 'string' ? [L.gauge] : L.gauge
@@ -1214,6 +1224,7 @@ const LAUNCH_PUFFS = [
 /**
  * 로켓 발사 (2026-11-27 A-12) — 판 가운데 큰 로켓. 둥근 창은 투명해서 그 뒤의 창 안(어두운 보라) · 두 아이가 보인다.
  * 덜덜 → 불꽃(두 장을 번갈아 일렁임) · 발밑 연기 → 위로 날아간다. 연기는 땅에 남는다. 타이밍은 p05.css
+ * 로켓은 흰 카드 위 끝에서 잘린다 (2026-11-28 — 카드 밖 제목 · 안내 글자를 덮지 않게): 상자 위 끝 자리(--launch-top)를 CSS에 넘긴다
  * 자리는 로켓 그림(prop-launch-rocket 1100 × 1249) 기준 %: 창 가운데 50.3% · 51.2% · 분사구 아래 끝 97%
  */
 function Launch({
@@ -1235,10 +1246,19 @@ function Launch({
   const smoke = layerUrl(job, 'prop-launch-smoke')
   const puff = layerUrl(job, 'prop-launch-puff')
   const w = launch.w * k
+  const top = (launch.cy - panel.top) * k
   return (
     <span
       className="p05-launch"
-      style={{ left: (launch.cx - panel.left) * k, top: (launch.cy - panel.top) * k, width: w }}
+      style={
+        {
+          left: (launch.cx - panel.left) * k,
+          top,
+          width: w,
+          // 상자(로켓 그림 1100 × 1249) 위 끝 — 그림 칸 위 끝에서 잰 자리 (상자는 가운데 맞춤이라 top − 높이 ÷ 2)
+          '--launch-top': `${top - (w * 1249) / 1100 / 2}px`,
+        } as CSSProperties
+      }
     >
       <span className="p05-launch__lift">
         {flame1 && <img className="p05-launch__flame" src={flame1} alt="" draggable={false} />}
