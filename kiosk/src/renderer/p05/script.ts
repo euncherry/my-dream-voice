@@ -214,6 +214,12 @@ const A04_CAST = { girl: 0.31, boy: 0.645 } as const
 /** 가운데 마이크 — 두 아이 사이, 내민 손 높이 (배경 그림 픽셀) */
 const MIC: SceneProp = { name: 'prop-mic', cx: 915, cy: 365, w: 175, fx: 'mic' }
 
+/**
+ * 마이크 위의 "띵!" 글자 (2026-11-29 사용자 지정 — 경찰관 P-04와 같은 그림 · 같은 동작: 띵이 울려 마이크가 빛날 때만 톡).
+ * 크기는 두 헬멧 사이에 들어가게(경찰관보다 조금 작다), 자리는 마이크 바로 위. A-04에만 둔다
+ */
+const DING: SceneProp = { name: 'prop-ding', cx: 915, cy: 112, w: 240, fx: 'ding' }
+
 /** A-03-1부터 — 새 별은 가만히 있다: 돌지도 반짝이지도 않는다 (가리키는 A-03이 끝나면 · 2026-11-26 돌기 멈춤 → 2026-11-28 반짝임도 멈춤) */
 const still = (props: readonly SceneProp[]): SceneProp[] =>
   props.map((p) => (p.fx === 'twinkle' ? { ...p, still: true } : p))
@@ -458,7 +464,7 @@ export const SCRIPTS: Record<JobId, JobScript> = {
         girl: 'girl-present',
         boy: 'boy-present',
         cast: A04_CAST,
-        props: [...still(ROCKET_PROPS), MIC],
+        props: [...still(ROCKET_PROPS), MIC, DING],
         gauge: 0,
         gaugeBox: ROCKET_GAUGE,
       },
