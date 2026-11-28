@@ -321,6 +321,9 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       // "안녕! 나는 경찰관이야!" — 경찰서 앞마당. 남자아이가 손을 흔들고, 여자아이는 허리에 손을 얹고 웃는다.
       // 뒤로 순찰차(왼쪽) · 경찰서(오른쪽) · 경광등(오른쪽 아래) · 하늘에 노란 별
       '01': { bg: 'bg-yard', boy: 'boy-wave', girl: 'girl-hips', cast: POLICE_CAST, props: YARD_PROPS },
+      // "나도 경찰관! 오늘 너는 우리 꼬마 경찰관이야!" — 같은 앞마당 · 같은 자리 (2026-11-29 · 완성 그림에서 재니 P-01과 같다).
+      // 여자아이가 윙크하며 손바닥 위 경찰 배지를 내밀고(반짝 표시는 그림 안에 있다), 남자아이는 박수
+      '02': { bg: 'bg-yard', boy: 'boy-clap', girl: 'girl-badge', cast: POLICE_CAST, props: YARD_PROPS },
     },
   },
 
