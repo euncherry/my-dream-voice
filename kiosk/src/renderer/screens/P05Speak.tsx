@@ -689,7 +689,7 @@ function SpeakFlow({
     await sleep(300)
     // 띵이 울리고 마이크가 빛나는 바로 그 모습을 가리켜 한 번 더 — 마이크는 빛나는 채로 (2026-11-28 사용자 지정)
     await say('04', COMMON.signalGo, 'signal-go', LEAD, false, 'demo')
-    // 목소리 게이지 소개 (게이지가 있는 직업만) — 짝꿍 · 마이크는 계속 빛난다 (진행 바는 그대로).
+    // 목소리 게이지 소개 (게이지가 있는 직업만) — 짝꿍 · 마이크 빛은 꺼진다 (2026-11-28 — 게이지를 볼 차례 · 진행 바는 그대로).
     // 문장마다 자막을 나눌 수 있다 — 목소리 파일 gauge-1 · gauge-2 …
     const gauge = L.gauge === undefined ? [] : typeof L.gauge === 'string' ? [L.gauge] : L.gauge
     for (const [i, text] of gauge.entries()) {
