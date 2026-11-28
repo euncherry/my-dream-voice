@@ -667,7 +667,8 @@ function SpeakFlow({
     // 임무 — 길면 자막 여러 개로 나뉜다 (진행 바는 한 칸 그대로)
     const mission = typeof L.mission === 'string' ? [{ text: L.mission }] : L.mission
     for (const [i, part] of mission.entries()) {
-      await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission', LEAD)
+      // 나눈 자막 가운데 짝꿍이 말하는 문장이 있을 수 있다 (2026-11-28 우주비행사 ②)
+      await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission', part.who === 'partner' ? PARTNER : LEAD)
     }
     set({ bar: { part: 'tutorial', done: 4 } })
     // 순서 약속 먼저(듣고 → 따라 말하기), 그다음에 언제 말하는지(띵) — 둘 다 장면 04 (2026-11-28)
