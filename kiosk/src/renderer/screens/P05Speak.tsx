@@ -670,6 +670,8 @@ function SpeakFlow({
       await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission', LEAD)
     }
     set({ bar: { part: 'tutorial', done: 4 } })
+    // 순서 약속 먼저(듣고 → 따라 말하기), 그다음에 언제 말하는지(띵) — 둘 다 장면 04 (2026-11-28)
+    await say('04', COMMON.rule, 'rule', LEAD)
     await say('04', COMMON.signal, 'signal', LEAD)
     // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다
     set({ mic: 'demo', step: 'signal:ding' })
