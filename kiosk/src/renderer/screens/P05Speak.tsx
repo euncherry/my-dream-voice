@@ -8,7 +8,7 @@
  *   A 인사 · 역할 → B 임무 → C 신호 설명(진짜 띵을 한 번 들려준다) + 짝꿍 시범
  *   → D 연습 "준비 완료!" (반짝 + 띵 → 녹음 — 분석 안 함, 목소리 크기만)
  *   → E 반응 (연습은 한 번만 — 2026-11-24): 크게 = 칭찬 / 작게 = "○○가 너~무 멀리 있나 봐" / 무음 = "아직 못 들었나 봐!"
- *     작게 · 무음은 캐릭터가 "내가 다시 해 볼게! 준비 완료!" 하고 크게 시범을 보인 뒤 넘어간다 (아이에게 다시 시키지 않는다)
+ *     작게 · 무음은 캐릭터가 다시 보여 준다 — "내가 다시 해 볼게!" → 진짜 띵(마이크 반짝) → "준비 완료!" + 게이지 꽉 (redo — 2026-11-28) 뒤 넘어간다 (아이에게 다시 시키지 않는다)
  *   → F1 문장 ① (소개 → 이끔이 문장 시범 → 띵 → 녹음 → "잘 듣고 있어요" → 응원, 또는 다시 말하기 1회)
  *   → G 이어 주기 → F2 문장 ② → I 마무리 → P-06
  *   어느 나이든 문장을 한 번에 말한다 (2026-11-24 만 4세 어절 끊기 없앰 — 대신 만 4 · 5 · 6세 이상 문장이 다 다르다).
@@ -77,7 +77,7 @@ import '../styles/p05.css'
 /** 아래 마이크 알약의 모습 */
 type MicState =
   | 'wait' // 캐릭터가 말하는 중 — "먼저 들어 봐요"
-  | 'demo' // 반짝이지만 녹음은 안 한다 — 신호 설명의 진짜 띵 · "이렇게 되면 말하면 돼!" · 시범의 띵 · 짝꿍의 "준비 완료!" (2026-11-28)
+  | 'demo' // 반짝이지만 녹음은 안 한다 — 신호 설명의 진짜 띵 · "이렇게 되면 말하면 돼!" · 시범과 다시 보여 주기의 띵 · 캐릭터의 "준비 완료!" (2026-11-28)
   | 'live' // 띵 → 녹음 중 — "지금 말해요!" (반짝)
   | 'listening' // 받아쓰기 기다림 — "잘 듣고 있어요"
   | 'error' // 마이크를 못 켰다 — [다시 시도]
@@ -456,18 +456,34 @@ function SpeakFlow({
     }
 
     /**
-     * 시범 — 목소리 게이지가 짝꿍의 외침에 맞춰 차오른다 (빈칸 → 꽉 · delayMs 뒤부터 ms 동안 여섯 걸음).
+     * 시범 · 다시 보여 주기 — 목소리 게이지가 캐릭터의 외침에 맞춰 차오른다 (from → 꽉 · delayMs 뒤부터 ms 동안 여섯 걸음).
+     * from: 지금 차 있는 높이 (시범은 빈칸 0 · 다시 보여 주기는 아이가 방금 채운 만큼 — 거기서 내려가지 않게).
      * 흐름이 멈추면 타이머도 같이 치워진다 (stopFlow)
      */
-    function fillGauge(delayMs: number, ms: number): void {
+    function fillGauge(delayMs: number, ms: number, from = 0): void {
       const STEPS = 6
       for (let i = 1; i <= STEPS; i++) {
         const id = window.setTimeout(() => {
           timersRef.current.delete(id)
-          if (run.alive) setView((v) => ({ ...v, gauge: i / STEPS }))
+          if (run.alive) setView((v) => ({ ...v, gauge: from + ((1 - from) * i) / STEPS }))
         }, delayMs + (ms * i) / STEPS)
         timersRef.current.add(id)
       }
+    }
+
+    /**
+     * 다시 보여 주기 — 연습의 작게 · 무음 반응 끝 (2026-11-28 — 시범과 같은 모양으로):
+     * "내가 다시 해 볼게!"(04 · 게이지는 아이가 채운 만큼 그대로) → 진짜 띵(마이크 반짝 · 말풍선 없음) → "준비 완료!"(shoutScene · 마이크는 빛나는 채로 · 게이지가 꽉 차오른다).
+     * 아이에게 다시 시키지 않는다 — 캐릭터가 보여 주기만 하고 넘어간다 (2026-11-24 사용자 결정)
+     */
+    async function redo(key: 'quiet' | 'silent', who: Who, shoutScene: string): Promise<void> {
+      await say('04', COMMON.redo, `${key}-redo`, who, true)
+      set({ mic: 'demo', step: `${key}:ding`, subtitle: null })
+      await playClip(DING_URL, 600).done
+      check()
+      await sleep(DING_TO_RECORD_MS)
+      fillGauge(150, 600, gaugeRef.current.shown)
+      await say(shoutScene, COMMON.practiceWord, `${key}-word`, who, true, 'demo')
     }
 
     /**
@@ -727,8 +743,7 @@ function SpeakFlow({
     // 따라 할 말은 띵 바로 앞에 혼자 들려준다 — 실제 문장(소개 → 문장 → 띵)과 같은 모양 (2026-11-28)
     await say('06', COMMON.practiceWord, 'practice-word', LEAD)
     // 연습은 한 번만 — 작거나 무음이어도 다시 시키지 않는다 (2026-11-24 사용자 결정).
-    // 반응만 하고 넘어간다: 작게 · 무음이면 캐릭터가 "내가 다시 해 볼게! 준비 완료!" 하고 크게 시범을 보인다
-    // TODO(목소리 게이지): 작게 · 무음 반응 끝에 캐릭터 외침과 함께 게이지가 꽉 차오르게 (docs/P05_SCENARIO.md 우주비행사)
+    // 반응만 하고 넘어간다: 작게 · 무음이면 캐릭터가 다시 보여 준다 — "내가 다시 해 볼게!" → 띵 → "준비 완료!" + 게이지 꽉 (redo — 2026-11-28)
     const voice = await practice()
     set({ bar: { part: 'tutorial', done: 7 } })
     if (voice === 'loud') await say('07', L.loud, 'loud', PARTNER)
@@ -738,13 +753,15 @@ function SpeakFlow({
       for (const [i, text] of quiet.entries()) {
         await say('08', text, quiet.length > 1 ? `quiet-${i + 1}` : 'quiet', PARTNER, true)
       }
+      await redo('quiet', PARTNER, '05')
     }
     else {
-      // 문장마다 자막을 나눌 수 있다 — 목소리 파일 silent-1 · silent-2 … (2026-11-27 우주비행사)
+      // 문장마다 자막을 나눌 수 있다 — 목소리 파일 silent-1 · silent-2 … (지금은 나눈 직업이 없다 — 한 문장이면 silent)
       const silent = typeof L.silent === 'string' ? [L.silent] : L.silent
       for (const [i, text] of silent.entries()) {
         await say('09', text, silent.length > 1 ? `silent-${i + 1}` : 'silent', LEAD, true)
       }
+      await redo('silent', LEAD, '09')
     }
     set({ big: null })
 
@@ -1552,7 +1569,7 @@ function MicGlow({ job, name }: { job: JobId; name: string }): ReactNode {
  * 목소리 게이지 — 그림 위 오른쪽에 크게 덮어 그리는 세로 캡슐 (2026-11-26 — 로켓과 따로, 눈에 띄게 · 꼭대기 작은 로켓은 같은 날 뺌).
  * 아래에서부터 차오른다 (0 ~ 1). 모양은 별빛 유리관 + 오른쪽 눈금 5단계 (2026-11-26 사용자가 시안 중 고름 — p05.css).
  * 아이 차례에는 마이크 소리를 따라 차오르고(paintGauge), 시범의 "준비 완료!"에는 저절로 차오른다(fillGauge — 2026-11-28).
- * 작게 · 무음 반응의 "내가 다시 해 볼게! 준비 완료!"에서 채우는 것만 아직 안 붙였다
+ * 작게 · 무음 반응 끝의 다시 보여 주기 "준비 완료!"에서도 아이가 채운 데서 꽉 차오른다 (redo — 2026-11-28)
  */
 function VoiceGauge({
   level,
