@@ -260,6 +260,29 @@ const ROCKET_PROPS: readonly SceneProp[] = [
   { name: 'prop-rocket', cx: 1505, cy: 381, w: 330 },
 ]
 
+/**
+ * 경찰관 — 두 아이가 서는 자리 (판 폭 대비 · 모자 가운데 · 2026-11-28 P-01 완성 그림에서 잰 값).
+ * 우주비행사와 같은 틀: 이끔이 왼쪽 · 짝꿍이 오른쪽 (우주비행사는 여 0.36 · 남 0.595 — 경찰관은 이끔이 남자아이라 자리가 바뀐다).
+ * 키 · 발끝 높이는 우주비행사와 같은 값을 쓴다 (P05Speak.tsx BODY_H · FEET)
+ */
+const POLICE_CAST = { boy: 0.337, girl: 0.593 } as const
+
+/**
+ * 경찰서 앞마당의 소품 — 자리 · 크기는 P-01 완성 그림에서 잰 값 (배경 그림 bg-yard 1910 × 823 픽셀).
+ * 노란 별은 우주비행사의 별 그림을 같이 쓴다 (layers/police에 복사 · 완성 그림의 별 자리) — 따로 받으면 바꿔 넣는다.
+ * 경광등(prop-siren — 파랑 · 빨강 · 완성 그림과 같은 불빛)은 노란 반짝 표시 없이 (2026-11-28 사용자 지정).
+ * 완성 그림보다 조금 왼쪽에 둔다 — 그 자리에서는 받침이 배경에 그려진 오른쪽 아래 화단 돌 모서리를 덮는다 (완성 그림은 화단이 앞).
+ * 불빛이 반대인 그림(prop-siren-alt — 빨강 · 파랑)도 있다 — 아직 안 쓴다 (번갈아 보이면 깜빡이는 경광등)
+ */
+const YARD_PROPS: readonly SceneProp[] = [
+  { name: 'prop-star-yellow', cx: 203, cy: 188, w: 120, fx: 'glow' },
+  { name: 'prop-star-yellow-2', img: 'prop-star-yellow', cx: 352, cy: 141, w: 52, fx: 'glow' },
+  { name: 'prop-star-yellow-3', img: 'prop-star-yellow', cx: 1777, cy: 164, w: 60, fx: 'glow' },
+  { name: 'prop-station', cx: 1593, cy: 339, w: 620 },
+  { name: 'prop-car', cx: 304, cy: 490, w: 434 },
+  { name: 'prop-siren', cx: 1536, cy: 676, w: 248 },
+]
+
 export const SCRIPTS: Record<JobId, JobScript> = {
   police: {
     prefix: 'P',
@@ -292,6 +315,12 @@ export const SCRIPTS: Record<JobId, JobScript> = {
       '12': '두 아이가 탄 순찰차가 경광등을 켜고 거리를 달린다. 창밖으로 손을 흔든다',
       '13': '순찰차 안. 남자아이가 사이렌 버튼에 손을 올리고 외친다. 경광등이 막 켜지려 반짝',
       '14': '잃어버린 강아지를 찾아 여자아이가 안고, 두 아이가 경례하며 웃는다. 꽃가루',
+    },
+    // 레이어 장면 (2026-11-28 P-01부터 — 우주비행사와 같은 방식: 배경 판 + 소품 + 두 아이). 없는 장면은 임시 판
+    layered: {
+      // "안녕! 나는 경찰관이야!" — 경찰서 앞마당. 남자아이가 손을 흔들고, 여자아이는 허리에 손을 얹고 웃는다.
+      // 뒤로 순찰차(왼쪽) · 경찰서(오른쪽) · 경광등(오른쪽 아래) · 하늘에 노란 별
+      '01': { bg: 'bg-yard', boy: 'boy-wave', girl: 'girl-hips', cast: POLICE_CAST, props: YARD_PROPS },
     },
   },
 
