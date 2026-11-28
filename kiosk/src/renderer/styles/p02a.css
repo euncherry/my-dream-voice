@@ -276,20 +276,65 @@
   gap: 22px;
 }
 
-/* 입력칸 — <input>이 아니다 (OS 화면 키보드가 뜨지 않게) */
+/* 입력칸 둘 — [ 아이디 ] @ [ 주소 ] (2026-11-28 — 시안 전, 전의 입력칸 하나를 같은 모양으로 둘로 쪼갰다) */
+.p02a-entry__fields {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* 가운데 고정 글자 @ — 치지 않는다 */
+.p02a-entry__at {
+  flex: 0 0 auto;
+  align-self: center;
+  padding-bottom: 6px;
+  font-family: var(--d-font-display);
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--d-navy);
+}
+
+/* 입력칸 — <input>이 아니다 (OS 화면 키보드가 뜨지 않게). 누르면 켜진다.
+   꺼진 칸은 키보드 판과 같은 옅은 테두리, 켜진 칸은 전의 입력칸 그대로(진한 남색 테두리)에 파란 빛 */
 .p02a-entry__box {
   flex: 1 1 0;
   min-width: 0;
-  padding: 0 34px;
+  padding: 0 0 0 28px;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  text-align: left;
+  border: 4px solid var(--d-tray-line);
+  border-radius: 32px;
+  background: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 0.12s ease-out,
+    box-shadow 0.12s ease-out;
+}
+
+/* 아이디 칸을 조금 넓게 — 주소는 버튼으로 고르는 짧은 글자가 대부분이다 */
+.p02a-entry__box[data-field='local'] {
+  flex-grow: 1.2;
+}
+
+.p02a-entry__box[data-active='true'] {
+  border-color: var(--d-check);
+  box-shadow: 0 0 0 5px rgb(var(--d-glow) / 0.28);
+}
+
+/* 글자 + 형식 안내를 세로로 */
+.p02a-entry__text {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 2px;
-  overflow: hidden;
-  text-align: left;
-  border: 4px solid var(--d-check);
-  border-radius: 32px;
-  background: #fff;
 }
 
 .p02a-entry__box[data-invalid='true'] {
@@ -327,6 +372,45 @@
   border-radius: 2px;
   background: var(--d-check);
   animation: p02a-blink 1s steps(1) infinite;
+}
+
+/* 빈 칸의 이름 — 옅게 ("아이디" · "주소") */
+.p02a-entry__hint {
+  color: var(--d-navy);
+  opacity: 0.3;
+}
+
+/* ✕ — 그 칸 전체 지우기. 보이는 동그라미는 48px, 누르는 자리는 칸 높이 전체 × 88px (PAGE_SPEC §2-2 — 칸 오른쪽 끝까지) */
+.p02a-entry__clear {
+  flex: 0 0 88px;
+  padding: 0 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  color: var(--d-navy);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.p02a-entry__clear svg {
+  width: 48px;
+  height: 48px;
+  padding: 11px;
+  border-radius: 50%;
+  background: var(--d-tray);
+  box-shadow: inset 0 0 0 1.5px var(--d-tray-line);
+  transition: scale 0.08s ease-out;
+}
+
+.p02a-entry__clear:active:not(:disabled) svg {
+  scale: 0.9;
+  background: var(--d-chip-bottom);
+}
+
+.p02a-entry__clear:disabled {
+  cursor: default;
 }
 
 .p02a-entry__notice {
@@ -762,7 +846,9 @@
   .p02a-pill,
   .p02a-pill__arrow,
   .p02a-key,
-  .p02a-domain {
+  .p02a-domain,
+  .p02a-entry__box,
+  .p02a-entry__clear svg {
     transition: none;
   }
 }

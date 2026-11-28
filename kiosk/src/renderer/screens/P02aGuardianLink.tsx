@@ -9,6 +9,7 @@
  *
  * 화면 상태 (phase)
  *   email     이메일 입력 — 화면 키보드 · 자주 쓰는 주소 · [확인](형식 검사)
+ *             입력칸은 **아이디 칸 · @ · 주소 칸** 둘로 나뉜다 (2026-11-28 — 아래 "입력칸 두 개")
  *   confirm   주소 확인 창 — 입력한 주소를 크게 다시 보여 준다 · [고치기] / [맞아요]
  *   sending   [맞아요] — 이메일과 함께 서버에 세션 열기를 요청하는 중 (확인 창 그대로)
  *   linked    "연결됐어요" → LINKED_SHOW_MS 뒤 P-03
@@ -28,11 +29,20 @@
  *      · 주소 확인 창(confirm · sending) — 흰 창 + [고치기] / [맞아요]. 창이 떠 있는 동안 [← 뒤로]는 없다 ([고치기]로 돌아간다)
  *      · 연결됐어요(linked) · 연결 실패(error) — 가운데 흰 카드
  *
+ * 입력칸 두 개 (2026-11-28 사용자 지정 — 시안 전, 지금 스타일을 둘로 쪼갬)
+ *   전에는 칸 하나에 맨 끝에만 치고 맨 끝에서만 지워서, 아이디를 고치려면 @ 뒤를 다 지워야 했다.
+ *   · [ 아이디 ] @ [ 주소 ] — @는 가운데 고정 글자다 (치지 않는다)
+ *   · 누른 칸이 켜진다(진한 테두리 + 깜빡이는 커서) — 화면 키보드의 글자 · 지우기는 켜진 칸에만 들어간다
+ *   · 자주 쓰는 주소 버튼은 어느 칸이 켜져 있든 주소 칸을 통째로 채운다
+ *   · 키보드의 @ 키는 글자를 넣지 않고 주소 칸으로 넘어간다 · 빈 주소 칸에서 지우기를 누르면 아이디 칸으로 돌아간다
+ *   · 칸마다 오른쪽 끝에 ✕(그 칸 전체 지우기)
+ *   글자 사이를 눌러 커서를 옮기는 기능은 없다 — 칸 안에서는 지금처럼 끝에서만 치고 지운다
+ *
  * 연달아 두드린 터치를 막는다 — 화면이 바뀐 직후 · 상태(phase)가 바뀐 직후(손님이 눌러서든 서버 대답으로든) 0.4초(TAP_GUARD_MS)는
  *   버튼 · 화면 키를 받지 않는다. [확인] · [고치기] 자리에도 다른 버튼이 온다 —
  *   두 번 두드리면 둘째 터치가 글자를 치거나 다음 버튼을 누르기 때문이다.
  *
- * ⚠️ 개인정보 — 직접 입력한 이메일은 이 컴포넌트의 지역 상태(email)에만 있다.
+ * ⚠️ 개인정보 — 직접 입력한 이메일은 이 컴포넌트의 지역 상태(local · domain — 합친 것이 email)에만 있다.
  *    세션 스토어 · localStorage · console · 오류 메시지에 넣지 않는다.
  *    서버가 받은 직후와 화면을 떠날 때 지운다. guardianLink에는 주소를 넣지 않는다 (CLAUDE.md 금지사항 4).
  *
@@ -97,8 +107,22 @@ const EMAIL_MAX_LENGTH = 80
 /** 형식 검사 — @ 와 점이 있는 주소. 메인(src/main/server.ts)이 보내기 전에 한 번 더 본다 */
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-/** 자주 쓰는 주소 — 스케치의 4개. 누르면 @ 뒤를 그 주소로 채운다 */
+/** 자주 쓰는 주소 — 스케치의 4개. 누르면 주소 칸(@ 뒤)을 그 주소로 채운다 */
 const EMAIL_DOMAINS = ['@naver.com', '@gmail.com', '@daum.net', '@hanmail.net'] as const
+
+/** 입력칸 두 개 — 아이디(@ 앞) · 주소(@ 뒤) */
+type Field = 'local' | 'domain'
+
+/** 형식 안내가 가리키는 칸 — all은 어느 칸인지 모를 때 (서버가 돌려보낸 경우) */
+type Notice = Field | 'all' | null
+
+/** 칸이 비었을 때 옅게 보여 주는 이름 · 형식 안내 — 임시 문구 (문서 · 시안에 없다) */
+const FIELD_HINT: Record<Field, string> = { local: '아이디', domain: '주소' }
+const NOTICE_TEXT: Record<Exclude<Notice, null>, string> = {
+  local: '아이디를 입력해 주세요',
+  domain: '주소를 확인해 주세요',
+  all: '이메일 주소를 다시 확인해 주세요',
+}
 
 /** 입력칸의 글자 크기 (px) — 한 줄에 들어가는 동안은 큰 쪽, 넘치면 작은 쪽까지 줄이고 그래도 넘치면 두 줄 (styles/p02a.css) */
 const ENTRY_FONT = { max: 54, min: 32 } as const
@@ -147,6 +171,8 @@ function closeStoredLink(keep?: string): void {
 function useFitText<T extends HTMLElement>(
   text: string,
   { max, min }: { max: number; min: number },
+  /** 글자는 같아도 다시 재야 할 때 바뀌는 값 (커서가 생기거나 없어질 때) */
+  remeasure: unknown = null,
 ): RefObject<T> {
   const ref = useRef<T>(null)
 
@@ -170,7 +196,7 @@ function useFitText<T extends HTMLElement>(
       box.style.fontSize = `${min}px`
       box.dataset.wrap = 'true'
     }
-  }, [text, max, min])
+  }, [text, max, min, remeasure])
 
   return ref
 }
@@ -251,9 +277,19 @@ export function P02aGuardianLink(): ReactNode {
   const switchToPhotoOnly = useSession((s) => s.switchToPhotoOnly)
 
   const [phase, setPhase] = useState<Phase>('email')
-  /** ⚠️ 직접 입력한 이메일 — 여기에만 둔다 (파일 머리 주석) */
-  const [email, setEmail] = useState('')
-  const [formatNotice, setFormatNotice] = useState(false)
+  /** ⚠️ 직접 입력한 이메일 — 여기에만 둔다 (파일 머리 주석). 아이디(@ 앞) · 주소(@ 뒤) 두 칸 */
+  const [local, setLocal] = useState('')
+  const [domain, setDomain] = useState('')
+  /** 켜진 칸 — 화면 키보드의 글자 · 지우기가 들어가는 곳 */
+  const [field, setField] = useState<Field>('local')
+  const [formatNotice, setFormatNotice] = useState<Notice>(null)
+  /** 두 칸을 합친 주소 — 확인 창에 보여 주고 서버에 넘기는 값. 둘 다 비었으면 빈 글자 */
+  const email = local.length === 0 && domain.length === 0 ? '' : `${local}@${domain}`
+  const clearEmail = useCallback((): void => {
+    setLocal('')
+    setDomain('')
+    setField('local')
+  }, [])
   /** 연결 실패가 이어진 횟수 — 1이면 [다시 시도]만, 2부터 [사진만 찍기]도. 성공하면 0 */
   const [failCount, setFailCount] = useState(0)
   /** 개발용 — MOCK 서버 연결 상태 */
@@ -277,8 +313,8 @@ export function P02aGuardianLink(): ReactNode {
 
   // 화면을 떠날 때 — 치던 주소를 지운다
   useEffect(() => {
-    return () => setEmail('')
-  }, [])
+    return () => clearEmail()
+  }, [clearEmail])
 
   // [맞아요] · ([다시 시도] → 주소 확인 창 → [맞아요]) — 이메일과 함께 서버에 세션 열기를 요청한다
   useEffect(() => {
@@ -297,8 +333,8 @@ export function P02aGuardianLink(): ReactNode {
         // 주소는 넣지 않는다 — 세션 번호 · 시각뿐 (PAGE_SPEC §5). 이제 이 세션은 스토어 것이다 (닫기: M-03 · P-03 [뒤로])
         setGuardianLink({ sessionToken: res.sessionToken, linkedAt: new Date().toISOString() })
         // 서버가 받았다 → 기기에 남기지 않는다
-        setEmail('')
-        setFormatNotice(false)
+        clearEmail()
+        setFormatNotice(null)
         setFailCount(0)
         setPhase('linked')
         return
@@ -306,7 +342,7 @@ export function P02aGuardianLink(): ReactNode {
       if (res.reason === 'rejected') {
         // 형식 오류 — 서버에는 닿았다. 안내와 함께 입력으로 (고칠 수 있게 주소는 그대로)
         setFailCount(0)
-        setFormatNotice(true)
+        setFormatNotice('all')
         setPhase('email')
         return
       }
@@ -318,7 +354,7 @@ export function P02aGuardianLink(): ReactNode {
     return () => {
       cancelled = true
     }
-  }, [phase, email, setGuardianLink, fail])
+  }, [phase, email, setGuardianLink, fail, clearEmail])
 
   // 연결됨 — "연결됐어요"를 잠깐 보여 주고 P-03으로
   useEffect(() => {
@@ -346,42 +382,73 @@ export function P02aGuardianLink(): ReactNode {
   /** [← 뒤로] — 이메일 입력에서만 있다. 치던 주소는 남기지 않고 P-02로 */
   function handleBack(): void {
     if (tappedTooSoon()) return
-    setEmail('')
-    setFormatNotice(false)
+    clearEmail()
+    setFormatNotice(null)
     back()
   }
 
+  /** 칸을 누른다 — 그 칸이 켜진다 (글자 · 지우기가 그 칸으로) */
+  function handleField(target: Field): void {
+    if (tappedTooSoon()) return
+    setField(target)
+  }
+
+  /** 칸 오른쪽 끝의 ✕ — 그 칸을 통째로 지우고 그 칸을 켠다 */
+  function handleClear(target: Field): void {
+    if (tappedTooSoon()) return
+    setFormatNotice(null)
+    if (target === 'local') setLocal('')
+    else setDomain('')
+    setField(target)
+  }
+
+  /** 화면 키 하나 — 켜진 칸의 끝에 붙는다. @ 는 글자로 넣지 않고 주소 칸으로 넘어간다 */
   function handleKey(char: string): void {
     if (tappedTooSoon()) return
-    setFormatNotice(false)
-    setEmail((value) => (value.length < EMAIL_MAX_LENGTH ? value + char : value))
+    setFormatNotice(null)
+    if (char === '@') {
+      setField('domain')
+      return
+    }
+    // 두 칸 + @ 를 합쳐 길이 제한 안에서만
+    if (local.length + domain.length + 1 >= EMAIL_MAX_LENGTH) return
+    if (field === 'local') setLocal((value) => value + char)
+    else setDomain((value) => value + char)
   }
 
+  /** [⌫ 지우기] — 켜진 칸의 마지막 한 글자. 빈 주소 칸에서 누르면 아이디 칸으로 돌아간다 */
   function handleBackspace(): void {
     if (tappedTooSoon()) return
-    setFormatNotice(false)
-    setEmail((value) => value.slice(0, -1))
+    setFormatNotice(null)
+    if (field === 'local') {
+      setLocal((value) => value.slice(0, -1))
+    } else if (domain.length === 0) {
+      setField('local')
+    } else {
+      setDomain((value) => value.slice(0, -1))
+    }
   }
 
-  /** 자주 쓰는 주소 — @ 뒤를 통째로 바꾼다 (@ 가 아직 없으면 뒤에 붙인다) */
-  function handleDomain(domain: string): void {
+  /** 자주 쓰는 주소 — 어느 칸이 켜져 있든 주소 칸을 통째로 바꾼다 (켜진 칸은 그대로) */
+  function handleDomain(chosen: string): void {
     if (tappedTooSoon()) return
-    setFormatNotice(false)
-    setEmail((value) => {
-      const at = value.indexOf('@')
-      const filled = (at === -1 ? value : value.slice(0, at)) + domain
-      return filled.length <= EMAIL_MAX_LENGTH ? filled : value
-    })
+    setFormatNotice(null)
+    const filled = chosen.replace(/^@/, '')
+    if (local.length + filled.length + 1 > EMAIL_MAX_LENGTH) return
+    setDomain(filled)
   }
 
-  /** [확인] — 형식이 맞으면 주소 확인 창, 틀리면 안내를 띄우고 입력 화면 그대로 */
+  /** [확인] — 형식이 맞으면 주소 확인 창, 틀리면 틀린 칸을 켜고 안내를 띄운다 (입력 화면 그대로) */
   function handleSubmitInput(): void {
     if (tappedTooSoon()) return
     if (!EMAIL_SHAPE.test(email)) {
-      setFormatNotice(true)
+      // 아이디가 비었으면 아이디 칸, 아니면 주소 칸(비었거나 점이 없다)이 틀린 것이다
+      const wrong: Field = local.length === 0 ? 'local' : 'domain'
+      setFormatNotice(wrong)
+      setField(wrong)
       return
     }
-    setFormatNotice(false)
+    setFormatNotice(null)
     setPhase('confirm')
   }
 
@@ -412,7 +479,7 @@ export function P02aGuardianLink(): ReactNode {
     // 연결 실패 카드가 뜬 직후에는 받지 않는다 (PHOTO_ONLY_SETTLE_MS)
     if (performance.now() - phaseChangedAt.current < PHOTO_ONLY_SETTLE_MS) return
     closeStoredLink()
-    setEmail('')
+    clearEmail()
     switchToPhotoOnly()
   }
 
@@ -440,7 +507,61 @@ export function P02aGuardianLink(): ReactNode {
   const showEmail = inputOpen || confirmOpen
   // 입력칸 · 확인 창 요소는 그 화면에서만 있다 — 없는 동안은 빈 글자로 둬서, 요소가 다시 생길 때 폭을 새로 재게 한다
   // (연결 실패 → [다시 시도]로 주소가 그대로인 채 돌아오는 경우)
-  const entryRef = useFitText<HTMLDivElement>(showEmail ? email : '', ENTRY_FONT)
+  // 칸마다 따로 잰다. 커서는 켜진 칸에만 있어 폭이 달라진다 → 켜진 칸이 바뀌면 다시 잰다
+  const localRef = useFitText<HTMLDivElement>(showEmail ? local : '', ENTRY_FONT, inputOpen && field === 'local')
+  const domainRef = useFitText<HTMLDivElement>(showEmail ? domain : '', ENTRY_FONT, inputOpen && field === 'domain')
+  const fieldRefs: Record<Field, RefObject<HTMLDivElement>> = { local: localRef, domain: domainRef }
+  const fieldValues: Record<Field, string> = { local, domain }
+
+  /** 입력칸 하나 — 누르면 켜진다. 켜진 칸에 커서, 글자가 있으면 오른쪽 끝에 ✕ */
+  const renderField = (name: Field): ReactNode => {
+    const value = fieldValues[name]
+    const active = inputOpen && field === name
+    const invalid = formatNotice === name || formatNotice === 'all'
+    // 안내 글은 틀린 칸 아래에 — 어느 칸인지 모르면(all) 아이디 칸에
+    const notice = formatNotice === name || (formatNotice === 'all' && name === 'local') ? formatNotice : null
+    return (
+      <div
+        className="p02a-entry__box"
+        data-field={name}
+        data-active={active}
+        data-invalid={invalid}
+        onClick={() => handleField(name)}
+      >
+        <div className="p02a-entry__text">
+          <div className="p02a-entry__value" ref={fieldRefs[name]}>
+            <span className="p02a-fit">
+              {value}
+              {active && <span className="p02a-entry__caret" aria-hidden="true" />}
+              {value.length === 0 && <span className="p02a-entry__hint">{FIELD_HINT[name]}</span>}
+            </span>
+          </div>
+          {notice && (
+            <div className="p02a-entry__notice" role="alert">
+              {NOTICE_TEXT[notice]} <PlaceholderTag label="형식 안내 — 임시 문구 (문서에 없음)" />
+            </div>
+          )}
+        </div>
+        {value.length > 0 && (
+          <button
+            type="button"
+            className="p02a-entry__clear"
+            aria-label={`${FIELD_HINT[name]} 지우기`}
+            disabled={!inputOpen}
+            onClick={(e) => {
+              // 칸을 누른 것으로 번지지 않게 — ✕ 는 지우기만 한다
+              e.stopPropagation()
+              handleClear(name)
+            }}
+          >
+            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+              <path d="M15 15l18 18M33 15L15 33" fill="none" stroke="currentColor" strokeWidth="5.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
+    )
+  }
   const confirmRef = useFitText<HTMLParagraphElement>(confirmOpen ? email : '', CONFIRM_FONT)
   const offerPhotoOnly = failCount >= 2
   const mockNetworkLabel =
@@ -461,20 +582,14 @@ export function P02aGuardianLink(): ReactNode {
 
         <div className="p02a-email">
           <div className="p02a-entry">
-            {/* <input>을 쓰지 않는다 — OS 화면 키보드가 뜨지 않게. 글자는 화면 키보드로만 들어온다 */}
-            <div className="p02a-entry__box" data-invalid={formatNotice}>
-              <div className="p02a-entry__value" ref={entryRef}>
-                <span className="p02a-fit">
-                  {email}
-                  {inputOpen && <span className="p02a-entry__caret" aria-hidden="true" />}
-                </span>
-              </div>
-              {formatNotice && (
-                <div className="p02a-entry__notice" role="alert">
-                  이메일 주소를 다시 확인해 주세요{' '}
-                  <PlaceholderTag label="형식 안내 — 임시 문구 (문서에 없음)" />
-                </div>
-              )}
+            {/* <input>을 쓰지 않는다 — OS 화면 키보드가 뜨지 않게. 글자는 화면 키보드로만 들어온다.
+                아이디 칸 · @ · 주소 칸 (2026-11-28) — 누른 칸이 켜진다 */}
+            <div className="p02a-entry__fields">
+              {renderField('local')}
+              <span className="p02a-entry__at" aria-hidden="true">
+                @
+              </span>
+              {renderField('domain')}
             </div>
             <button
               type="button"
