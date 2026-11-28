@@ -77,7 +77,7 @@ import '../styles/p05.css'
 /** 아래 마이크 알약의 모습 */
 type MicState =
   | 'wait' // 캐릭터가 말하는 중 — "먼저 들어 봐요"
-  | 'demo' // 신호 설명 때 진짜 띵을 들려줌 — 반짝이지만 녹음은 안 한다
+  | 'demo' // 반짝이지만 녹음은 안 한다 — 신호 설명의 진짜 띵 · "이렇게 되면 말하면 돼!" · 시범의 띵 · 짝꿍의 "준비 완료!" (2026-11-28)
   | 'live' // 띵 → 녹음 중 — "지금 말해요!" (반짝)
   | 'listening' // 받아쓰기 기다림 — "잘 듣고 있어요"
   | 'error' // 마이크를 못 켰다 — [다시 시도]
@@ -456,6 +456,21 @@ function SpeakFlow({
     }
 
     /**
+     * 시범 — 목소리 게이지가 짝꿍의 외침에 맞춰 차오른다 (빈칸 → 꽉 · delayMs 뒤부터 ms 동안 여섯 걸음).
+     * 흐름이 멈추면 타이머도 같이 치워진다 (stopFlow)
+     */
+    function fillGauge(delayMs: number, ms: number): void {
+      const STEPS = 6
+      for (let i = 1; i <= STEPS; i++) {
+        const id = window.setTimeout(() => {
+          timersRef.current.delete(id)
+          if (run.alive) setView((v) => ({ ...v, gauge: i / STEPS }))
+        }, delayMs + (ms * i) / STEPS)
+        timersRef.current.add(id)
+      }
+    }
+
+    /**
      * 문장 ②에서만 다른 그림을 쓰는 장면 — `<장면>-2`가 있으면 그것 (2026-11-27 우주비행사: 발사한 뒤라 달이 아니라 우주에서).
      * 06-2 아이 차례 · 11-2 다시 말하기 · 07-2 통과 반응
      */
@@ -679,11 +694,11 @@ function SpeakFlow({
       await say(part.scene ?? '03', part.text, mission.length > 1 ? `mission-${i + 1}` : 'mission', part.who === 'partner' ? PARTNER : LEAD)
     }
     set({ bar: { part: 'tutorial', done: 4 } })
-    // 순서 약속 먼저(듣고 → 따라 말하기), 그다음에 언제 말하는지(띵) — 둘 다 장면 04 (2026-11-28)
+    // 순서 약속 먼저(듣고 → 따라 말하기), 그다음에 언제 말하는지(띵) — 둘 다 장면 04 (2026-11-28).
+    // 언제 말하는지는 말로 설명하지 않고 바로 들려준다 ("마이크가 반짝이고, 띵! 소리가 나면…" 문장은 뺐다 — 2026-11-28)
     await say('04', COMMON.rule, 'rule', LEAD)
-    await say('04', COMMON.signal, 'signal', LEAD)
-    // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다
-    set({ mic: 'demo', step: 'signal:ding' })
+    // 진짜 띵을 한 번 들려준다 — 마이크가 반짝이지만 녹음은 하지 않는다 (앞 대사 말풍선은 치운다)
+    set({ mic: 'demo', step: 'signal:ding', subtitle: null })
     await playClip(DING_URL, 600).done
     check()
     await sleep(300)
@@ -696,11 +711,21 @@ function SpeakFlow({
       await say('04-2', text, gauge.length > 1 ? `gauge-${i + 1}` : 'gauge', PARTNER)
     }
     set({ bar: { part: 'tutorial', done: 5 } })
-    await say('05', COMMON.demo, 'demo', PARTNER)
+    // 시범 — 아이 차례와 같은 모양으로 보여 준다 (2026-11-28):
+    // "내가 먼저 해 볼게!" → 진짜 띵(마이크 반짝 · 말풍선 없음) → 짝꿍이 "준비 완료!"를 외친다(마이크는 빛나는 채로) → 게이지가 차오른다
+    await say('04', COMMON.demo, 'demo-1', PARTNER)
+    set({ mic: 'demo', step: 'demo:ding', subtitle: null, gauge: 0 })
+    await playClip(DING_URL, 600).done
+    check()
+    await sleep(DING_TO_RECORD_MS)
+    fillGauge(150, 600)
+    await say('05', COMMON.practiceWord, 'demo-2', PARTNER, true, 'demo')
 
     // ── D · E — "준비 완료!" 연습 ──
     set({ progress: 'practice', big: { words: [COMMON.practiceWord], current: null }, bar: { part: 'tutorial', done: 6 } })
     await say('06', COMMON.practice, 'practice', LEAD)
+    // 따라 할 말은 띵 바로 앞에 혼자 들려준다 — 실제 문장(소개 → 문장 → 띵)과 같은 모양 (2026-11-28)
+    await say('06', COMMON.practiceWord, 'practice-word', LEAD)
     // 연습은 한 번만 — 작거나 무음이어도 다시 시키지 않는다 (2026-11-24 사용자 결정).
     // 반응만 하고 넘어간다: 작게 · 무음이면 캐릭터가 "내가 다시 해 볼게! 준비 완료!" 하고 크게 시범을 보인다
     // TODO(목소리 게이지): 작게 · 무음 반응 끝에 캐릭터 외침과 함께 게이지가 꽉 차오르게 (docs/P05_SCENARIO.md 우주비행사)
@@ -1514,8 +1539,8 @@ function Props({
 }
 
 /**
- * 가운데 마이크의 빛나는 그림 — 보통 마이크와 같은 크기로 위에 겹쳐 두고, "띵!" 신호 · 녹음 중에만 보인다
- * (.p05[data-mic=demo|live] — CSS). 그림이 없으면 CSS 빛만
+ * 가운데 마이크의 빛나는 그림 — 보통 마이크와 같은 크기로 위에 겹쳐 두고, 마이크 상태가 demo · live일 때만 보인다
+ * ("띵!" 신호 · 녹음 중 · demo로 말하는 대사: "이렇게 되면 말하면 돼!" · 시범의 "준비 완료!" — .p05[data-mic=demo|live] · CSS). 그림이 없으면 CSS 빛만
  */
 function MicGlow({ job, name }: { job: JobId; name: string }): ReactNode {
   const url = layerUrl(job, `${name}-glow`)
@@ -1526,7 +1551,8 @@ function MicGlow({ job, name }: { job: JobId; name: string }): ReactNode {
 /**
  * 목소리 게이지 — 그림 위 오른쪽에 크게 덮어 그리는 세로 캡슐 (2026-11-26 — 로켓과 따로, 눈에 띄게 · 꼭대기 작은 로켓은 같은 날 뺌).
  * 아래에서부터 차오른다 (0 ~ 1). 모양은 별빛 유리관 + 오른쪽 눈금 5단계 (2026-11-26 사용자가 시안 중 고름 — p05.css).
- * 채우기(아이 차례 A-06 · 연습 반응)는 아직 안 붙였다 — 지금은 늘 빈 채
+ * 아이 차례에는 마이크 소리를 따라 차오르고(paintGauge), 시범의 "준비 완료!"에는 저절로 차오른다(fillGauge — 2026-11-28).
+ * 작게 · 무음 반응의 "내가 다시 해 볼게! 준비 완료!"에서 채우는 것만 아직 안 붙였다
  */
 function VoiceGauge({
   level,
