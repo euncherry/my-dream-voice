@@ -1322,6 +1322,39 @@ img.p05-scene__art--pop {
   animation: p05-mic-beat 0.9s ease-in-out infinite;
 }
 
+/* "띵!" 글자 (2026-11-29 경찰관 P-04) — 평소에는 안 보이다가 마이크가 빛날 때(띵 신호 · 녹음 중)만 톡 튀어나온다.
+   마이크(z 1) · 인물보다 앞. 소품이 나타나고 사라지는 기본 움직임(.is-in · .is-out)은 쓰지 않는다 — 그대로 두면 안 보여야 할 때 한 번 비친다 */
+.p05-prop[data-fx="ding"] {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.p05-prop[data-fx="ding"].is-in,
+.p05-prop[data-fx="ding"].is-out {
+  animation: none;
+}
+
+.p05[data-mic="demo"] .p05-prop[data-fx="ding"]:not(.is-out),
+.p05[data-mic="live"] .p05-prop[data-fx="ding"]:not(.is-out) {
+  opacity: 1;
+  animation: p05-ding-pop 0.42s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+@keyframes p05-ding-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes p05-mic-float {
   0%,
   100% {

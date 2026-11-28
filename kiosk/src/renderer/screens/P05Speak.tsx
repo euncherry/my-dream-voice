@@ -1522,11 +1522,19 @@ function Props({
     })
   }, [props])
 
+  // 움직임이 끝나면 정리한다 — 사라진 것은 빼고, 다 나타난 것은 "나타나는 중" 표시(is-in · is-swap)를 뗀다.
+  // 2026-11-29: 표시가 남아 있으면, 마이크 빛이 꺼질 때(두근거림이 끝날 때) 나타나는 움직임이 처음부터 다시 돌아
+  // 마이크가 깜빡 사라졌다 나타났다 (경찰관 P-04 — 띵 뒤 "내가 먼저 해 볼게!"로 넘어갈 때). 창 그림은 0.36초 걸려 조금 더 기다린다
   useEffect(() => {
-    if (!items.some((it) => it.fade === 'out' || it.fade === 'stay')) return
+    if (!items.some((it) => it.fade)) return
     const id = window.setTimeout(
-      () => setItems((its) => its.filter((it) => it.fade !== 'out' && it.fade !== 'stay')),
-      POSE_FADE_MS + 40,
+      () =>
+        setItems((its) =>
+          its
+            .filter((it) => it.fade !== 'out' && it.fade !== 'stay')
+            .map((it): PropItem => (it.fade ? { p: it.p } : it)),
+        ),
+      POSE_FADE_MS + 80,
     )
     return () => window.clearTimeout(id)
   }, [items])
